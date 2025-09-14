@@ -87,7 +87,7 @@ services:
       --appendonly yes
       --appendfsync everysec
     volumes:
-      - redis_master_data:/data
+      - redis_primary_data:/data
     mem_limit: 512m
     networks:
       - datec-network
@@ -168,12 +168,12 @@ volumes:
       type: none
       o: bind
       device: ./volumes/mongo_secondary
-  redis_master_data:
+  redis_primary_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: ./volumes/redis_master
+      device: ./volumes/redis_primary
   redis_replica_data:
     driver: local
     driver_opts:
