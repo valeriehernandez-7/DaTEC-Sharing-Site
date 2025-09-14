@@ -10,7 +10,7 @@ services:
   # ================================================
   
   mongo-primary:
-    image: mongodb/mongodb-community-server:8.0-ubi9 # latest Sep. 2025
+    image: mongodb/mongodb-community-server:8.0-ubi9
     container_name: datec-mongo-primary
     restart: always
     hostname: mongo-primary
@@ -39,7 +39,7 @@ services:
       start_period: 40s
 
   mongo-secondary:
-    image: mongodb/mongodb-community-server:8.0-ubi9 # latest Sep. 2025
+    image: mongodb/mongodb-community-server:8.0-ubi9
     container_name: datec-mongo-secondary
     restart: always
     hostname: mongo-secondary
@@ -73,7 +73,7 @@ services:
   # ================================================
   
   redis-master:
-    image: redis:8-alpine # latest Sep. 2025
+    image: redis:8-alpine
     container_name: datec-redis-master
     restart: always
     hostname: redis-master
@@ -97,11 +97,11 @@ services:
       timeout: 3s
       retries: 3
 
-  redis-slave:
-    image: redis:8-alpine # latest Sep. 2025
-    container_name: datec-redis-slave
+  redis-replica:
+    image: redis:8-alpine
+    container_name: datec-redis-replica
     restart: always
-    hostname: redis-slave
+    hostname: redis-replica
     ports:
       - "6380:6379"
     command: >
@@ -111,7 +111,7 @@ services:
       --maxmemory-policy allkeys-lru
       --replica-read-only yes
     volumes:
-      - redis_slave_data:/data
+      - redis_replica_data:/data
     mem_limit: 256m
     depends_on:
       redis-master:
@@ -129,7 +129,7 @@ services:
   # ================================================
   
   mongo-setup:
-    image: mongodb/mongodb-community-server:8.0-ubi9 # latest Sep. 2025
+    image: mongodb/mongodb-community-server:8.0-ubi9
     container_name: datec-mongo-setup
     depends_on:
       mongo-primary:
@@ -174,12 +174,12 @@ volumes:
       type: none
       o: bind
       device: ./volumes/redis_master
-  redis_slave_data:
+  redis_replica_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: ./volumes/redis_slave
+      device: ./volumes/redis_replica
 
 # ================================================
 # Internal Network
