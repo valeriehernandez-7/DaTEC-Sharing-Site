@@ -1,5 +1,5 @@
 # DaTEC Configuration
-# MongoDB + Redis : Multi-node | Neo4j + CouchDB : Local
+# MongoDB + Redis : Docker Multi-node | Neo4j + CouchDB : Local
 
 version: '3.8'
 
@@ -22,9 +22,9 @@ services:
       MONGO_INITDB_DATABASE: datec
     command: >
       mongod --replSet datecRS 
-             --bind_ip_all 
-             --wiredTigerCacheSizeGB 0.5
-             --oplogSize 128
+        --bind_ip_all 
+        --wiredTigerCacheSizeGB 0.5
+        --oplogSize 128
     volumes:
       - mongo_primary_data:/data/db
       - ./scripts/init-replica.js:/docker-entrypoint-initdb.d/init-replica.js:ro
@@ -50,9 +50,9 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: datec123
     command: >
       mongod --replSet datecRS 
-             --bind_ip_all 
-             --wiredTigerCacheSizeGB 0.3
-             --oplogSize 64
+        --bind_ip_all 
+        --wiredTigerCacheSizeGB 0.3
+        --oplogSize 64
     volumes:
       - mongo_secondary_data:/data/db
     mem_limit: 800m
