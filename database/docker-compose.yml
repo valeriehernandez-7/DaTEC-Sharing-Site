@@ -32,7 +32,7 @@ services:
     networks:
       - datec-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh admin -u admin -p datec123 --quiet
+      test: mongosh --eval "db.adminCommand('ping')" admin -u admin -p datec123 --quiet
       interval: 10s
       timeout: 10s
       retries: 5
@@ -62,21 +62,21 @@ services:
     networks:
       - datec-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh admin -u admin -p datec123 --quiet
+      test: mongosh --eval "db.adminCommand('ping')" admin -u admin -p datec123 --quiet
       interval: 10s
       timeout: 10s
       retries: 3
 
   # ================================================
-  # Redis Master-Slave (Multi-node) https://hub.docker.com/_/redis
+  # Redis Primary-Replica (Multi-node) https://hub.docker.com/_/redis
   # https://hub.docker.com/layers/library/redis/8-alpine/images/sha256-fc785a6b2936ec73d0c1c7dc81fb72383e0ce5d392d1c6b20dbafa68f0ff0572
   # ================================================
   
-  redis-master:
+  redis-primary:
     image: redis:8-alpine
-    container_name: datec-redis-master
+    container_name: datec-redis-primary
     restart: always
-    hostname: redis-master
+    hostname: redis-primary
     ports:
       - "6379:6379"
     command: >
@@ -106,7 +106,7 @@ services:
       - "6380:6379"
     command: >
       redis-server 
-      --replicaof redis-master 6379
+      --replicaof redis-primary 6379
       --maxmemory 200mb 
       --maxmemory-policy allkeys-lru
       --replica-read-only yes
@@ -114,7 +114,7 @@ services:
       - redis_replica_data:/data
     mem_limit: 256m
     depends_on:
-      redis-master:
+      redis-primary:
         condition: service_healthy
     networks:
       - datec-network
