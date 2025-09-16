@@ -44,7 +44,6 @@ The DaTEC platform is an academic dataset sharing system designed to facilitate 
 - **Frontend**: React.js single-page application
 - **Backend**: Node.js with Express.js framework
 - **Databases**: MongoDB, Redis, Neo4j, CouchDB
-- **Authentication**: JWT-based session management
 
 ## Naming Conventions
 
@@ -57,6 +56,7 @@ Following [Database Naming Standards](https://dev.to/ovid/database-naming-standa
 users                    # User account information
 datasets                 # Dataset metadata and references
 comments                 # User comments on datasets
+comment_likes            # Like reactions on comments
 votes                    # User voting records
 private_messages         # Direct messages between users
 user_sessions           # Active user sessions (Redis)
@@ -69,13 +69,13 @@ user_avatars            # Profile pictures (CouchDB)
 id_user                 # Primary user identifier
 id_dataset              # Primary dataset identifier
 id_comment              # Primary comment identifier
+id_comment_like         # Comment like reaction identifier
 username                # Unique user login name
 email_address           # User email contact
 password_hash           # Encrypted password storage
 created_at              # Record creation timestamp
 updated_at              # Last modification timestamp
 is_admin                # Administrative privilege flag
-is_active               # Record active status flag
 is_public               # Dataset visibility flag
 ```
 
@@ -130,7 +130,7 @@ Constraints:
 ```
 Username: datec_master
 Password: datec_master_4dmin
-Email: admin@datec-ss.cr
+Email: admin@datec.cr
 Role: system_administrator
 Permissions: all_access
 ```
@@ -151,6 +151,7 @@ Acceptance Criteria:
 - Required fields: username, email, password, first_name, last_name, birth_date
 - Optional field: profile picture upload
 - Birth date validation (minimum age 13)
+- Success confirmation with login capability
 ```
 
 **Technical Implementation:**
@@ -159,7 +160,7 @@ Acceptance Criteria:
 {
   id_user: "john_doe",
   username: "john_doe", 
-  email_address: "john@datec-ss.cr",
+  email_address: "john@datec.cr",
   password_hash: "$2b$12$...",
   password_salt: "random_salt_string",
   first_name: "John",
@@ -210,6 +211,7 @@ Acceptance Criteria:
 - Username cannot be changed after creation
 - Password change requires current password verification
 - Profile picture upload with size and format validation
+- Users can delete their account permanently
 - Changes reflected immediately in user interface
 ```
 
@@ -462,16 +464,18 @@ Acceptance Criteria:
 - User statistics and activity summary
 ```
 
-#### HU15: Comment System
+#### HU15: Comment System with Reactions
 ```
 As a platform user
-I want to comment on datasets and reply to other comments
-So that I can discuss data quality, usage, and insights
+I want to comment on datasets, reply to other comments, and like comments
+So that I can discuss data quality, usage, insights, and show appreciation for helpful comments
 
 Acceptance Criteria:
 - Comment posting on any approved and public dataset
 - Threaded comments with unlimited depth
-- Comment editing capability
+- Like reactions on comments (similar to dataset voting)
+- Single like per user per comment (toggle on/off)
+- Real-time like count updates
 - Comment moderation by administrators
 ```
 
@@ -486,8 +490,17 @@ Acceptance Criteria:
   content: "This dataset provides excellent insights...",
   is_active: true,
   thread_depth: 0,
+  like_count: 0,
   created_at: ISODate("2025-09-28T16:20:00Z"),
   updated_at: ISODate("2025-09-28T16:20:00Z")
+}
+
+// MongoDB comment_likes collection
+{
+  id_comment_like: "like_cmt_john_doe_20250928_001_20250928_001_user_123",
+  id_comment: "cmt_john_doe_20250928_001_20250928_001",
+  id_user: "user_123",
+  created_at: ISODate("2025-09-28T16:25:00Z")
 }
 ```
 
@@ -638,9 +651,8 @@ db.private_messages.createIndex({
 
 ### FR1: Authentication System
 - **FR1.1**: Secure login with bcrypt password hashing
-- **FR1.2**: JWT-based session management
-- **FR1.3**: Password reset capability
-- **FR1.4**: Profile management with picture upload
+- **FR1.2**: Password reset capability
+- **FR1.3**: Profile management with picture upload
 
 ### FR2: Dataset Management
 - **FR2.1**: Multi-format file upload (CSV, JSON, XML, TXT)
