@@ -4,787 +4,1063 @@
 - **Project**: DaTEC (Dataset Sharing Platform)
 - **Course**: IC4302 - Bases de Datos II
 - **Document Type**: Software Requirements Specification (SRS)
-- **Version**: 1.1
-- **Date**: September 16, 2025
+- **Version**: 2.0
+- **Date**: September 17, 2025
 
 ## Table of Contents
 1. [Executive Summary](#executive-summary)
 2. [System Overview](#system-overview)
-3. [Naming Conventions](#naming-conventions)
-4. [User Stories Analysis](#user-stories-analysis)
-5. [Functional Requirements](#functional-requirements)
-6. [Non-Functional Requirements](#non-functional-requirements)
-7. [Database Requirements](#database-requirements)
-8. [Security Requirements](#security-requirements)
-9. [Integration Requirements](#integration-requirements)
+3. [Database Naming Conventions](#database-naming-conventions)
+4. [Database Architecture](#database-architecture)
+5. [Data Models](#data-models)
+6. [User Stories Implementation](#user-stories-implementation)
+7. [Database Operations](#database-operations)
+8. [Technical Requirements](#technical-requirements)
+9. [Implementation Timeline](#implementation-timeline)
 10. [Acceptance Criteria](#acceptance-criteria)
+
+---
 
 ## Executive Summary
 
-The DaTEC platform is an academic dataset sharing system designed to facilitate collaboration among researchers, students, and data analysts. The system implements 21 core user stories across authentication, dataset management, social networking, and administrative functions using a multi-database architecture.
+DaTEC is an academic dataset sharing platform implementing **21 core user stories** plus **2 additional features** (tags system and comment likes). The system uses a multi-database architecture with MongoDB and Redis in Docker containers, plus Neo4j and CouchDB running locally.
 
-### Key System Characteristics
-- **Multi-tenant architecture** supporting academic institutions
-- **Social networking features** for collaboration and knowledge sharing
-- **Approval workflow** with privacy controls for dataset quality assurance
-- **Real-time notifications** for user engagement
-- **Search capabilities** with tag-based filtering
+### Key Features
+- Multi-database architecture for optimal performance
+- Social networking (follow users, private messaging)
+- Dataset approval workflow with admin moderation
+- Real-time notifications and counters
+- Enhanced search with tags
+- Secure authentication with bcrypt
+
+---
 
 ## System Overview
 
 ### Stakeholder Roles
-
-#### Primary Users
 - **Students**: Upload and download datasets for academic projects
 - **Researchers**: Share research data and collaborate with peers
 - **Administrators**: Manage platform content and user permissions
-- **Visitors**: Browse public datasets without uploading privileges
+- **Visitors**: Browse public datasets
 
-#### System Architecture
-- **Frontend**: React.js single-page application
-- **Backend**: Node.js with Express.js framework
-- **Databases**: MongoDB, Redis, Neo4j, CouchDB
+### Technical Stack
+- **Frontend**: React.js
+- **Backend**: Node.js with Express.js
+- **Databases**: 
+  - MongoDB (Docker) - Structured data
+  - Redis (Docker) - Caching and notifications
+  - Neo4j (Local) - Social graph
+  - CouchDB (Local) - Binary files
 
-## Naming Conventions
+---
 
-### Database Naming Standards
+## Database Naming Conventions
 
-Following [Database Naming Standards](https://dev.to/ovid/database-naming-standards-2061):
+### General Principles
+- **Case**: Lowercase with underscores (snake_case)
+- **Clarity**: Descriptive names indicating purpose
+- **Consistency**: Uniform patterns across databases
+- **Simplicity**: Avoid abbreviations
 
-#### Table/Collection Names
+### Collection Names
 ```
-users                    # User account information
-datasets                 # Dataset metadata and references
-comments                 # User comments on datasets
-comment_likes            # Like reactions on comments
-votes                    # User voting records
-private_messages         # Direct messages between users
-user_sessions           # Active user sessions (Redis)
-dataset_files           # File storage references (CouchDB)
-user_avatars            # Profile pictures (CouchDB)
-```
-
-#### Field Names
-```
-id_user                 # Primary user identifier
-id_dataset              # Primary dataset identifier
-id_comment              # Primary comment identifier
-id_comment_like         # Comment like reaction identifier
-username                # Unique user login name
-email_address           # User email contact
-password_hash           # Encrypted password storage
-created_at              # Record creation timestamp
-updated_at              # Last modification timestamp
-is_admin                # Administrative privilege flag
-is_public               # Dataset visibility flag
+users                    # User accounts
+datasets                 # Dataset metadata
+comments                 # User comments
+comment_likes            # Comment reactions (additional feature)
+votes                    # Dataset votes
+private_messages         # Direct messages
 ```
 
-### Identifier Format Specifications
+### Identifier Formats
 
-#### User Identifier (id_user)
+**User ID (user_id)**
 ```
-Format: {username}
-Examples:
-- john_doe
-- maria_garcia
-- admin_user
-
-Constraints:
-- Length: 3-50 characters
-- Pattern: ^[a-zA-Z0-9_]+$
-- Unique across system
+Format: UUID v4
+Example: "550e8400-e29b-41d4-a716-446655440000"
 ```
 
-#### Dataset Identifier (id_dataset)
+**Dataset ID (dataset_id)**
 ```
-Format: {username}_{YYYYMMDD}_{sequential_number}
-Examples:
-- john_doe_20250928_001
-- maria_garcia_20250928_002
-- research_team_20250928_003
-
-Constraints:
-- Length: maximum 100 characters
-- Date: ISO format YYYYMMDD
-- Sequential: 3-digit zero-padded
-- Unique across system
+Format: {username}_{YYYYMMDD}_{sequence}
+Example: "john_doe_20250928_001"
 ```
 
-#### Comment Identifier (id_comment)
+**Comment ID (comment_id)**
 ```
-Format: cmt_{id_dataset}_{YYYYMMDD}_{sequential_number}
-Examples:
-- cmt_john_doe_20250928_001_20250928_001
-- cmt_maria_garcia_20250928_002_20250928_001
-
-Constraints:
-- Prefix: "cmt_"
-- References parent dataset
-- Timestamp of comment creation
-- Sequential numbering per dataset
+Format: cmt_{dataset_id}_{timestamp}_{sequence}
+Example: "cmt_john_doe_20250928_001_20250928143022_001"
 ```
 
 ### Administrative Credentials
-
-#### System Administrator Account
 ```
-Username: datec_master
-Password: datec_master_4dmin
+Username: datec_admin
+Password: datec_m4ster-p1n
 Email: admin@datec.cr
-Role: system_administrator
-Permissions: all_access
 ```
 
-## User Stories Analysis
+---
 
-### Authentication & User Management (HU1-HU4)
+## Database Architecture
 
-#### HU1: User Self-Registration
-```
-As a new user
-I want to create an account with username, encrypted password, personal information, and profile picture
-So that I can access the platform and share datasets
+### Database Selection Rationale
 
-Acceptance Criteria:
-- Username must be unique and follow naming standards
-- Password must be encrypted with bcrypt and salt
-- Required fields: username, email, password, first_name, last_name, birth_date
-- Optional field: profile picture upload
-- Birth date validation (minimum age 13)
-- Success confirmation with login capability
-```
+#### MongoDB - Operational Data & Simple Relationships
+**Purpose**: Core structured data and simple many-to-many relationships
 
-**Technical Implementation:**
+**Why MongoDB:**
+- Document model fits operational data
+- Simple relationships (votes, likes) require only lookups, no graph traversal
+- Unique constraint support prevents duplicates
+- Text search capabilities
+- Flexible schema
+
+**Collections**: users, datasets, comments, votes, comment_likes, private_messages
+
+#### Neo4j - Social Graph & Download Analytics
+**Purpose**: Complex relationships requiring graph traversal
+
+**Why Neo4j:**
+- Optimized for social relationship queries
+- Efficient follower/following traversal
+- Download pattern analysis across user networks
+- Future analytics capabilities
+
+**Relationships**: FOLLOWS, DOWNLOADED
+
+#### Redis - Real-time Operations
+**Purpose**: Caching and real-time counters
+
+**Why Redis:**
+- In-memory sub-millisecond performance
+- Atomic increment operations
+- Notification queues with LPUSH/LPOP
+- Session storage with TTL
+
+**Data Types**: Counters, lists, hashes
+
+#### CouchDB - Binary File Storage
+**Purpose**: Binary attachments
+
+**Why CouchDB:**
+- Optimized for large binary files
+- Built-in HTTP access
+- Replication capabilities
+- Better than GridFS for large files
+
+**Document Types**: user_avatars, dataset_files, header_photos, tutorial_videos
+
+---
+
+## Data Models
+
+### MongoDB Schemas
+
+#### Users Collection
+
 ```javascript
-// MongoDB users collection
 {
-  id_user: "john_doe",
-  username: "john_doe", 
-  email_address: "john@datec.cr",
-  password_hash: "$2b$12$...",
-  password_salt: "random_salt_string",
-  first_name: "John",
-  last_name: "Doe", 
-  birth_date: ISODate("1995-03-15"),
-  is_admin: false,
-  profile_picture_id: "avatar_john_doe_20250928", // CouchDB reference
+  // Identification
+  user_id: "550e8400-e29b-41d4-a716-446655440000",     // PK: UUID v4
+  username: "john_doe",                                 // Unique username
+  email_address: "john@datec.cr",                       // Unique email
+  
+  // Authentication (HU1)
+  password_hash: "$2b$12$...",                          // Bcrypt hash
+  password_salt: "random_salt_string",                  // Unique salt
+  
+  // Profile information
+  full_name: "John Doe",                                // Display name
+  birth_date: ISODate("1995-03-15"),                    // Birth date (min age 13)
+  avatar_couchdb_id: "avatar_550e8400...",              // CouchDB reference
+  
+  // Permissions
+  is_admin: false,                                      // Admin flag (HU2, HU3)
+  
+  // Timestamps
   created_at: ISODate("2025-09-28T10:00:00Z"),
   updated_at: ISODate("2025-09-28T10:00:00Z")
 }
+
+// Indexes
+db.users.createIndex({ user_id: 1 }, { unique: true })
+db.users.createIndex({ username: 1 }, { unique: true })
+db.users.createIndex({ email_address: 1 }, { unique: true })
 ```
 
-#### HU2: Initial Administrator Account
-```
-As a system installer
-I want to create an initial administrator account during system setup
-So that the platform can be managed from the first deployment
+#### Datasets Collection
 
-Acceptance Criteria:
-- Administrator account created during installation
-- Default credentials: datec_master / datec_master_4dmin
-- Full administrative privileges enabled
-- Cannot be deleted through normal user interface
-- Forced password change on first login recommended
-```
-
-#### HU3: Administrator Privilege Assignment
-```
-As an administrator
-I want to grant administrative privileges to other users
-So that platform management can be distributed among trusted users
-
-Acceptance Criteria:
-- Only existing administrators can grant admin privileges
-- Target user must have existing account
-- Privilege change logged with timestamp and granting admin
-- Audit trail maintained for privilege changes
-```
-
-#### HU4: User Profile Management
-```
-As a registered user
-I want to edit my personal information
-So that I can keep my profile current and accurate
-
-Acceptance Criteria:
-- Users can modify: first_name, last_name, email_address, profile_picture, password
-- Username cannot be changed after creation
-- Password change requires current password verification
-- Profile picture upload with size and format validation
-- Users can delete their account permanently
-- Changes reflected immediately in user interface
-```
-
-### Dataset Management (HU5-HU8)
-
-#### HU5: Dataset Creation
-```
-As a registered user
-I want to create a dataset with metadata, files, and tutorial videos
-So that I can share my research data with the community
-
-Acceptance Criteria:
-- Required fields: name, description, tags, files
-- Optional fields: 1 header photo, 1 tutorial video
-- File upload support: CSV, JSON, XML, TXT formats
-- Video upload support: MP4, AVI, MOV formats
-- Photo upload support: PNG, JPG
-- Maximum file size: 1GB per file, 5GB total per dataset
-- Automatic generation of dataset ID following naming convention
-- Dataset submission goes directly to "pending" status for approval
-- After admin approval, dataset is automatically set to private
-- Dataset owner must manually change to public for general access
-- Preview generation for supported file types
-```
-
-**Technical Implementation:**
 ```javascript
-// MongoDB datasets collection
 {
-  id_dataset: "john_doe_20250928_001",
-  id_dataset_parent: null, // for clones only
-  owner_id: "john_doe",
-  dataset_name: "Global Sales Analysis 2024",
-  description: "Comprehensive analysis of global sales data...",
-  tags: ["sales", "analytics", "business", "2024"],
-  is_public: false, // defaults to private after approval
-  status: "pending", // pending, approved, rejected
+  // Identification
+  dataset_id: "john_doe_20250928_001",                  // PK: {username}_{date}_{seq}
+  owner_user_id: "550e8400-e29b-41d4-a716-446655440000", // FK to users.user_id
+  
+  // Metadata
+  dataset_name: "Global Sales Analysis 2024",           // Display name
+  description: "Comprehensive analysis...",             // Searchable description
+  tags: ["sales", "analytics", "business"],             // Additional feature: searchable tags
+  
+  // Approval workflow (HU6, HU8)
+  status: "pending",                                    // pending | approved | rejected
+  reviewed_at: null,                                    // Last review timestamp
+  admin_review: null,                                   // Admin comments (approval/rejection notes)
+  
+  // Privacy control (HU7)
+  is_public: false,                                     // Only applies if status === "approved"
+  
+  // File references - CouchDB (HU5)
   file_references: [
     {
-      file_name: "sales_q1.csv",
+      file_name: "sales_q1.csv",                        // Original filename
       couchdb_document_id: "file_john_doe_20250928_001_001",
-      file_size_bytes: 15728640,
+      file_size_bytes: 15728640,                        // 15 MB - for display (HU10)
       mime_type: "text/csv",
       uploaded_at: ISODate("2025-09-28T10:30:00Z")
     }
   ],
-  photo_reference: {
+  
+  // Optional media - CouchDB
+  header_photo_ref: {                                   // Optional header photo (HU5)
+    couchdb_document_id: "photo_john_doe_20250928_001_header",
     file_name: "header.jpg",
-    couchdb_document_id: "photo_john_doe_20250928_001_001",
-    file_size_bytes: 2048000,
+    file_size_bytes: 2048000,                           // 2 MB
     mime_type: "image/jpeg"
   },
-  video_reference: {
+  
+  tutorial_video_ref: {                                 // Optional tutorial video (HU11)
+    couchdb_document_id: "video_john_doe_20250928_001_tutorial",
     file_name: "tutorial.mp4",
-    couchdb_document_id: "video_john_doe_20250928_001_001",
-    file_size_bytes: 52428800,
+    file_size_bytes: 52428800,                          // 50 MB
     mime_type: "video/mp4",
     duration_seconds: 180
   },
-  statistics: {
-    download_count: 0,
-    clone_count: 0,
-    vote_count: 0,
-    comment_count: 0
-  },
+  
+  // Denormalized counters - synced from Redis/aggregations
+  download_count: 0,                                    // From Neo4j/Redis (HU13)
+  vote_count: 0,                                        // From MongoDB votes collection (HU17)
+  comment_count: 0,                                     // From MongoDB comments collection (HU15)
+  
+  // Timestamps
   created_at: ISODate("2025-09-28T10:00:00Z"),
-  updated_at: ISODate("2025-09-28T10:00:00Z"),
-  reviewed_at: null // set when admin reviews
+  updated_at: ISODate("2025-09-28T10:00:00Z")
 }
-```
 
-#### HU6: Dataset Approval Request
-```
-As a dataset owner
-I want to submit my dataset for approval
-So that it can be made available to other users
-
-Acceptance Criteria:
-- Dataset automatically submitted for approval upon creation
-- Submission timestamp recorded in reviewed_at field when admin acts
-- Owner cannot modify dataset while status is "pending"
-```
-
-#### HU7: Dataset Privacy and Deletion
-```
-As a dataset owner or administrator
-I want to set my dataset to private or delete it
-So that I can control access to my content
-
-Acceptance Criteria:
-- Dataset owners can toggle is_public flag on their approved datasets
-- Dataset owners can delete their own datasets
-- Administrators can modify privacy or delete any dataset
-- Existing downloads and clones remain accessible after deletion
-- Deletion is permanent (hard delete)
-```
-
-#### HU8: Dataset Approval Process
-```
-As an administrator
-I want to review and approve submitted datasets
-So that platform content quality is maintained
-
-Acceptance Criteria:
-- List of pending datasets visible to administrators
-- Approval/rejection with required reason
-- Status change from "pending" to "approved" or "rejected"
-- Approved datasets automatically set to private (is_public: false)
-- Application notification sent to dataset owner
-- Approval timestamp recorded in reviewed_at field
-- Rejected datasets can be resubmitted after modification
-```
-
-### Search & Discovery (HU9-HU12)
-
-#### HU9: Dataset Search
-```
-As a platform user
-I want to search datasets by name, description, and tags
-So that I can find relevant data for my projects
-
-Acceptance Criteria:
-- Full-text search across dataset names and descriptions
-- Tag-based filtering with multiple tag selection
-- Search results only show approved and public datasets
-- Search result ranking by relevance
-```
-
-**Technical Implementation:**
-```javascript
-// MongoDB text index for search
-db.datasets.createIndex({
+// Indexes
+db.datasets.createIndex({ dataset_id: 1 }, { unique: true })
+db.datasets.createIndex({ owner_user_id: 1, created_at: -1 })  // User's datasets (HU12)
+db.datasets.createIndex({ status: 1 })                          // Admin approval queue
+db.datasets.createIndex({ status: 1, is_public: 1 })           // Public dataset queries
+db.datasets.createIndex({                                       // Full-text search (HU9)
   dataset_name: "text",
-  description: "text", 
+  description: "text",
   tags: "text"
 }, {
-  weights: {
-    dataset_name: 10,
-    tags: 5,
-    description: 1
-  }
+  weights: { dataset_name: 10, tags: 5, description: 1 }
 })
-
-// Search query example
-db.datasets.find({
-  $text: { $search: "sales analytics business" },
-  status: "approved",
-  is_public: true
-}).sort({ score: { $meta: "textScore" } })
 ```
 
-#### HU10: Dataset Detailed View
-```
-As a platform user
-I want to view complete dataset information including file sizes and metadata
-So that I can evaluate if the dataset meets my needs
+#### Comments Collection
 
-Acceptance Criteria:
-- Complete dataset metadata display
-- File listing with sizes and types
-- Download statistics and user votes
-- Header photo display if available
-- Comments and discussion section
-- Dataset owner profile link
-- Tutorial video embedded player if available
-```
-
-#### HU11: Video Content Integration
-```
-As a dataset owner
-I want to include one tutorial video with my dataset
-So that users can better understand and utilize the data
-
-Acceptance Criteria:
-- Maximum: 1 video per dataset
-- Video upload during dataset creation only
-- Supported formats: MP4, AVI, MOV
-- Maximum video size: 500MB per video
-- Automatic thumbnail generation
-- Video player with standard controls
-```
-
-#### HU12: User Dataset Portfolio
-```
-As a platform user
-I want to view all datasets created by a specific user
-So that I can explore their other work and expertise
-
-Acceptance Criteria:
-- User profile page with public dataset listing
-- Datasets sorted by creation date (newest first)
-- User statistics: total datasets, downloads, votes, followers, following count
-- Contact button linking to private messaging (HU21)
-- Follow button for new dataset notifications (HU19)
-```
-
-### Analytics & Tracking (HU13)
-
-#### HU13: Download Analytics
-```
-As a dataset owner or administrator
-I want to see who downloaded my datasets and usage statistics over time
-So that I can understand user engagement and data value
-
-Acceptance Criteria:
-- List of users who downloaded each dataset
-- Download timestamps and user information
-- Daily, weekly, monthly download statistics
-```
-
-**Technical Implementation:**
 ```javascript
-// Redis real-time counters
-SET counter:dataset:john_doe_20250928_001:downloads 156
-
-// Neo4j download relationships
-CREATE (user:User {id_user: "maria_garcia"})
--[:DOWNLOADED {
-  downloaded_at: datetime("2025-09-28T16:30:00Z"),
-  ip_address: "192.168.1.100",
-  user_agent: "Mozilla/5.0...",
-  download_source: "web_interface"
-}]->
-(dataset:Dataset {id_dataset: "john_doe_20250928_001"})
-
-// MongoDB download log
 {
-  id_download: "dl_john_doe_20250928_001_20250928_001",
-  id_dataset: "john_doe_20250928_001",
-  id_user: "maria_garcia",
-  downloaded_at: ISODate("2025-09-28T16:30:00Z"),
-  file_name: "sales_q1.csv",
-  file_size_bytes: 15728640,
-  download_ip: "192.168.1.100"
-}
-```
-
-### Social Interaction (HU14-HU18)
-
-#### HU14: User Discovery
-```
-As a platform user
-I want to search for other users and view their datasets
-So that I can find collaborators and relevant content creators
-
-Acceptance Criteria:
-- User search by username, name, or dataset
-- User profile display with public information
-- User's public datasets visible
-- User statistics and activity summary
-```
-
-#### HU15: Comment System with Reactions
-```
-As a platform user
-I want to comment on datasets, reply to other comments, and like comments
-So that I can discuss data quality, usage, insights, and show appreciation for helpful comments
-
-Acceptance Criteria:
-- Comment posting on any approved and public dataset
-- Threaded comments with unlimited depth
-- Like reactions on comments (similar to dataset voting)
-- Single like per user per comment (toggle on/off)
-- Real-time like count updates
-- Comment moderation by administrators
-```
-
-**Technical Implementation:**
-```javascript
-// MongoDB comments collection
-{
-  id_comment: "cmt_john_doe_20250928_001_20250928_001",
-  id_dataset: "john_doe_20250928_001",
-  author_id: "maria_garcia",
-  parent_comment_id: null, // null for top-level, id for replies
-  content: "This dataset provides excellent insights...",
-  is_active: true,
-  thread_depth: 0,
-  like_count: 0,
+  // Identification
+  comment_id: "cmt_john_doe_20250928_001_20250928143022_001",  // PK
+  
+  // Relationships
+  target_dataset_id: "john_doe_20250928_001",          // FK to datasets.dataset_id
+  author_user_id: "550e8400-e29b-41d4-a716-446655440000", // FK to users.user_id
+  parent_comment_id: null,                             // FK to comments.comment_id (null = top-level)
+  
+  // Content
+  content: "This dataset provides excellent insights...", // Comment text
+  
+  // Moderation (HU16)
+  is_active: true,                                     // false = hidden by admin
+  
+  // Engagement (additional feature)
+  like_count: 0,                                       // Denormalized from comment_likes
+  
+  // Timestamps
   created_at: ISODate("2025-09-28T16:20:00Z"),
   updated_at: ISODate("2025-09-28T16:20:00Z")
 }
 
-// MongoDB comment_likes collection
+// Indexes
+db.comments.createIndex({ comment_id: 1 }, { unique: true })
+db.comments.createIndex({ target_dataset_id: 1, created_at: -1 })  // Dataset comments
+db.comments.createIndex({ parent_comment_id: 1 })                   // Nested replies
+db.comments.createIndex({ author_user_id: 1 })                      // User's comments
+```
+
+#### Comment Likes Collection (Additional Feature)
+
+```javascript
 {
-  id_comment_like: "like_cmt_john_doe_20250928_001_20250928_001_user_123",
-  id_comment: "cmt_john_doe_20250928_001_20250928_001",
-  id_user: "user_123",
+  // Identification
+  like_id: "like_cmt_john_doe_20250928_001_20250928143022_001_user_550e8400",
+  
+  // Relationships
+  comment_id: "cmt_john_doe_20250928_001_20250928143022_001",  // FK to comments.comment_id
+  user_id: "550e8400-e29b-41d4-a716-446655440000",             // FK to users.user_id
+  
+  // Timestamp
   created_at: ISODate("2025-09-28T16:25:00Z")
 }
+
+// Indexes
+db.comment_likes.createIndex({ like_id: 1 }, { unique: true })
+db.comment_likes.createIndex({ comment_id: 1, user_id: 1 }, { unique: true })  // Prevent duplicates
+db.comment_likes.createIndex({ comment_id: 1 })                                 // Count likes
+db.comment_likes.createIndex({ user_id: 1 })                                    // User's likes
 ```
 
-#### HU16: Comment Moderation
-```
-As an administrator
-I want to delete or disable inappropriate comments
-So that platform discussions remain professional and constructive
+#### Votes Collection
 
-Acceptance Criteria:
-- Administrators can hide comments by setting is_active to false
-- Comment removal capability
-- User notification when their comment is moderated
-- Moderation log with administrator and timestamp
-```
-
-#### HU17: Dataset Voting System
-```
-As a platform user
-I want to upvote datasets and remember my votes
-So that I can express quality feedback and see community opinions
-
-Acceptance Criteria:
-- Single upvote per user per dataset
-- Vote removal option (toggle upvote on/off)
-- No downvote functionality
-- Real-time vote count updates
-- Vote history preservation
-- Vote-based dataset ranking in search results
-```
-
-**Technical Implementation:**
 ```javascript
-// MongoDB votes collection
 {
-  id_vote: "vote_john_doe_20250928_001_maria_garcia",
-  id_dataset: "john_doe_20250928_001", 
-  id_user: "maria_garcia",
+  // Identification
+  vote_id: "vote_john_doe_20250928_001_user_550e8400",  // PK
+  
+  // Relationships
+  target_dataset_id: "john_doe_20250928_001",           // FK to datasets.dataset_id
+  user_id: "550e8400-e29b-41d4-a716-446655440000",      // FK to users.user_id
+  
+  // Timestamp
   created_at: ISODate("2025-09-28T16:30:00Z")
 }
 
-// Unique index on dataset + user
-db.votes.createIndex({ id_dataset: 1, id_user: 1 }, { unique: true })
+// Indexes
+db.votes.createIndex({ vote_id: 1 }, { unique: true })
+db.votes.createIndex({ target_dataset_id: 1, user_id: 1 }, { unique: true })  // Prevent duplicates (HU17)
+db.votes.createIndex({ target_dataset_id: 1 })                                 // Count votes
+db.votes.createIndex({ user_id: 1 })                                           // User's voting history
 ```
 
-#### HU18: Dataset Cloning
-```
-As a platform user
-I want to clone an existing dataset with a new name
-So that I can create variations or improvements of existing data
+#### Private Messages Collection
 
-Acceptance Criteria:
-- Clone functionality for approved and public datasets
-- New dataset name required (cannot duplicate)
-- Original dataset attribution maintained via id_dataset_parent
-- All files copied to new dataset
-- Cloned dataset starts in "pending" status for approval
-- Clone relationship tracked for analytics
-```
-
-### Advanced Social Features (HU19-HU21)
-
-#### HU19: User Following System
-```
-As a platform user
-I want to follow other users and receive notifications about their new datasets
-So that I can stay updated on relevant content from trusted sources
-
-Acceptance Criteria:
-- Follow/unfollow functionality for any user
-- Notification when followed users publish new public datasets
-- Following list management
-- Follower count display
-```
-
-**Technical Implementation:**
 ```javascript
-// Neo4j follow relationships
-CREATE (follower:User {id_user: "maria_garcia"})
--[:FOLLOWS {
-  followed_at: datetime("2025-09-28T16:00:00Z"),
-  notifications_enabled: true,
-  follow_source: "user_profile"
-}]->
-(followed:User {id_user: "john_doe"})
-
-// Redis notification queue
-LPUSH notifications:user:maria_garcia {
-  type: "new_dataset",
-  from_user: "john_doe", 
-  dataset_id: "john_doe_20250928_002",
-  timestamp: "2025-09-28T17:00:00Z"
-}
-```
-
-#### HU20: Follower Management
-```
-As a platform user
-I want to see who follows me
-So that I can understand my audience and engage with my community
-
-Acceptance Criteria:
-- Follower list with user profiles
-- Follower count display on profile
-- Following count display on profile
-```
-
-#### HU21: Private Messaging
-```
-As a platform user
-I want to send private messages to other users
-So that I can communicate directly about datasets and collaboration
-
-Acceptance Criteria:
-- Bidirectional messaging between any users
-- Message thread organization
-- Attachment support for files, images, and hyperlinks
-- Simple message display without read/unread status
-```
-
-**Technical Implementation:**
-```javascript
-// MongoDB private_messages collection
 {
-  id_message: "msg_maria_garcia_john_doe_20250928_001",
-  from_user_id: "maria_garcia",
-  to_user_id: "john_doe", 
-  message_content: "Hi! I have questions about your dataset...",
-  attachments: [
-    {
-      file_name: "questions.pdf",
-      couchdb_document_id: "att_msg_001_20250928_001",
-      mime_type: "application/pdf"
-    }
-  ],
+  // Identification
+  message_id: "msg_from_550e8400_to_449d7344_20250928_001",  // PK
+  
+  // Relationships
+  from_user_id: "550e8400-e29b-41d4-a716-446655440000",      // FK to users.user_id (sender)
+  to_user_id: "449d7344-e29b-41d4-a716-446655440001",        // FK to users.user_id (recipient)
+  
+  // Content
+  content: "Hi! I have questions about your dataset...",     // Message text
+  
+  // Timestamp
   created_at: ISODate("2025-09-28T17:00:00Z")
 }
 
-// Conversation thread indexing
-db.private_messages.createIndex({ 
-  from_user_id: 1, 
-  to_user_id: 1, 
-  created_at: -1 
+// Indexes
+db.private_messages.createIndex({ message_id: 1 }, { unique: true })
+db.private_messages.createIndex({ from_user_id: 1, to_user_id: 1, created_at: -1 })  // Conversations
+db.private_messages.createIndex({ to_user_id: 1, created_at: -1 })                    // Inbox
+db.private_messages.createIndex({ from_user_id: 1, created_at: -1 })                  // Sent messages
+```
+
+---
+
+### Neo4j Schemas
+
+#### User and Dataset Nodes
+
+```cypher
+// User node
+CREATE (u:User {
+  user_id: "550e8400-e29b-41d4-a716-446655440000",
+  username: "john_doe"
+})
+
+// Dataset node
+CREATE (d:Dataset {
+  dataset_id: "john_doe_20250928_001",
+  dataset_name: "Global Sales Analysis 2024"
 })
 ```
 
-## Functional Requirements
+#### FOLLOWS Relationship (HU19, HU20)
 
-### FR1: Authentication System
-- **FR1.1**: Secure login with bcrypt password hashing
-- **FR1.2**: Password reset capability
-- **FR1.3**: Profile management with picture upload
+```cypher
+// Follow relationship
+CREATE (follower:User {user_id: "follower_uuid"})
+-[:FOLLOWS {
+  followed_at: datetime("2025-09-28T16:00:00Z"),       // When follow occurred
+  notifications_enabled: true                           // Notification preference
+}]->
+(followed:User {user_id: "followed_uuid"})
 
-### FR2: Dataset Management
-- **FR2.1**: Multi-format file upload (CSV, JSON, XML, TXT)
-- **FR2.2**: Single video upload (MP4, AVI, MOV)
-- **FR2.3**: Single photo upload (PNG, JPG)
-- **FR2.4**: Metadata validation and formatting
-- **FR2.5**: Privacy controls (public/private toggle)
+// Query: Get all followers
+MATCH (follower:User)-[:FOLLOWS]->(user:User {user_id: $user_id})
+RETURN follower.user_id, follower.username
+ORDER BY follower.username
 
-### FR3: Search and Discovery
-- **FR3.1**: Full-text search with relevance ranking
-- **FR3.2**: Tag-based filtering
-- **FR3.3**: Public dataset browsing only
-- **FR3.4**: User profile discovery
+// Query: Get all following
+MATCH (user:User {user_id: $user_id})-[:FOLLOWS]->(followed:User)
+RETURN followed.user_id, followed.username
+ORDER BY followed.username
+```
 
-### FR4: Social Features
-- **FR4.1**: User following and follower management
-- **FR4.2**: Notification system for new datasets
-- **FR4.3**: Comment threading with moderation
-- **FR4.4**: Private messaging with attachments
-- **FR4.5**: Simple upvote system
+#### DOWNLOADED Relationship (HU13)
 
-### FR5: Administrative Functions
-- **FR5.1**: Content approval workflow management
-- **FR5.2**: User privilege management
-- **FR5.3**: Comment moderation tools
-- **FR5.4**: Download analytics access
+```cypher
+// Download relationship
+CREATE (user:User {user_id: "maria_garcia_uuid"})
+-[:DOWNLOADED {
+  downloaded_at: datetime("2025-09-28T16:30:00Z"),     // Download timestamp
+  download_source: "web_interface"                      // Source: web_interface, api, mobile
+}]->
+(dataset:Dataset {dataset_id: "john_doe_20250928_001"})
 
-## Non-Functional Requirements
+// Query: Get all users who downloaded a dataset
+MATCH (user:User)-[d:DOWNLOADED]->(dataset:Dataset {dataset_id: $dataset_id})
+RETURN user.user_id, user.username, d.downloaded_at
+ORDER BY d.downloaded_at DESC
 
-### NFR1: Performance Requirements
-- **NFR1.1**: Page load time under 2 seconds for 95% of requests
-- **NFR1.2**: Search results returned within 1 second
-- **NFR1.3**: File upload support up to 1GB per file, 5GB total per dataset
-- **NFR1.4**: Video upload support up to 500MB per video
-- **NFR1.5**: Database query response time under 100ms for 90% of operations
+// Query: Download statistics over time
+MATCH (user:User)-[d:DOWNLOADED]->(dataset:Dataset {dataset_id: $dataset_id})
+WHERE d.downloaded_at >= datetime($start_date) 
+  AND d.downloaded_at <= datetime($end_date)
+RETURN date(d.downloaded_at) AS download_date, count(*) AS download_count
+ORDER BY download_date
+```
 
-### NFR2: Security Requirements
-- **NFR2.1**: Data encryption at rest and in transit
-- **NFR2.2**: SQL injection and XSS attack prevention
-- **NFR2.3**: Rate limiting for API endpoints
-- **NFR2.4**: File upload security validation
+---
 
-### NFR3: Reliability Requirements
-- **NFR3.1**: System availability of 99% uptime
-- **NFR3.2**: Automated backup every 24 hours
-- **NFR3.3**: Database replication for data redundancy
+### Redis Data Structures
 
-### NFR4: Usability Requirements
-- **NFR4.1**: Responsive design for mobile and desktop
-- **NFR4.2**: Intuitive user interface with minimal training
-- **NFR4.3**: Clear navigation and workflow
+```javascript
+// Download counters (HU13)
+SET download_count:dataset:john_doe_20250928_001 156
+INCR download_count:dataset:john_doe_20250928_001
 
-## Database Requirements
+// Vote counters (HU17)
+SET vote_count:dataset:john_doe_20250928_001 42
+INCR vote_count:dataset:john_doe_20250928_001
 
-### DR1: Multi-Database Architecture
-- **DR1.1**: MongoDB for operational data storage
-- **DR1.2**: Redis for caching and session management
-- **DR1.3**: Neo4j for social graph relationships
-- **DR1.4**: CouchDB for binary file storage
+// Notification queues (HU19) - FIFO lists
+LPUSH notifications:user:550e8400-e29b-41d4-a716-446655440000 {
+  "type": "new_dataset",
+  "from_user_id": "followed_uuid",
+  "dataset_id": "new_dataset_id",
+  "timestamp": "2025-09-28T17:00:00Z"
+}
+LRANGE notifications:user:550e8400-e29b-41d4-a716-446655440000 0 9  // Get 10 most recent
 
-### DR2: Data Consistency
-- **DR2.1**: ACID transactions for critical operations
-- **DR2.2**: Cross-database referential integrity
-- **DR2.3**: Data synchronization mechanisms
+// User sessions - Hash with TTL
+HSET session:abc123xyz user_id "550e8400-e29b-41d4-a716-446655440000"
+HSET session:abc123xyz username "john_doe"
+EXPIRE session:abc123xyz 3600  // 1 hour
 
-### DR3: Data Backup and Recovery
-- **DR3.1**: Daily automated backups for all databases
-- **DR3.2**: Backup verification procedures
-- **DR3.3**: Basic recovery procedures
+// Cache frequently accessed data
+SET cache:dataset:john_doe_20250928_001 {json_data}
+EXPIRE cache:dataset:john_doe_20250928_001 300  // 5 minutes
+```
 
-## Security Requirements
+---
 
-### SR1: Authentication Security
-- **SR1.1**: Secure password policy enforcement (minimum length, complexity)
-- **SR1.2**: Session timeout and management
-- **SR1.3**: Account lockout after failed login attempts
-- **SR1.4**: Password encryption with bcrypt and salt
+### CouchDB Schemas
 
-### SR2: Data Protection
-- **SR2.1**: Secure file upload validation
-- **SR2.2**: API rate limiting and throttling
-- **SR2.3**: Audit logging for approval workflow and administrative actions
-- **SR2.4**: Data encryption in transit (HTTPS)
+```javascript
+// User avatar document
+{
+  "_id": "avatar_550e8400-e29b-41d4-a716-446655440000",
+  "type": "user_avatar",
+  "owner_user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "uploaded_at": "2025-09-28T10:00:00Z",
+  "_attachments": {
+    "profile.jpg": {
+      "content_type": "image/jpeg",
+      "length": 204800                              // 200 KB
+    }
+  }
+}
 
-### SR3: Access Control
-- **SR3.1**: Role-based access control (RBAC)
-- **SR3.2**: Resource-level access controls
-- **SR3.3**: Administrative privilege separation
+// Dataset file document
+{
+  "_id": "file_john_doe_20250928_001_001",
+  "type": "dataset_file",
+  "owner_user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "dataset_id": "john_doe_20250928_001",
+  "uploaded_at": "2025-09-28T10:30:00Z",
+  "_attachments": {
+    "sales_q1.csv": {
+      "content_type": "text/csv",
+      "length": 15728640                            // 15 MB
+    }
+  }
+}
 
-## Integration Requirements
+// Header photo document
+{
+  "_id": "photo_john_doe_20250928_001_header",
+  "type": "header_photo",
+  "owner_user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "dataset_id": "john_doe_20250928_001",
+  "uploaded_at": "2025-09-28T10:15:00Z",
+  "_attachments": {
+    "header.jpg": {
+      "content_type": "image/jpeg",
+      "length": 2048000                             // 2 MB
+    }
+  }
+}
 
-### IR1: API Requirements
-- **IR1.1**: RESTful API design principles
-- **IR1.2**: API rate limiting and quotas
-- **IR1.3**: Basic API documentation
+// Tutorial video document
+{
+  "_id": "video_john_doe_20250928_001_tutorial",
+  "type": "tutorial_video",
+  "owner_user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "dataset_id": "john_doe_20250928_001",
+  "uploaded_at": "2025-09-28T10:20:00Z",
+  "_attachments": {
+    "tutorial.mp4": {
+      "content_type": "video/mp4",
+      "length": 52428800                            // 50 MB
+    }
+  }
+}
+```
 
-### IR2: File Management
-- **IR2.1**: Secure file upload and storage with size limits
-- **IR2.2**: File type validation (CSV, JSON, XML, TXT, MP4, AVI, MOV, PNG, JPG)
-- **IR2.3**: Efficient file retrieval and streaming
+---
 
-### IR3: Notification System
-- **IR3.1**: Real-time notification delivery via Redis
-- **IR3.2**: Notification for new datasets from followed users
-- **IR3.3**: Application-level notification display
+## User Stories Implementation
+
+### Authentication (HU1-HU4)
+
+**HU1: User Self-Registration**
+- Create account with username, encrypted password, profile picture
+- UUID generation for user_id
+- Bcrypt password hashing with unique salt
+- Birth date validation (minimum age 13)
+- Avatar upload to CouchDB
+
+**HU2: Initial Administrator Account**
+- Default admin created during installation
+- Credentials: datec_admin / datec_m4ster-p1n
+
+**HU3: Administrator Privilege Assignment**
+- Admins can grant admin privileges to other users
+- Update `is_admin` flag in users collection
+
+**HU4: User Profile Management**
+- Edit personal information, change password, update avatar
+- Delete account functionality
+
+---
+
+### Dataset Management (HU5-HU8)
+
+**HU5: Dataset Creation**
+- Upload multiple data files, one header photo, one tutorial video
+- Files stored in CouchDB, metadata in MongoDB
+- Automatic `status: "pending"` for admin approval
+
+**HU6: Dataset Approval Request**
+- Automatic submission when created (no explicit action needed)
+
+**HU7: Dataset Privacy and Deletion**
+- Owner can toggle `is_public` (only if approved)
+- Owner or admin can delete dataset
+
+**HU8: Dataset Approval Process**
+
+**Workflow:**
+```
+CREATE → pending → ADMIN REVIEWS → approved/rejected → OWNER MAKES PUBLIC
+```
+
+**States:**
+- **pending**: Awaiting admin review
+- **approved**: Admin approved, still private until owner sets public
+- **rejected**: Admin rejected with comments in `admin_review`
+
+**Admin Actions:**
+```javascript
+// Approve
+POST /api/admin/datasets/:dataset_id/approve
+Body: { admin_review: "Optional notes" }
+
+// Reject
+POST /api/admin/datasets/:dataset_id/reject
+Body: { admin_review: "Reason for rejection" }
+```
+
+**User Actions After Rejection:**
+```javascript
+// Edit and resubmit
+PUT /api/datasets/:dataset_id
+POST /api/datasets/:dataset_id/resubmit
+// Returns to pending, clears reviewed_at and admin_review
+```
+
+---
+
+### Search & Discovery (HU9-HU12)
+
+**HU9: Dataset Search**
+- Full-text search by name, description, tags
+- Only approved and public datasets visible
+- MongoDB text indexes with relevance scoring
+
+**HU10: Dataset Detailed View**
+- Complete metadata display including file sizes
+- Download statistics and votes
+- Comments section
+
+**HU11: Video Content Integration**
+- One tutorial video per dataset
+- Embedded video player
+
+**HU12: User Dataset Portfolio**
+- View all public datasets by a specific user
+- User statistics (datasets, downloads, votes, followers, followed)
+
+---
+
+### Analytics (HU13)
+
+**HU13: Download Analytics**
+- Track who downloaded datasets (Neo4j DOWNLOADED relationships)
+- Download timestamps and statistics
+- Real-time counters in Redis
+
+---
+
+### Social Interaction (HU14-HU18)
+
+**HU14: User Discovery**
+- Search users by username and name
+- View user profiles and public datasets
+
+**HU15: Comment System with Reactions**
+- Comment on datasets with threaded replies
+- Like comments (additional feature)
+- Admin moderation via `is_active` flag
+
+**HU16: Comment Moderation**
+- Admins can hide comments (set `is_active: false`)
+
+**HU17: Dataset Voting System**
+- Upvote datasets (toggle on/off)
+- Track voting history
+- Unique constraint prevents duplicate votes
+
+**HU18: Dataset Cloning**
+- Clone existing public datasets with new name
+- Cloned dataset starts in pending status
+
+---
+
+### Advanced Social Features (HU19-HU21)
+
+**HU19: User Following System**
+- Follow other users (Neo4j FOLLOWS relationship)
+- Receive notifications when followed users publish datasets
+
+**HU20: Follower Management**
+- View who follows you
+- View who you follow
+
+**HU21: Private Messaging**
+- Send direct messages to other users
+- Time-ordered message threads
+
+---
+
+## Database Operations
+
+### Complete Dataset Lifecycle
+
+```javascript
+// 1. Create dataset
+async function createDataset(userId, datasetData, files) {
+  // Upload to CouchDB
+  const fileRefs = await uploadFiles(files);
+  
+  // Create in MongoDB
+  const dataset = {
+    dataset_id: generateDatasetId(username),
+    owner_user_id: userId,
+    dataset_name: datasetData.name,
+    description: datasetData.description,
+    tags: datasetData.tags,
+    status: "pending",
+    is_public: false,
+    reviewed_at: null,
+    admin_review: null,
+    file_references: fileRefs,
+    download_count: 0,
+    vote_count: 0,
+    comment_count: 0,
+    created_at: new Date(),
+    updated_at: new Date()
+  };
+  
+  await mongodb.datasets.insertOne(dataset);
+  
+  // Initialize Redis counters
+  await redis.set(`download_count:dataset:${dataset.dataset_id}`, 0);
+  await redis.set(`vote_count:dataset:${dataset.dataset_id}`, 0);
+  
+  // Create Neo4j node
+  await neo4j.run(`
+    CREATE (d:Dataset {dataset_id: $id, dataset_name: $name})
+  `, { id: dataset.dataset_id, name: dataset.dataset_name });
+  
+  return dataset;
+}
+
+// 2. Admin approves
+async function approveDataset(datasetId, adminReview) {
+  await mongodb.datasets.updateOne(
+    { dataset_id: datasetId, status: "pending" },
+    {
+      $set: {
+        status: "approved",
+        is_public: false,
+        reviewed_at: new Date(),
+        admin_review: adminReview || null
+      }
+    }
+  );
+  
+  // Notify owner via Redis
+  const dataset = await mongodb.datasets.findOne({ dataset_id: datasetId });
+  await redis.lpush(`notifications:user:${dataset.owner_user_id}`, 
+    JSON.stringify({
+      type: "dataset_approved",
+      dataset_id: datasetId,
+      timestamp: new Date().toISOString()
+    })
+  );
+}
+
+// 3. Admin rejects
+async function rejectDataset(datasetId, adminReview) {
+  await mongodb.datasets.updateOne(
+    { dataset_id: datasetId, status: "pending" },
+    {
+      $set: {
+        status: "rejected",
+        reviewed_at: new Date(),
+        admin_review: adminReview
+      }
+    }
+  );
+  
+  // Notify owner
+  const dataset = await mongodb.datasets.findOne({ dataset_id: datasetId });
+  await redis.lpush(`notifications:user:${dataset.owner_user_id}`, 
+    JSON.stringify({
+      type: "dataset_rejected",
+      dataset_id: datasetId,
+      admin_review: adminReview,
+      timestamp: new Date().toISOString()
+    })
+  );
+}
+
+// 4. Owner resubmits
+async function resubmitDataset(userId, datasetId) {
+  await mongodb.datasets.updateOne(
+    { dataset_id: datasetId, owner_user_id: userId, status: "rejected" },
+    {
+      $set: {
+        status: "pending",
+        reviewed_at: null,
+        admin_review: null,
+        updated_at: new Date()
+      }
+    }
+  );
+}
+
+// 5. Owner makes public
+async function makeDatasetPublic(userId, datasetId) {
+  const dataset = await mongodb.datasets.findOne({ 
+    dataset_id: datasetId,
+    owner_user_id: userId,
+    status: "approved"
+  });
+  
+  if (!dataset) throw new Error("Dataset must be approved first");
+  
+  await mongodb.datasets.updateOne(
+    { dataset_id: datasetId },
+    { $set: { is_public: true, updated_at: new Date() } }
+  );
+  
+  // Notify followers
+  const followers = await neo4j.run(`
+    MATCH (f:User)-[:FOLLOWS]->(o:User {user_id: $owner_id})
+    RETURN f.user_id
+  `, { owner_id: userId });
+  
+  for (const follower of followers.records) {
+    await redis.lpush(`notifications:user:${follower.get('f.user_id')}`, 
+      JSON.stringify({
+        type: "new_dataset",
+        from_user_id: userId,
+        dataset_id: datasetId,
+        timestamp: new Date().toISOString()
+      })
+    );
+  }
+}
+
+// 6. User downloads dataset
+async function downloadDataset(userId, datasetId, fileId) {
+  // Verify public and approved
+  const dataset = await mongodb.datasets.findOne({
+    dataset_id: datasetId,
+    status: "approved",
+    is_public: true
+  });
+  
+  if (!dataset) throw new Error("Dataset not available");
+  
+  // Get file from CouchDB
+  const file = await couchdb.attachment.get('datec_files', fileId, filename);
+  
+  // Record in Neo4j
+  await neo4j.run(`
+    MATCH (u:User {user_id: $userId}), (d:Dataset {dataset_id: $datasetId})
+    CREATE (u)-[:DOWNLOADED {
+      downloaded_at: datetime(),
+      download_source: 'web_interface'
+    }]->(d)
+  `, { userId, datasetId });
+  
+  // Increment Redis counter
+  await redis.incr(`download_count:dataset:${datasetId}`);
+  
+  // Sync to MongoDB (async)
+  const count = await redis.get(`download_count:dataset:${datasetId}`);
+  await mongodb.datasets.updateOne(
+    { dataset_id: datasetId },
+    { $set: { download_count: parseInt(count) } }
+  );
+  
+  return file;
+}
+
+// 7. User votes on dataset
+async function toggleVote(userId, datasetId) {
+  const existingVote = await mongodb.votes.findOne({
+    target_dataset_id: datasetId,
+    user_id: userId
+  });
+  
+  if (existingVote) {
+    // Remove vote
+    await mongodb.votes.deleteOne({ vote_id: existingVote.vote_id });
+    await redis.decr(`vote_count:dataset:${datasetId}`);
+  } else {
+    // Add vote
+    await mongodb.votes.insertOne({
+      vote_id: `vote_${datasetId}_${userId}`,
+      target_dataset_id: datasetId,
+      user_id: userId,
+      created_at: new Date()
+    });
+    await redis.incr(`vote_count:dataset:${datasetId}`);
+  }
+  
+  // Sync to MongoDB
+  const count = await redis.get(`vote_count:dataset:${datasetId}`);
+  await mongodb.datasets.updateOne(
+    { dataset_id: datasetId },
+    { $set: { vote_count: parseInt(count) } }
+  );
+}
+
+// 8. User follows another user
+async function followUser(followerId, followedId) {
+  // Create relationship in Neo4j
+  await neo4j.run(`
+    MATCH (follower:User {user_id: $followerId}), 
+          (followed:User {user_id: $followedId})
+    CREATE (follower)-[:FOLLOWS {
+      followed_at: datetime(),
+      notifications_enabled: true
+    }]->(followed)
+  `, { followerId, followedId });
+  
+  // Notify followed user
+  const follower = await mongodb.users.findOne({ user_id: followerId });
+  await redis.lpush(`notifications:user:${followedId}`, 
+    JSON.stringify({
+      type: "new_follower",
+      from_user_id: followerId,
+      from_username: follower.username,
+      timestamp: new Date().toISOString()
+    })
+  );
+}
+```
+
+### Data Synchronization
+
+```javascript
+// Background job: Sync Redis counters to MongoDB (runs every 5 minutes)
+async function syncCounters() {
+  const datasets = await mongodb.datasets.find({}, { dataset_id: 1 }).toArray();
+  
+  for (const { dataset_id } of datasets) {
+    const downloadCount = await redis.get(`download_count:dataset:${dataset_id}`);
+    const voteCount = await redis.get(`vote_count:dataset:${dataset_id}`);
+    
+    await mongodb.datasets.updateOne(
+      { dataset_id: dataset_id },
+      { 
+        $set: { 
+          download_count: parseInt(downloadCount) || 0,
+          vote_count: parseInt(voteCount) || 0
+        } 
+      }
+    );
+  }
+}
+```
+
+---
+
+## Technical Requirements
+
+### Functional Requirements
+
+**FR1: Authentication System**
+- User registration with bcrypt (cost factor 12)
+- Unique salt per user
+- Session management via Redis (1-hour TTL)
+- Profile picture upload to CouchDB
+
+**FR2: Dataset Management**
+- Multi-file upload support
+- Single header photo (optional)
+- Single tutorial video (optional)
+- Automatic dataset_id generation
+- Privacy controls
+
+**FR3: Search and Discovery**
+- Full-text search with MongoDB text indexes
+- Tag-based filtering
+- Results limited to approved and public datasets
+
+**FR4: Social Features**
+- User following via Neo4j
+- Notification system via Redis
+- Comment threading with likes
+- Private messaging
+- Dataset voting
+
+**FR5: Administrative Functions**
+- Dataset approval workflow
+- Admin privilege assignment
+- Comment moderation
+- Download analytics
+
+### Non-Functional Requirements
+
+**NFR1: Performance**
+- Page load time under 2 seconds (95% of requests)
+- Search results within 1 second
+- Database queries under 100ms (90% of operations)
+- File upload up to 1GB per file
+- Video upload up to 500MB
+
+**NFR2: Security**
+- Bcrypt password hashing (cost factor 12)
+- Unique salt per user
+- HTTPS encryption
+- File upload validation
+- Session timeout (1 hour)
+
+**NFR3: Reliability**
+- 99% uptime target
+- Daily automated backups
+- MongoDB replica set for redundancy
+- Redis persistence (RDB + AOF)
+- Error handling with graceful degradation
+
+**NFR4: Usability**
+- Responsive design (mobile and desktop)
+- Intuitive interface
+- Clear error messages
+- Loading indicators
+- Consistent navigation
+
+**NFR5: Scalability**
+- MongoDB replica set handles read distribution
+- Redis replication for high availability
+- Connection pooling across all databases
+- Horizontal scaling capability for web servers
+
+---
+
+## Implementation Timeline
+
+**Day 1-2**: Database Setup & Authentication
+- Docker setup for MongoDB and Redis
+- Local installation of Neo4j and CouchDB
+- User registration and login
+- Admin account creation
+
+**Day 3-4**: Dataset CRUD & File Storage
+- Dataset creation with file uploads
+- CouchDB integration
+- Dataset approval workflow
+- Privacy controls
+
+**Day 5**: Search & Admin Features
+- Full-text search implementation
+- Tag filtering
+- Admin approval interface
+- Comment moderation
+
+**Day 6**: Social Features
+- User following (Neo4j)
+- Comment system with likes
+- Private messaging
+- Dataset voting
+- Notifications
+
+**Day 7**: Testing & Documentation
+- Integration testing
+- Cross-database operation validation
+- Performance testing
+- Final documentation
+
+---
 
 ## Acceptance Criteria
 
-### AC1: User Story Completion
-Each user story must satisfy the following criteria:
-- All specified functionality implemented and tested
-- Error handling for edge cases
-- Performance requirements met
-- Security requirements satisfied
-- User interface matches specifications
+### Core Requirements
+- All 21 user stories implemented and tested
+- Multi-database architecture operational
+- Docker containers stable (MongoDB, Redis)
+- Local databases integrated (Neo4j, CouchDB)
+- Dataset approval workflow functional
+- Search with tags operational
 
-### AC2: System Integration
-- All databases properly integrated and synchronized
-- Cross-database queries function correctly
-- Data consistency maintained across systems
-- Real-time features operate within latency requirements
+### Additional Features
+- Tag-based search system
+- Comment like functionality
+- Enhanced user experience
 
-### AC3: Quality Assurance
-- Unit test coverage for critical functionality
-- Integration test suite covers all user workflows
-- Basic performance testing validates requirements
-- Security validation for authentication and file uploads
+### Quality Assurance
+- Unit tests for critical business logic
+- Integration tests for cross-database operations
+- Security validation
+- Performance testing meets requirements
 
-## Conclusion
+### Database Distribution
+- MongoDB: Operational data and simple relationships
+- Redis: Real-time counters and notifications
+- Neo4j: Social graph (follows, downloads)
+- CouchDB: Binary file storage
 
-This Software Requirements Specification provides comprehensive documentation for the DaTEC platform implementation focused on core functionality. The 21 user stories cover essential functionality for an academic dataset sharing platform, while the multi-database architecture ensures performance and scalability.
-
-The simplified approach prioritizes implementability within the academic timeline while maintaining all required features from the original specification. The clear naming conventions and identifier formats establish consistent development practices aligned with industry standards.
-
-The specification serves as the authoritative reference for development, testing, and acceptance criteria throughout the project lifecycle.
