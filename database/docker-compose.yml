@@ -17,8 +17,8 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: datec123
+      MONGO_INITDB_ROOT_USERNAME: datec_admin
+      MONGO_INITDB_ROOT_PASSWORD: dat3c_master_4dmin
       MONGO_INITDB_DATABASE: datec
     command: >
       mongod --replSet datecRS 
@@ -37,7 +37,7 @@ services:
     networks:
       - datec-network
     healthcheck:
-      test: mongosh --eval "db.adminCommand('ping')" admin -u admin -p datec123 --quiet || exit 1
+      test: mongosh --eval "db.adminCommand('ping')" admin -u datec_admin -p dat3c_master_4dmin --quiet || exit 1
       interval: 10s
       timeout: 10s
       retries: 5
@@ -51,8 +51,8 @@ services:
     ports:
       - "27018:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: datec123
+      MONGO_INITDB_ROOT_USERNAME: datec_admin
+      MONGO_INITDB_ROOT_PASSWORD: dat3c_master_4dmin
     command: >
       mongod --replSet datecRS 
         --bind_ip_all 
@@ -72,7 +72,7 @@ services:
     networks:
       - datec-network
     healthcheck:
-      test: mongosh --eval "db.adminCommand('ping')" admin -u admin -p datec123 --quiet || exit 1
+      test: mongosh --eval "db.adminCommand('ping')" admin -u datec_admin -p dat3c_master_4dmin --quiet || exit 1
       interval: 10s
       timeout: 10s
       retries: 3
@@ -163,7 +163,7 @@ services:
         echo 'Waiting for MongoDB to be ready...' &&
         sleep 15 &&
         echo 'Configuring Replica Set...' &&
-        mongosh --host mongo-primary:27017 -u admin -p datec123 --authenticationDatabase admin /scripts/setup-replica.js &&
+        mongosh --host mongo-primary:27017 -u datec_admin -p dat3c_master_4dmin --authenticationDatabase admin /scripts/setup-replica.js &&
         echo 'Replica Set configured successfully!' &&
         sleep 5
       "
