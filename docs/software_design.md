@@ -112,9 +112,7 @@ GET    /api/users/:username
 Response: { 
   user: UserObject, 
   stats: { 
-    datasets: number, 
-    downloads: number, 
-    votes: number, 
+    datasets: number,  
     followers: number, 
     following: number 
   } 
@@ -398,14 +396,14 @@ Response: {
   // - Description (truncated)
   // - Tags (badges)
   // - Owner (avatar + username)
-  // - Stats (votes, downloads)
+  // - Stats (votes, downloads, clones)
   // - Click navigates to /datasets/:id
 
 <DatasetHeader dataset={dataset} currentUser={user} />
   // Large title
   // Owner info with avatar
   // StatusBadge (pending/approved/rejected)
-  // Action buttons: Edit, Delete, Make Public, Clone, Download
+  // Action buttons: Edit, Delete, Public|Private, Clone, Download
   // Conditionally based on permissions
 
 <FileList files={files} onDownload={handleDownload} />
@@ -523,7 +521,7 @@ Response: {
 <ProfileHeader user={user} isOwnProfile={bool} />
   // Large avatar
   // Username + full_name
-  // StatsBar (datasets, downloads, votes, followers, following)
+  // StatsBar (datasets, followers, following)
   // FollowButton (if not own profile)
   // Edit Profile button (if own profile)
 
@@ -538,7 +536,7 @@ Response: {
   // Optional crop modal (react-image-crop)
   // Upload to CouchDB
 
-<StatsBar stats={{ datasets, downloads, votes, followers, following }} />
+<StatsBar stats={{ datasets, followers, following }} />
   // Flex row with stats
   // Each stat: large number + small label
   // Clickable to navigate (e.g., followers opens list)

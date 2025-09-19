@@ -5,7 +5,7 @@
 - **Course**: IC4302 - Bases de Datos II
 - **Document Type**: Software Requirements Specification (SRS)
 - **Version**: 2.0
-- **Date**: September 28, 2025
+- **Date**: September 18, 2025
 
 ## Table of Contents
 1. [Executive Summary](#executive-summary)
