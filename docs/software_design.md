@@ -1,33 +1,80 @@
 # DaTEC - Frontend/Backend Implementation Guide
 
-## Tabla de Rutas y Endpoints
-
-| Ruta Frontend | Propósito | User Stories | Endpoints API | Método | Auth Required |
-|---------------|-----------|--------------|---------------|---------|---------------|
-| `/` | Homepage - Explorar datasets públicos | HU9, HU10 | `/api/datasets` | GET | No |
-| `/login` | Iniciar sesión | HU1 | `/api/auth/login` | POST | No |
-| `/register` | Crear cuenta nueva | HU1 | `/api/auth/register` | POST | No |
-| `/datasets/new` | Crear nuevo dataset | HU5, HU6 | `/api/datasets` | POST | Sí |
-| `/datasets/:id` | Ver detalles de dataset | HU10, HU11, HU13, HU15, HU17 | `/api/datasets/:id`<br>`/api/datasets/:id/comments` | GET | No* |
-| `/datasets/:id/clone` | Clonar dataset existente | HU18 | `/api/datasets/:id/clone` | POST | Sí |
-| `/datasets/:id/edit` | Editar dataset propio | HU7 | `/api/datasets/:id` | PUT | Sí (owner/admin) |
-| `/datasets/:id/analytics` | Analíticas de descargas | HU13 | `/api/datasets/:id/analytics` | GET | Sí (owner/admin) |
-| `/profile/:username` | Perfil de usuario | HU4, HU12, HU14, HU19, HU20 | `/api/users/:username`<br>`/api/users/:username/datasets` | GET | No* |
-| `/profile/:username/edit` | Editar perfil propio | HU4 | `/api/users/:username` | PUT | Sí (own profile) |
-| `/messages` | Lista de conversaciones | HU21 | `/api/messages` | GET | Sí |
-| `/messages/:username` | Thread de mensajes específico | HU21 | `/api/messages/:username`<br>`/api/messages` | GET<br>POST | Sí |
-| `/my-datasets` | Dashboard de mis datasets | HU5, HU7 | `/api/users/me/datasets` | GET | Sí |
-| `/notifications` | Centro de notificaciones | HU8, HU19 | `/api/notifications` | GET | Sí |
-| `/admin/datasets` | Cola de aprobación de datasets | HU8 | `/api/admin/datasets/pending`<br>`/api/admin/datasets/:id/approve`<br>`/api/admin/datasets/:id/reject` | GET<br>POST<br>POST | Sí (admin) |
-| `/admin/users` | Gestión de usuarios | HU3 | `/api/admin/users`<br>`/api/admin/users/:username/admin` | GET<br>PATCH | Sí (admin) |
-| `/admin/comments` | Moderación de comentarios | HU16 | `/api/admin/comments`<br>`/api/admin/comments/:id/toggle` | GET<br>PATCH | Sí (admin) |
-| `/search` | Búsqueda avanzada | HU9 | `/api/datasets/search` | GET | No |
-
-**Nota**: * = Algunas acciones requieren auth (votar, comentar, descargar)
+## Table of Contents
+- [DaTEC - Frontend/Backend Implementation Guide](#datec---frontendbackend-implementation-guide)
+  - [Table of Contents](#table-of-contents)
+  - [Routes \& Endpoints Table](#routes--endpoints-table)
+  - [Complete API Endpoints](#complete-api-endpoints)
+    - [Authentication](#authentication)
+    - [Users](#users)
+    - [Datasets](#datasets)
+    - [Comments](#comments)
+    - [Messages](#messages)
+    - [Admin](#admin)
+    - [Notifications](#notifications)
+  - [Frontend Components](#frontend-components)
+    - [Layout Components](#layout-components)
+    - [Shared/Common Components](#sharedcommon-components)
+    - [Dataset Components](#dataset-components)
+    - [Comment Components](#comment-components)
+    - [User/Profile Components](#userprofile-components)
+    - [Message Components](#message-components)
+    - [Admin Components](#admin-components)
+    - [Analytics Components](#analytics-components)
+    - [Notification Components](#notification-components)
+  - [Technology Stack](#technology-stack)
+    - [Frontend](#frontend)
+      - [Core](#core)
+      - [State Management \& Data Fetching](#state-management--data-fetching)
+      - [Forms \& Validation](#forms--validation)
+      - [UI Components (shadcn/ui base)](#ui-components-shadcnui-base)
+      - [Specific Functionality](#specific-functionality)
+    - [Backend](#backend)
+      - [Core](#core-1)
+      - [Database Clients](#database-clients)
+      - [Authentication \& Security](#authentication--security)
+      - [File Upload \& Processing](#file-upload--processing)
+      - [Utilities](#utilities)
+  - [Project Structure](#project-structure)
+    - [Frontend](#frontend-1)
+    - [Backend](#backend-1)
+  - [Implementation Notes](#implementation-notes)
+    - [Authentication](#authentication-1)
+    - [File Upload Flow](#file-upload-flow)
+    - [Real-time Updates](#real-time-updates)
+    - [Error Handling](#error-handling)
+    - [Performance](#performance)
 
 ---
 
-## Endpoints API Completos
+## Routes & Endpoints Table
+
+| Frontend Route | Purpose | User Stories | API Endpoints | Method | Auth Required |
+|---------------|---------|--------------|---------------|---------|---------------|
+| `/` | Homepage - Browse public datasets | HU9, HU10 | `/api/datasets` | GET | No |
+| `/login` | User login | HU1 | `/api/auth/login` | POST | No |
+| `/register` | User registration | HU1 | `/api/auth/register` | POST | No |
+| `/datasets/new` | Create new dataset | HU5, HU6 | `/api/datasets` | POST | Yes |
+| `/datasets/:id` | Dataset details view | HU10, HU11, HU13, HU15, HU17 | `/api/datasets/:id`<br>`/api/datasets/:id/comments` | GET | No* |
+| `/datasets/:id/clone` | Clone existing dataset | HU18 | `/api/datasets/:id/clone` | POST | Yes |
+| `/datasets/:id/edit` | Edit own dataset | HU7 | `/api/datasets/:id` | PUT | Yes (owner/admin) |
+| `/datasets/:id/analytics` | Download analytics | HU13 | `/api/datasets/:id/analytics` | GET | Yes (owner/admin) |
+| `/profile/:username` | User profile | HU4, HU12, HU14, HU19, HU20 | `/api/users/:username`<br>`/api/users/:username/datasets` | GET | No* |
+| `/profile/:username/edit` | Edit own profile | HU4 | `/api/users/:username` | PUT | Yes (own profile) |
+| `/messages` | Messages inbox | HU21 | `/api/messages` | GET | Yes |
+| `/messages/:username` | Message thread | HU21 | `/api/messages/:username`<br>`/api/messages` | GET<br>POST | Yes |
+| `/my-datasets` | My datasets dashboard | HU5, HU7 | `/api/users/me/datasets` | GET | Yes |
+| `/notifications` | Notifications center | HU8, HU19 | `/api/notifications` | GET | Yes |
+| `/admin/datasets` | Dataset approval queue | HU8 | `/api/admin/datasets/pending`<br>`/api/admin/datasets/:id/approve`<br>`/api/admin/datasets/:id/reject` | GET<br>POST<br>POST | Yes (admin) |
+| `/admin/users` | User management | HU3 | `/api/admin/users`<br>`/api/admin/users/:username/admin` | GET<br>PATCH | Yes (admin) |
+| `/admin/comments` | Comment moderation | HU16 | `/api/admin/comments`<br>`/api/admin/comments/:id/toggle` | GET<br>PATCH | Yes (admin) |
+| `/search` | Advanced search | HU9 | `/api/datasets/search` | GET | No |
+
+**Note**: * = Some actions require authentication (vote, comment, download)
+
+---
+
+## Complete API Endpoints
 
 ### Authentication
 
@@ -62,11 +109,24 @@ Response: { user: UserObject }
 
 ```javascript
 GET    /api/users/:username
-Response: { user: UserObject, stats: { datasets, downloads, votes, followers, following } }
+Response: { 
+  user: UserObject, 
+  stats: { 
+    datasets: number, 
+    downloads: number, 
+    votes: number, 
+    followers: number, 
+    following: number 
+  } 
+}
 
 GET    /api/users/:username/datasets
 Query: ?page=1&limit=20
-Response: { datasets: DatasetObject[], total: number, page: number }
+Response: { 
+  datasets: DatasetObject[], 
+  total: number, 
+  page: number 
+}
 
 GET    /api/users/:username/followers
 Response: { followers: UserObject[] }
@@ -79,7 +139,10 @@ Body: { full_name?, email?, avatar?: File }
 Response: { user: UserObject }
 
 PUT    /api/users/:username/password
-Body: { current_password: string, new_password: string }
+Body: { 
+  current_password: string, 
+  new_password: string 
+}
 Response: { message: "Password updated" }
 
 DELETE /api/users/:username
@@ -100,7 +163,11 @@ Response: { users: UserObject[] }
 ```javascript
 GET    /api/datasets
 Query: ?search=&tags=&page=1&limit=20&sort_by=created_at&order=desc
-Response: { datasets: DatasetObject[], total: number, page: number }
+Response: { 
+  datasets: DatasetObject[], 
+  total: number, 
+  page: number 
+}
 
 POST   /api/datasets
 Body: FormData {
@@ -132,7 +199,10 @@ Body: { dataset_name: string }
 Response: { dataset: DatasetObject }
 
 POST   /api/datasets/:id/resubmit
-Response: { dataset: DatasetObject, message: "Resubmitted for review" }
+Response: { 
+  dataset: DatasetObject, 
+  message: "Resubmitted for review" 
+}
 
 GET    /api/datasets/:id/files/:file_id
 Response: Stream (file download)
@@ -146,7 +216,10 @@ Response: {
 }
 
 POST   /api/datasets/:id/vote
-Response: { voted: boolean, vote_count: number }
+Response: { 
+  voted: boolean, 
+  vote_count: number 
+}
 
 GET    /api/users/me/datasets
 Response: { datasets: DatasetObject[] }
@@ -159,7 +232,10 @@ GET    /api/datasets/:id/comments
 Response: { comments: CommentObject[] } // Tree structure
 
 POST   /api/datasets/:id/comments
-Body: { content: string, parent_comment_id?: string }
+Body: { 
+  content: string, 
+  parent_comment_id?: string 
+}
 Response: { comment: CommentObject }
 
 PUT    /api/comments/:id
@@ -170,20 +246,32 @@ DELETE /api/comments/:id
 Response: { message: "Comment deleted" }
 
 POST   /api/comments/:id/like
-Response: { liked: boolean, like_count: number }
+Response: { 
+  liked: boolean, 
+  like_count: number 
+}
 ```
 
 ### Messages
 
 ```javascript
 GET    /api/messages
-Response: { conversations: [{ other_user, last_message, timestamp }] }
+Response: { 
+  conversations: [{ 
+    other_user, 
+    last_message, 
+    timestamp 
+  }] 
+}
 
 GET    /api/messages/:username
 Response: { messages: MessageObject[] }
 
 POST   /api/messages
-Body: { to_username: string, content: string }
+Body: { 
+  to_username: string, 
+  content: string 
+}
 Response: { message: MessageObject }
 ```
 
@@ -232,7 +320,7 @@ Response: {
 
 ---
 
-## Componentes Frontend Detallados
+## Frontend Components
 
 ### Layout Components
 
@@ -255,12 +343,12 @@ Response: {
 </Navbar>
 
 // src/components/layout/AuthLayout.jsx
-<AuthLayout>      // Centered layout para login/register
+<AuthLayout>      // Centered layout for login/register
   {children}
 </AuthLayout>
 
 // src/components/layout/Footer.jsx
-<Footer>          // Links básicos, copyright
+<Footer>          // Basic links, copyright
 </Footer>
 ```
 
@@ -282,16 +370,16 @@ Response: {
 <Toast />
 
 // src/components/common/
-<SearchBar />           // Input con debounce, autocompletado
-<TagFilter />           // Multi-select de tags
-<TagInput />            // Input para crear tags (react-tag-autocomplete)
-<Pagination />          // Prev/Next + números de página
+<SearchBar />           // Input with debounce, autocomplete
+<TagFilter />           // Multi-select tags
+<TagInput />            // Input for creating tags (react-tag-autocomplete)
+<Pagination />          // Prev/Next + page numbers
 <LoadingSpinner />      // Skeleton loader
-<ErrorBoundary />       // Wrapper para manejo de errores
-<ConfirmDialog />       // Modal de confirmación reutilizable
-<MarkdownEditor />      // Editor con preview (react-markdown-editor-lite)
-<MarkdownPreview />     // Renderizador markdown
-<EmptyState />          // Estado vacío con ilustración y mensaje
+<ErrorBoundary />       // Error handling wrapper
+<ConfirmDialog />       // Reusable confirmation modal
+<MarkdownEditor />      // Editor with preview (react-markdown-editor-lite)
+<MarkdownPreview />     // Markdown renderer
+<EmptyState />          // Empty state with illustration and message
 ```
 
 ### Dataset Components
@@ -300,48 +388,48 @@ Response: {
 // src/components/dataset/
 
 <DatasetGrid datasets={datasets} />
-  // Grid responsive (grid-cols-1 md:grid-cols-2 lg:grid-cols-3)
-  // Map de DatasetCard
+  // Responsive grid (grid-cols-1 md:grid-cols-2 lg:grid-cols-3)
+  // Maps DatasetCard components
 
 <DatasetCard dataset={dataset} />
-  // Card con:
+  // Card with:
   // - HeaderImage (thumbnail)
   // - Title
-  // - Description (truncada)
+  // - Description (truncated)
   // - Tags (badges)
   // - Owner (avatar + username)
-  // - Stats (votos, descargas)
-  // - Click navega a /datasets/:id
+  // - Stats (votes, downloads)
+  // - Click navigates to /datasets/:id
 
 <DatasetHeader dataset={dataset} currentUser={user} />
-  // Título grande
-  // Owner info con avatar
+  // Large title
+  // Owner info with avatar
   // StatusBadge (pending/approved/rejected)
   // Action buttons: Edit, Delete, Make Public, Clone, Download
-  // Condicionalmente según permisos
+  // Conditionally based on permissions
 
 <FileList files={files} onDownload={handleDownload} />
-  // Tabla o lista de archivos
-  // Columnas: Filename, Type, Size, Download button
-  // Click descarga via /api/datasets/:id/files/:file_id
+  // Table or list of files
+  // Columns: Filename, Type, Size, Download button
+  // Click downloads via /api/datasets/:id/files/:file_id
 
 <FileUploader onUpload={handleUpload} maxSize={1024 * 1024 * 1024} />
   // react-dropzone
   // Drag & drop zone
-  // Preview de archivos seleccionados
-  // Progress bar durante upload
+  // Preview of selected files
+  // Progress bar during upload
 
 <VideoUploader onUpload={handleUpload} maxSize={500 * 1024 * 1024} />
-  // Similar a FileUploader pero solo video
-  // Preview con thumbnail
+  // Similar to FileUploader but video only
+  // Preview with thumbnail
 
 <ImageUploader onUpload={handleUpload} aspectRatio={16/9} />
-  // Upload con crop opcional (react-image-crop)
-  // Preview circular o rectangular
+  // Upload with optional crop (react-image-crop)
+  // Circular or rectangular preview
 
 <VideoPlayer url={videoUrl} />
   // react-player
-  // Controls integrados
+  // Integrated controls
   // Responsive
 
 <VoteButton 
@@ -350,38 +438,38 @@ Response: {
   initialCount={count} 
   onVote={handleVote} 
 />
-  // Botón upvote con animación
-  // Cambia color si voted
-  // Contador animado (react-spring o framer-motion)
+  // Upvote button with animation
+  // Changes color if voted
+  // Animated counter (react-spring or framer-motion)
 
 <DownloadButton datasetId={id} fileId={fileId} />
-  // Botón con icono download
-  // Muestra contador de descargas
-  // Loading state durante descarga
+  // Button with download icon
+  // Shows download counter
+  // Loading state during download
 
 <CloneButton datasetId={id} onClone={handleClone} />
-  // Botón que abre modal o navega a /datasets/:id/clone
-  // Solo visible en datasets públicos aprobados
+  // Button that opens modal or navigates to /datasets/:id/clone
+  // Only visible on public approved datasets
 
 <DatasetForm 
   initialData={data} 
   mode="create" | "edit" 
   onSubmit={handleSubmit}
 />
-  // Form multi-step con react-hook-form
-  // Step 1: Metadata (nombre, descripción, tags)
+  // Multi-step form with react-hook-form
+  // Step 1: Metadata (name, description, tags)
   // Step 2: Files upload
   // Step 3: Optional media (photo, video)
-  // Validación con zod
+  // Validation with zod
   // Progress indicator
 
 <StatusBadge status="pending" | "approved" | "rejected" />
-  // Badge coloreado según estado
+  // Colored badge by status
   // pending: yellow, approved: green, rejected: red
 
 <DatasetPreview dataset={dataset} />
-  // Vista compacta para modals
-  // Muestra: título, descripción corta, archivos, owner
+  // Compact view for modals
+  // Shows: title, short description, files, owner
 ```
 
 ### Comment Components
@@ -390,31 +478,31 @@ Response: {
 // src/components/comment/
 
 <CommentSection datasetId={id} />
-  // Container principal
+  // Main container
   // CommentForm (top-level)
-  // CommentList con sorting (más recientes, más likes)
+  // CommentList with sorting (most recent, most likes)
 
 <CommentThread comments={comments} depth={0} />
-  // Renderiza recursivamente
-  // Indentación visual por depth
-  // Max depth 5 (luego "show more")
+  // Renders recursively
+  // Visual indentation by depth
+  // Max depth 5 (then "show more")
 
 <CommentCard comment={comment} onReply={fn} onEdit={fn} onDelete={fn} />
-  // Avatar del autor
+  // Author avatar
   // Username + timestamp
   // Content (markdown)
-  // Actions: Like, Reply, Edit (si autor), Delete (si autor/admin)
-  // LikeButton integrado
-  // ReplyForm expandible
+  // Actions: Like, Reply, Edit (if author), Delete (if author/admin)
+  // Integrated LikeButton
+  // Expandable ReplyForm
 
 <CommentForm 
   datasetId={id} 
   parentCommentId={parentId} 
   onSubmit={handleSubmit}
 />
-  // Textarea con autosize
+  // Textarea with autosize
   // Submit button
-  // Cancel button (si es reply)
+  // Cancel button (if reply)
   // Markdown preview toggle
 
 <CommentLikeButton 
@@ -422,9 +510,9 @@ Response: {
   initialLiked={liked} 
   initialCount={count}
 />
-  // Corazón o thumbs up icon
+  // Heart or thumbs up icon
   // Toggle like/unlike
-  // Contador animado
+  // Animated counter
 ```
 
 ### User/Profile Components
@@ -433,27 +521,27 @@ Response: {
 // src/components/profile/
 
 <ProfileHeader user={user} isOwnProfile={bool} />
-  // Avatar grande
+  // Large avatar
   // Username + full_name
-  // StatsBar (datasets, downloads, votos, followers, following)
-  // FollowButton (si no es propio perfil)
-  // Edit Profile button (si es propio)
+  // StatsBar (datasets, downloads, votes, followers, following)
+  // FollowButton (if not own profile)
+  // Edit Profile button (if own profile)
 
 <AvatarDisplay src={url} alt={name} size="sm" | "md" | "lg" />
-  // Avatar circular
-  // Fallback con iniciales si no hay imagen
-  // Border opcional
+  // Circular avatar
+  // Fallback with initials if no image
+  // Optional border
 
 <AvatarUpload currentAvatar={url} onUpload={handleUpload} />
-  // Click para seleccionar
-  // Preview inmediato
-  // Crop modal opcional (react-image-crop)
-  // Upload a CouchDB
+  // Click to select
+  // Immediate preview
+  // Optional crop modal (react-image-crop)
+  // Upload to CouchDB
 
 <StatsBar stats={{ datasets, downloads, votes, followers, following }} />
-  // Flex row con stats
-  // Cada stat: número grande + label pequeño
-  // Clickeable para navegar (ej. followers abre lista)
+  // Flex row with stats
+  // Each stat: large number + small label
+  // Clickable to navigate (e.g., followers opens list)
 
 <FollowButton 
   username={username} 
@@ -462,32 +550,32 @@ Response: {
 />
   // Toggle Follow/Unfollow
   // Loading state
-  // Contador de followers actualizado optimistically
+  // Follower counter updated optimistically
 
 <TabNavigation activeTab={tab} onTabChange={setTab} />
   // Tabs: Datasets, Followers, Following
-  // Underline animation en tab activo
+  // Underline animation on active tab
 
 <FollowerList users={users} />
-  // Lista de usuarios con avatares
-  // Click navega a perfil
-  // Botón Follow/Unfollow en cada uno
+  // List of users with avatars
+  // Click navigates to profile
+  // Follow/Unfollow button on each
 
 <ProfileEditForm user={user} onSubmit={handleSubmit} />
-  // Form con react-hook-form
-  // Campos: full_name, email, avatar
-  // Validación
+  // Form with react-hook-form
+  // Fields: full_name, email, avatar
+  // Validation
   // Submit button
 
 <PasswordChangeForm onSubmit={handleSubmit} />
   // current_password, new_password, confirm_password
-  // Validación de match
+  // Match validation
   // Show/hide password toggles
 
 <DeleteAccountButton onConfirm={handleDelete} />
-  // Botón peligroso (rojo)
-  // Abre ConfirmDialog con advertencia
-  // Input para escribir "DELETE" como confirmación
+  // Danger button (red)
+  // Opens ConfirmDialog with warning
+  // Input to type "DELETE" as confirmation
 ```
 
 ### Message Components
@@ -496,14 +584,14 @@ Response: {
 // src/components/message/
 
 <MessagesLayout>
-  <MessagesSidebar />     // Izquierda: lista conversaciones
-  <MessageThread />       // Derecha: thread activo
+  <MessagesSidebar />     // Left: conversation list
+  <MessageThread />       // Right: active thread
 </MessagesLayout>
 
 <MessagesSidebar conversations={conversations} activeUsername={username} />
-  // Lista vertical de ConversationCard
-  // Scroll infinito si muchas conversaciones
-  // Highlight conversación activa
+  // Vertical list of ConversationCard
+  // Infinite scroll if many conversations
+  // Highlight active conversation
 
 <ConversationCard 
   otherUser={user} 
@@ -511,27 +599,27 @@ Response: {
   timestamp={time}
   isActive={bool}
 />
-  // Avatar del otro usuario
+  // Other user's avatar
   // Username
-  // Preview último mensaje (truncado)
-  // Timestamp relativo (date-fns)
-  // Background diferente si activo
+  // Last message preview (truncated)
+  // Relative timestamp (date-fns)
+  // Different background if active
 
 <MessageThread username={username} messages={messages} />
-  // Container con scroll
-  // Auto-scroll a último mensaje
-  // Agrupación por fecha
-  // MessageBubble para cada mensaje
-  // MessageInput al final
+  // Container with scroll
+  // Auto-scroll to last message
+  // Grouped by date
+  // MessageBubble for each message
+  // MessageInput at bottom
 
 <MessageBubble message={message} isSent={bool} />
-  // Burbuja alineada derecha (sent) o izquierda (received)
+  // Bubble aligned right (sent) or left (received)
   // Content
-  // Timestamp pequeño
-  // Avatar del sender (received only)
+  // Small timestamp
+  // Sender avatar (received only)
 
 <MessageInput onSend={handleSend} />
-  // Textarea autosize
+  // Autosize textarea
   // Placeholder: "Type a message..."
   // Send button (icon)
   // Enter to send, Shift+Enter for newline
@@ -543,15 +631,15 @@ Response: {
 // src/components/admin/
 
 <PendingDatasetTable datasets={datasets} onAction={fn} />
-  // Table con columnas:
+  // Table with columns:
   // - Dataset name + owner
   // - Created date
   // - Files count
   // - Actions: View, Approve, Reject
-  // Click "View" abre DatasetPreview modal
+  // Click "View" opens DatasetPreview modal
 
 <UserManagementTable users={users} onToggleAdmin={fn} />
-  // Table con columnas:
+  // Table with columns:
   // - Avatar + username
   // - Email
   // - Datasets count
@@ -559,8 +647,8 @@ Response: {
   // - Actions: View Profile
 
 <CommentModerationTable comments={comments} onToggle={fn} />
-  // Table con columnas:
-  // - Comment content (truncado)
+  // Table with columns:
+  // - Comment content (truncated)
   // - Author
   // - Dataset
   // - Is Active (toggle switch)
@@ -572,13 +660,13 @@ Response: {
   onReject={fn} 
   onClose={fn}
 />
-  // Modal grande
+  // Large modal
   // DatasetPreview
-  // Textarea para admin_review
+  // Textarea for admin_review
   // Buttons: Approve, Reject, Cancel
 
 <DatasetActionsMenu datasetId={id} />
-  // DropdownMenu con opciones:
+  // DropdownMenu with options:
   // - View
   // - Approve / Reject
   // - Delete
@@ -591,29 +679,29 @@ Response: {
 // src/components/analytics/
 
 <AnalyticsDashboard datasetId={id} />
-  // Grid con StatsCards arriba
-  // DownloadChart en el medio
-  // DownloadTable abajo
+  // Grid with StatsCards at top
+  // DownloadChart in middle
+  // DownloadTable at bottom
 
 <StatsCards stats={{ total_downloads, unique_users, avg_per_day }} />
-  // Grid de cards con iconos
-  // Números grandes + labels
-  // Iconos de lucide-react
+  // Grid of cards with icons
+  // Large numbers + labels
+  // Icons from lucide-react
 
 <DownloadChart data={chartData} />
-  // Line chart o Bar chart (Chart.js o Recharts)
+  // Line chart or Bar chart (Chart.js or Recharts)
   // X-axis: dates
   // Y-axis: download count
-  // Tooltip con detalles
+  // Tooltip with details
   // Toggle: Last 7 days, Last 30 days, All time
 
 <DownloadTable downloads={downloads} />
-  // Table con columnas:
+  // Table with columns:
   // - User (avatar + username)
-  // - Downloaded at (fecha + hora)
+  // - Downloaded at (date + time)
   // - File name
-  // Sorting por fecha
-  // Paginación
+  // Sorting by date
+  // Pagination
 ```
 
 ### Notification Components
@@ -622,32 +710,32 @@ Response: {
 // src/components/notification/
 
 <NotificationBell />
-  // Bell icon en navbar
-  // Badge con contador (red dot si > 0)
-  // Click abre dropdown con últimas 5 notificaciones
-  // "View all" link a /notifications
+  // Bell icon in navbar
+  // Badge with counter (red dot if > 0)
+  // Click opens dropdown with last 5 notifications
+  // "View all" link to /notifications
 
 <NotificationDropdown notifications={notifications} />
   // Dropdown menu
-  // Lista de NotificationCard (últimas 5)
+  // List of NotificationCard (last 5)
   // "View all notifications" footer
 
 <NotificationList notifications={notifications} />
-  // Lista completa en /notifications
-  // Agrupadas por fecha (Today, Yesterday, This week)
-  // Click en notificación navega al recurso
+  // Full list at /notifications
+  // Grouped by date (Today, Yesterday, This week)
+  // Click on notification navigates to resource
 
 <NotificationCard notification={notification} />
-  // Icon según tipo
-  // Mensaje formateado
-  // Timestamp relativo
-  // Click handler para navegar
-  // Background diferente si no leído (opcional)
+  // Icon by type
+  // Formatted message
+  // Relative timestamp
+  // Click handler to navigate
+  // Different background if unread (optional)
 ```
 
 ---
 
-## Stack Tecnológico
+## Technology Stack
 
 ### Frontend
 
@@ -759,7 +847,7 @@ Response: {
 
 ---
 
-## Estructura de Carpetas
+## Project Structure
 
 ### Frontend
 ```
@@ -799,7 +887,7 @@ src/
 │   ├── useMessages.js
 │   └── useNotifications.js
 ├── services/
-│   ├── api.js           # Axios instance con interceptors
+│   ├── api.js           # Axios instance with interceptors
 │   ├── auth.service.js
 │   ├── dataset.service.js
 │   ├── user.service.js
@@ -807,7 +895,7 @@ src/
 │   ├── message.service.js
 │   └── admin.service.js
 ├── store/
-│   └── authStore.js     # Zustand store para auth
+│   └── authStore.js     # Zustand store for auth
 ├── utils/
 │   ├── formatDate.js
 │   ├── formatFileSize.js
@@ -835,7 +923,7 @@ server/
 │   ├── upload.middleware.js
 │   └── errorHandler.js
 ├── models/
-│   └── (si usas Mongoose/ODM)
+│   └── (if using Mongoose/ODM)
 ├── routes/
 │   ├── auth.routes.js
 │   ├── dataset.routes.js
@@ -857,12 +945,12 @@ server/
 
 ---
 
-## Notas de Implementación
+## Implementation Notes
 
-### Autenticación
-- JWT almacenado en httpOnly cookie (más seguro) o localStorage
-- Middleware `authenticateToken` en todas las rutas protegidas
-- Refresh token opcional (día 7 si hay tiempo)
+### Authentication
+- JWT stored in httpOnly cookie (more secure) or localStorage
+- `authenticateToken` middleware on all protected routes
+- Optional refresh token (day 7 if time permits)
 
 ### File Upload Flow
 ```javascript
@@ -874,24 +962,22 @@ formData.append('files', file2);
 
 // Backend
 app.post('/api/datasets', upload.array('files', 10), async (req, res) => {
-  // req.files contiene los archivos
-  // Upload a CouchDB
-  // Crear documento en MongoDB con referencias
+  // req.files contains the files
+  // Upload to CouchDB
+  // Create document in MongoDB with references
 });
 ```
 
 ### Real-time Updates
-- **Fase 1 (MVP)**: Polling cada 30s para notificaciones
-- **Fase 2**: WebSocket con Socket.io para mensajes y notificaciones
+- **Phase 1 (MVP)**: Polling every 30s for notifications
+- **Phase 2**: WebSocket with Socket.io for messages and notifications
 
 ### Error Handling
 - Frontend: ErrorBoundary + Toast notifications
-- Backend: Middleware centralizado con códigos HTTP estándar
+- Backend: Centralized middleware with standard HTTP codes
 
 ### Performance
-- Lazy loading de rutas: `React.lazy()` + `Suspense`
-- Infinite scroll en grids (react-infinite-scroll-component)
-- Image lazy loading nativo: `loading="lazy"`
-- React Query caching automático
-
-Este stack está optimizado para desarrollo rápido (7 días) con JavaScript puro y componentes reutilizables.
+- Lazy loading routes: `React.lazy()` + `Suspense`
+- Infinite scroll in grids (react-infinite-scroll-component)
+- Native image lazy loading: `loading="lazy"`
+- React Query automatic caching
