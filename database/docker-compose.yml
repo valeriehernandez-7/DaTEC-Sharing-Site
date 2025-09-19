@@ -28,11 +28,16 @@ services:
     volumes:
       - mongo_primary_data:/data/db
       - ./scripts/init-replica.js:/docker-entrypoint-initdb.d/init-replica.js:ro
-    mem_limit: 1.2g
+    deploy:
+      resources:
+        limits:
+          memory: 1.2G
+        reservations:
+          memory: 256M
     networks:
       - datec-network
     healthcheck:
-      test: mongosh --eval "db.adminCommand('ping')" admin -u admin -p datec123 --quiet
+      test: mongosh --eval "db.adminCommand('ping')" admin -u admin -p datec123 --quiet || exit 1
       interval: 10s
       timeout: 10s
       retries: 5
@@ -55,14 +60,19 @@ services:
         --oplogSize 64
     volumes:
       - mongo_secondary_data:/data/db
-    mem_limit: 800m
+    deploy:
+      resources:
+        limits:
+          memory: 800M
+        reservations:
+          memory: 128M
     depends_on:
       mongo-primary:
         condition: service_healthy
     networks:
       - datec-network
     healthcheck:
-      test: mongosh --eval "db.adminCommand('ping')" admin -u admin -p datec123 --quiet
+      test: mongosh --eval "db.adminCommand('ping')" admin -u admin -p datec123 --quiet || exit 1
       interval: 10s
       timeout: 10s
       retries: 3
@@ -88,7 +98,12 @@ services:
       --appendfsync everysec
     volumes:
       - redis_primary_data:/data
-    mem_limit: 512m
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 64M
     networks:
       - datec-network
     healthcheck:
@@ -112,7 +127,12 @@ services:
       --replica-read-only yes
     volumes:
       - redis_replica_data:/data
-    mem_limit: 256m
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 32M
     depends_on:
       redis-primary:
         condition: service_healthy
@@ -153,33 +173,14 @@ services:
 
 # ================================================
 # Persistent Volumes
+# C:\ProgramData\Docker\volumes\
 # ================================================
 
 volumes:
   mongo_primary_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./volumes/mongo_primary
   mongo_secondary_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./volumes/mongo_secondary
   redis_primary_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./volumes/redis_primary
   redis_replica_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./volumes/redis_replica
 
 # ================================================
 # Internal Network
