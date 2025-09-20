@@ -15,7 +15,7 @@ try {
 
     // Initialize replica set
     print('Attempting to initialize replica set...');
-    
+
     try {
         const status = rs.status();
         if (status.ok === 1 && status.set) {
@@ -27,17 +27,17 @@ try {
             const config = {
                 _id: "datecRS",
                 members: [
-                    {_id: 0, host: "mongo-primary:27017", priority: 2},
-                    {_id: 1, host: "mongo-secondary:27017", priority: 1}
+                    { _id: 0, host: "mongo-primary:27017", priority: 2 },
+                    { _id: 1, host: "mongo-secondary:27017", priority: 1 }
                 ]
             };
-            
+
             rs.initiate(config);
             print('Replica set initiation command sent');
-            
+
             print('Waiting for replica set to stabilize (40 seconds)...');
             sleep(40000);
-            
+
             const newStatus = rs.status();
             if (newStatus.ok === 1) {
                 print('✓ Replica set initialization complete: ' + newStatus.set);
@@ -65,21 +65,32 @@ try {
                     required: ["user_id", "username", "email_address", "password_hash", "full_name", "birth_date", "created_at"],
                     properties: {
                         user_id: { bsonType: "string", description: "UUID required" },
-                        username: { 
-                            bsonType: "string", 
+                        username: {
+                            bsonType: "string",
                             minLength: 3,
                             maxLength: 30,
                             pattern: "^[a-zA-Z0-9_]+$",
                             description: "3-30 chars, alphanumeric + underscore only"
                         },
-                        email_address: { 
-                            bsonType: "string", 
+                        email_address: {
+                            bsonType: "string",
                             pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
                             description: "Valid email format required"
                         },
                         password_hash: { bsonType: "string", description: "Bcrypt hash required" },
+                        password_salt: { bsonType: "string", description: "Password salt required" },
                         full_name: { bsonType: "string", minLength: 1, description: "Full name required" },
                         birth_date: { bsonType: "date", description: "Birth date required" },
+                        avatar_ref: {
+                            bsonType: "object",
+                            description: "Avatar file reference to CouchDB",
+                            properties: {
+                                couchdb_document_id: { bsonType: "string" },
+                                file_name: { bsonType: "string" },
+                                file_size_bytes: { bsonType: "int" },
+                                mime_type: { bsonType: "string" }
+                            }
+                        },
                         is_admin: { bsonType: "bool" },
                         created_at: { bsonType: "date" },
                         updated_at: { bsonType: "date" }
@@ -101,24 +112,70 @@ try {
                         dataset_id: { bsonType: "string" },
                         owner_user_id: { bsonType: "string" },
                         parent_dataset_id: { bsonType: "string" },
-                        dataset_name: { 
-                            bsonType: "string", 
+                        dataset_name: {
+                            bsonType: "string",
                             minLength: 3,
                             maxLength: 100,
                             description: "Dataset name 3-100 chars required"
                         },
-                        description: { 
-                            bsonType: "string", 
+                        description: {
+                            bsonType: "string",
                             minLength: 10,
                             maxLength: 5000,
                             description: "Description 10-5000 chars required"
                         },
                         tags: { bsonType: "array" },
-                        status: { 
+                        status: {
                             enum: ["pending", "approved", "rejected"],
                             description: "Status must be pending, approved, or rejected"
                         },
+                        reviewed_at: { bsonType: ["date", "null"] },
+                        admin_review: { bsonType: ["string", "null"] },
                         is_public: { bsonType: "bool" },
+                        file_references: {
+                            bsonType: "array",
+                            minItems: 1, // Requiere al menos 1 archivo
+                            description: "At least one file reference required",
+                            items: {
+                                bsonType: "object",
+                                required: ["couchdb_document_id", "file_name", "file_size_bytes", "mime_type", "uploaded_at"],
+                                properties: {
+                                    couchdb_document_id: { bsonType: "string" },
+                                    file_name: { bsonType: "string" },
+                                    file_size_bytes: { bsonType: "int" },
+                                    mime_type: { bsonType: "string" },
+                                    uploaded_at: { bsonType: "date" }
+                                }
+                            }
+                        },
+                        header_photo_ref: {
+                            bsonType: "object",
+                            description: "Header photo reference to CouchDB",
+                            required: ["couchdb_document_id", "file_name", "file_size_bytes", "mime_type"],
+                            properties: {
+                                couchdb_document_id: { bsonType: "string" },
+                                file_name: { bsonType: "string" },
+                                file_size_bytes: { bsonType: "int" },
+                                mime_type: { bsonType: "string" }
+                            }
+                        },
+                        tutorial_video_ref: {
+                            bsonType: "object",
+                            description: "Tutorial video reference",
+                            required: ["storage_type"],
+                            properties: {
+                                storage_type: {
+                                    enum: ["url", "couchdb"],
+                                    description: "Must be url or couchdb"
+                                },
+                                external_url: { bsonType: "string" },
+                                platform: {
+                                    enum: ["youtube", "vimeo"],
+                                    description: "Must be youtube or vimeo for URL storage"
+                                },
+                                couchdb_document_id: { bsonType: "string" }
+                            }
+                        },
                         download_count: { bsonType: "int" },
                         vote_count: { bsonType: "int" },
                         comment_count: { bsonType: "int" },
@@ -143,8 +200,8 @@ try {
                         target_dataset_id: { bsonType: "string" },
                         author_user_id: { bsonType: "string" },
                         parent_comment_id: { bsonType: "string" },
-                        content: { 
-                            bsonType: "string", 
+                        content: {
+                            bsonType: "string",
                             minLength: 1,
                             maxLength: 2000,
                             description: "Content 1-2000 chars required"
@@ -189,8 +246,8 @@ try {
                         message_id: { bsonType: "string" },
                         from_user_id: { bsonType: "string" },
                         to_user_id: { bsonType: "string" },
-                        content: { 
-                            bsonType: "string", 
+                        content: {
+                            bsonType: "string",
                             minLength: 1,
                             maxLength: 5000,
                             description: "Content 1-5000 chars required"
@@ -205,7 +262,7 @@ try {
 
     // Create indexes
     print('\nCreating indexes...');
-    
+
     // Users indexes
     db.users.createIndex({ "user_id": 1 }, { unique: true, name: "user_id_unique" });
     db.users.createIndex({ "username": 1 }, { unique: true, name: "username_unique" });
@@ -221,7 +278,7 @@ try {
     db.datasets.createIndex({ "status": 1 }, { name: "status_index" });
     db.datasets.createIndex(
         { "dataset_name": "text", "description": "text", "tags": "text" },
-        { 
+        {
             name: "dataset_search_text",
             weights: { "dataset_name": 10, "tags": 5, "description": 1 }
         }
@@ -239,7 +296,7 @@ try {
     // Votes indexes
     db.votes.createIndex({ "vote_id": 1 }, { unique: true, name: "vote_id_unique" });
     db.votes.createIndex(
-        { "target_dataset_id": 1, "user_id": 1 }, 
+        { "target_dataset_id": 1, "user_id": 1 },
         { unique: true, name: "vote_unique_index" }
     );
     db.votes.createIndex({ "target_dataset_id": 1 }, { name: "dataset_votes_index" });
@@ -260,11 +317,18 @@ try {
     print('\nCreating sample admin user...');
     const adminUser = {
         user_id: "550e8400-e29b-41d4-a716-446655440000",
-        username: "datec_admin",
+        username: "datec_master",
         email_address: "admin@datec.cr",
         password_hash: "$2b$12$KZXvH8QjWZ.example",
+        password_salt: "e8f7d6c5b4a39281f0e3c2b1a",
         full_name: "DaTEC Administrator",
-        birth_date: new Date("1980-01-01"),
+        birth_date: new Date("2000-05-07"),
+        avatar_ref: {
+            couchdb_document_id: "avatar_550e8400-e29b-41d4-a716-446655440000",
+            file_name: "default_admin_avatar.jpg",
+            file_size_bytes: 204800,
+            mime_type: "image/jpeg"
+        },
         is_admin: true,
         created_at: new Date(),
         updated_at: new Date()
@@ -291,7 +355,29 @@ try {
             description: "Comprehensive analysis of global sales patterns and trends for 2024 with detailed regional breakdowns and performance metrics.",
             tags: ["sales", "analytics", "business", "2024"],
             status: "approved",
+            reviewed_at: new Date(),
+            admin_review: "Dataset approved for public sharing",
             is_public: true,
+            file_references: [
+                {
+                    couchdb_document_id: "file_john_doe_20250928_001_001",
+                    file_name: "sales_q1.csv",
+                    file_size_bytes: 15728640,
+                    mime_type: "text/csv",
+                    uploaded_at: new Date()
+                }
+            ],
+            header_photo_ref: {
+                couchdb_document_id: "photo_john_doe_20250928_001_header",
+                file_name: "header.jpg",
+                file_size_bytes: 2048000,
+                mime_type: "image/jpeg"
+            },
+            tutorial_video_ref: {
+                storage_type: "url",
+                external_url: "https://youtube.com/watch?v=abc123",
+                platform: "youtube"
+            },
             download_count: 156,
             vote_count: 42,
             comment_count: 8,
@@ -331,13 +417,13 @@ try {
     print('\nVerifying setup...');
     const collectionNames = db.getCollectionNames();
     let totalIndexes = 0;
-    
+
     for (const collectionName of collectionNames) {
         const indexes = db[collectionName].getIndexes();
         totalIndexes += indexes.length;
         print(`  - ${collectionName}: ${indexes.length} indexes`);
     }
-    
+
     const userCount = db.users.countDocuments();
     const datasetCount = db.datasets.countDocuments();
 
