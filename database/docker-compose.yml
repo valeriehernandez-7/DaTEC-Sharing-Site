@@ -14,10 +14,6 @@ services:
     hostname: mongo-primary
     ports:
       - "27017:27017"
-    environment:
-      MONGODB_INITDB_ROOT_USERNAME: datec_admin
-      MONGODB_INITDB_ROOT_PASSWORD: dat3c_master_4dmin
-      MONGODB_INITDB_DATABASE: datec
     command: >
       mongod --replSet datecRS 
         --bind_ip_all 
@@ -46,9 +42,6 @@ services:
     hostname: mongo-secondary
     ports:
       - "27018:27017"
-    environment:
-      MONGODB_INITDB_ROOT_USERNAME: datec_admin
-      MONGODB_INITDB_ROOT_PASSWORD: dat3c_master_4dmin
     command: >
       mongod --replSet datecRS 
         --bind_ip_all 
@@ -156,7 +149,7 @@ services:
         echo 'Waiting for MongoDB nodes to be ready...' &&
         sleep 30 &&
         echo 'Configuring Replica Set...' &&
-        mongosh --host mongo-primary:27017 -u datec_admin -p dat3c_master_4dmin --authenticationDatabase admin --eval '
+        mongosh --host mongo-primary:27017 --eval '
           rs.initiate({
             _id: \"datecRS\",
             members: [
@@ -167,9 +160,9 @@ services:
         ' &&
         echo 'Waiting for replica set to stabilize...' &&
         sleep 20 &&
-        echo 'Running secure setup script...' &&
-        mongosh --host mongo-primary:27017 -u datec_admin -p dat3c_master_4dmin --authenticationDatabase admin /scripts/setup-replica.js &&
-        echo 'Secure Replica Set configured successfully!'
+        echo 'Running setup script...' &&
+        mongosh --host mongo-primary:27017 /scripts/setup-replica.js &&
+        echo 'Replica Set configured successfully!'
       "
     networks:
       - datec-network

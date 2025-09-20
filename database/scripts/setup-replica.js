@@ -4,11 +4,12 @@
  * Purpose: Configures a 2-node replica set for the DaTEC application
  * Database: datec
  * Replica Set: datecRS
+ * Security: No authentication (development only)
  */
 
 try {
     print('='.repeat(60));
-    print('Starting MongoDB Replica Set Configuration');
+    print('Starting MongoDB Replica Set Configuration (No Auth)');
     print('='.repeat(60));
 
     // Wait a bit for replica set to stabilize
@@ -19,6 +20,24 @@ try {
     print('\nChecking replica set status:');
     const status = rs.status();
     printjson(status);
+
+    // Check if replica set is already initialized
+    if (status.ok === 1 && status.set) {
+        print('\nReplica set already initialized: ' + status.set);
+    } else {
+        print('\nInitializing replica set...');
+        rs.initiate({
+            _id: "datecRS",
+            members: [
+                {_id: 0, host: "mongo-primary:27017", priority: 2},
+                {_id: 1, host: "mongo-secondary:27017", priority: 1}
+            ]
+        });
+        
+        // Wait for initialization to complete
+        sleep(10000);
+        print('Replica set initialization complete');
+    }
 
     // Switch to datec database
     print('\nSwitching to datec database...');
@@ -57,15 +76,25 @@ try {
     db.createCollection('private_messages');
     db.private_messages.createIndex({ message_id: 1 }, { unique: true, name: "idx_message_id_unique" });
 
+    // Verify indexes were created
+    print('\nVerifying indexes...');
+    const collections = ['users', 'datasets', 'comments', 'votes', 'private_messages'];
+    collections.forEach(collectionName => {
+        const indexes = db[collectionName].getIndexes();
+        print(`  - ${collectionName}: ${indexes.length} indexes`);
+    });
+
     print('\n' + '='.repeat(60));
-    print('MongoDB Replica Set Setup Complete!');
+    print('MongoDB Replica Set Setup Complete! (No Authentication)');
     print('='.repeat(60));
     print('\nSummary:');
     print('  - Replica Set: datecRS (2 nodes)');
     print('  - Database: datec');
     print('  - Collections created: 5');
     print('  - Indexes created: 12');
-    print('\nReplica set is ready for application use.');
+    print('  - Security: No authentication');
+    print('\nReplica set is ready for development use.');
+    print('WARNING: This configuration is not secure for production!');
 
 } catch (error) {
     print('\n' + '!'.repeat(60));
