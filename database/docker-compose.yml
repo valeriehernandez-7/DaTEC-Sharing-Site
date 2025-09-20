@@ -1,8 +1,6 @@
 # DaTEC Configuration
 # MongoDB + Redis : Docker Multi-node | Neo4j + CouchDB : Local
 
-version: '3.8'
-
 services:
   # ================================================
   # MongoDB Replica Set (Multi-node) https://hub.docker.com/r/mongodb/mongodb-community-server
@@ -10,24 +8,22 @@ services:
   # ================================================
   
   mongo-primary:
-    image: mongodb/mongodb-community-server:8.0-ubi9
+    image: mongo:8.0
     container_name: datec-mongo-primary
-    restart: always
+    restart: unless-stopped
     hostname: mongo-primary
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: datec_admin
-      MONGO_INITDB_ROOT_PASSWORD: dat3c_master_4dmin
-      MONGO_INITDB_DATABASE: datec
+      MONGODB_INITDB_ROOT_USERNAME: datec_admin
+      MONGODB_INITDB_ROOT_PASSWORD: dat3c_master_4dmin
+      MONGODB_INITDB_DATABASE: datec
     command: >
       mongod --replSet datecRS 
         --bind_ip_all 
         --wiredTigerCacheSizeGB 0.5
-        --oplogSize 128
     volumes:
       - mongo_primary_data:/data/db
-      - ./scripts/init-replica.js:/docker-entrypoint-initdb.d/init-replica.js:ro
     deploy:
       resources:
         limits:
@@ -37,27 +33,26 @@ services:
     networks:
       - datec-network
     healthcheck:
-      test: mongosh --eval "db.adminCommand('ping')" admin -u datec_admin -p dat3c_master_4dmin --quiet || exit 1
-      interval: 10s
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
       timeout: 10s
-      retries: 5
-      start_period: 40s
+      retries: 10
+      start_period: 60s
 
   mongo-secondary:
-    image: mongodb/mongodb-community-server:8.0-ubi9
+    image: mongo:8.0
     container_name: datec-mongo-secondary
-    restart: always
+    restart: unless-stopped
     hostname: mongo-secondary
     ports:
       - "27018:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: datec_admin
-      MONGO_INITDB_ROOT_PASSWORD: dat3c_master_4dmin
+      MONGODB_INITDB_ROOT_USERNAME: datec_admin
+      MONGODB_INITDB_ROOT_PASSWORD: dat3c_master_4dmin
     command: >
       mongod --replSet datecRS 
         --bind_ip_all 
         --wiredTigerCacheSizeGB 0.3
-        --oplogSize 64
     volumes:
       - mongo_secondary_data:/data/db
     deploy:
@@ -67,15 +62,14 @@ services:
         reservations:
           memory: 128M
     depends_on:
-      mongo-primary:
-        condition: service_healthy
+      - mongo-primary
     networks:
       - datec-network
     healthcheck:
-      test: mongosh --eval "db.adminCommand('ping')" admin -u datec_admin -p dat3c_master_4dmin --quiet || exit 1
-      interval: 10s
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
       timeout: 10s
-      retries: 3
+      retries: 5
 
   # ================================================
   # Redis Primary-Replica (Multi-node) https://hub.docker.com/_/redis
@@ -85,7 +79,7 @@ services:
   redis-primary:
     image: redis:8-alpine
     container_name: datec-redis-primary
-    restart: always
+    restart: unless-stopped
     hostname: redis-primary
     ports:
       - "6379:6379"
@@ -115,7 +109,7 @@ services:
   redis-replica:
     image: redis:8-alpine
     container_name: datec-redis-replica
-    restart: always
+    restart: unless-stopped
     hostname: redis-replica
     ports:
       - "6380:6379"
@@ -134,8 +128,7 @@ services:
         reservations:
           memory: 32M
     depends_on:
-      redis-primary:
-        condition: service_healthy
+      - redis-primary
     networks:
       - datec-network
     healthcheck:
@@ -149,7 +142,7 @@ services:
   # ================================================
   
   mongo-setup:
-    image: mongodb/mongodb-community-server:8.0-ubi9
+    image: mongo:8.0
     container_name: datec-mongo-setup
     depends_on:
       mongo-primary:
@@ -160,12 +153,23 @@ services:
       - ./scripts/setup-replica.js:/scripts/setup-replica.js:ro
     command: >
       bash -c "
-        echo 'Waiting for MongoDB to be ready...' &&
-        sleep 15 &&
+        echo 'Waiting for MongoDB nodes to be ready...' &&
+        sleep 30 &&
         echo 'Configuring Replica Set...' &&
+        mongosh --host mongo-primary:27017 -u datec_admin -p dat3c_master_4dmin --authenticationDatabase admin --eval '
+          rs.initiate({
+            _id: \"datecRS\",
+            members: [
+              {_id: 0, host: \"mongo-primary:27017\", priority: 2},
+              {_id: 1, host: \"mongo-secondary:27017\", priority: 1}
+            ]
+          })
+        ' &&
+        echo 'Waiting for replica set to stabilize...' &&
+        sleep 20 &&
+        echo 'Running secure setup script...' &&
         mongosh --host mongo-primary:27017 -u datec_admin -p dat3c_master_4dmin --authenticationDatabase admin /scripts/setup-replica.js &&
-        echo 'Replica Set configured successfully!' &&
-        sleep 5
+        echo 'Secure Replica Set configured successfully!'
       "
     networks:
       - datec-network
@@ -189,6 +193,3 @@ volumes:
 networks:
   datec-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
