@@ -14,12 +14,38 @@ async function setupNeo4j() {
 
     const driver = neo4j.driver(
         'bolt://localhost:7687',
-        neo4j.auth.basic('neo4j', 'datec_master_4dmin')
+        neo4j.auth.basic('neo4j', 'dat3c_master_4dmin')
     );
 
-    const session = driver.session({ database: 'datec' });
-
     try {
+        // Primero, conectar a la DB system para crear datec
+        console.log('\nCreating datec database...');
+        const systemSession = driver.session({ database: 'system' });
+
+        try {
+            await systemSession.run('CREATE DATABASE datec IF NOT EXISTS');
+            console.log('✓ Database "datec" created or already exists');
+        } catch (e) {
+            // Si la versión de Neo4j no soporta múltiples DB, usar default
+            console.log('⚠ Using default database "neo4j" (multi-db not supported)');
+        } finally {
+            await systemSession.close();
+        }
+
+        // Esperar un momento para que la DB esté lista
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Ahora conectar a la DB datec (o neo4j si datec no existe)
+        let session;
+        try {
+            session = driver.session({ database: 'datec' });
+            // Test connection
+            await session.run('RETURN 1');
+        } catch (e) {
+            console.log('⚠ Falling back to default database "neo4j"');
+            session = driver.session({ database: 'neo4j' });
+        }
+
         // 1. Create constraints
         console.log('\nCreating constraints...');
 
@@ -59,8 +85,8 @@ async function setupNeo4j() {
                 username: $username
             })
         `, {
-            userId: '550e8400-e29b-41d4-a716-446655440000',
-            username: 'datec_master'
+            userId: '00000000-0000-5000-8000-00005a317347',
+            username: 'sudod4t3c'
         });
         console.log('✓ Admin user created');
 
@@ -98,17 +124,22 @@ async function setupNeo4j() {
         const datasetCountResult = await session.run('MATCH (d:Dataset) RETURN count(d) AS count');
         const datasetCount = datasetCountResult.records[0].get('count').toNumber();
 
+        const dbNameResult = await session.run('CALL db.info()');
+        const dbName = dbNameResult.records[0].get('name');
+
         console.log('\n' + '='.repeat(60));
         console.log('Neo4j Setup Complete!');
         console.log('='.repeat(60));
         console.log('\nSummary:');
         console.log('  - URL: bolt://localhost:7687');
-        console.log('  - Database: datec');
+        console.log(`  - Database: ${dbName}`);
         console.log('  - Constraints: 2 (User, Dataset)');
         console.log('  - Indexes: 2 (username, dataset_name)');
         console.log(`  - Users: ${userCount}`);
         console.log(`  - Datasets: ${datasetCount}`);
         console.log('  - Ready for relationship tracking');
+
+        await session.close();
 
     } catch (error) {
         console.error('\n' + '!'.repeat(60));
@@ -117,7 +148,6 @@ async function setupNeo4j() {
         console.error(error);
         throw error;
     } finally {
-        await session.close();
         await driver.close();
     }
 }

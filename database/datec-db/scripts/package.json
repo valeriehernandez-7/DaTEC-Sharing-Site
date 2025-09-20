@@ -1,9 +1,31 @@
 {
-  "name": "datec-redis-setup",
+  "name": "datec-database-setup",
   "version": "1.0.0",
-  "description": "Redis setup script for DaTEC",
-  "main": "setup-redis.js",
+  "description": "Database setup scripts for DaTEC project",
+  "main": "index.js",
+  "scripts": {
+    "setup:mongo": "echo 'MongoDB setup runs automatically via docker-compose (mongo-setup service)'",
+    "setup:redis": "node setup-redis.js",
+    "setup:couchdb": "node setup-couchdb.js",
+    "setup:neo4j": "node setup-neo4j.js",
+    "setup:local": "npm run setup:couchdb && npm run setup:neo4j",
+    "setup:all": "echo 'Step 1: Run docker-compose up -d first' && npm run setup:local",
+    "test:mongo": "echo 'Testing MongoDB connection...' && docker exec datec-mongo-primary mongosh --eval 'db.adminCommand({ping: 1})'",
+    "test:redis": "echo 'Testing Redis connection...' && docker exec datec-redis-primary redis-cli ping",
+    "verify:all": "npm run test:mongo && npm run test:redis && echo 'Run setup:local scripts manually to verify CouchDB and Neo4j'"
+  },
   "dependencies": {
-    "redis": "^4.6.0"
-  }
+    "redis": "^5.8.2",
+    "nano": "^11.0.1",
+    "neo4j-driver": "^6.0.0"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "database",
+    "setup",
+    "mongodb",
+    "redis",
+    "couchdb",
+    "neo4j"
+  ]
 }

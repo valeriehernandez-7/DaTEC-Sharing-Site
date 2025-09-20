@@ -165,7 +165,7 @@ services:
   # ================================================
 
   redis-setup:
-    image: node:18-alpine
+    image: node:24-alpine
     container_name: datec-redis-setup
     depends_on:
       redis-primary:

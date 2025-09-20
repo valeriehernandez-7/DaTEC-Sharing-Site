@@ -352,10 +352,10 @@ try {
     // Insert sample admin user
     print('\nCreating sample admin user...');
     const adminUser = {
-        user_id: "550e8400-e29b-41d4-a716-446655440000",
+        user_id: "00000000-0000-5000-8000-00005a317347",
         username: "sudod4t3c",
         email_address: "sudo@datec.com",
-        password_hash: "$2b$12$KZXvH8QjWZ.example",
+        password_hash: "$2a$12$V2xmRSFncBkDwmWkOmgtdemlUr8THwep2TlrbkHq1o1IyAFW0KUBm",
         full_name: "DaTEC System Administrator",
         birth_date: new Date("2000-05-07"),
         avatar_ref: null,
@@ -380,7 +380,7 @@ try {
     const sampleDatasets = [
         {
             dataset_id: "john_doe_20250928_001",
-            owner_user_id: "550e8400-e29b-41d4-a716-446655440000",
+            owner_user_id: "00000000-0000-5000-8000-00000870c5c3",
             parent_dataset_id: null,
             dataset_name: "Global Sales Analysis 2024",
             description: "Comprehensive analysis of global sales patterns and trends for 2024 with detailed regional breakdowns and performance metrics.",
@@ -416,7 +416,7 @@ try {
         },
         {
             dataset_id: "maria_garcia_20250929_001",
-            owner_user_id: "550e8400-e29b-41d4-a716-446655440000",
+            owner_user_id: "00000000-0000-5000-8000-00005101f6c7",
             parent_dataset_id: null,
             dataset_name: "Climate Change Indicators",
             description: "Long-term climate data showing temperature changes, precipitation patterns, and extreme weather events from 2000-2024.",
