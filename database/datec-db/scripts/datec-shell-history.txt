@@ -1,0 +1,129 @@
+﻿PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker-compose up -d
+[+] Running 11/11
+ ✔ Network datec-db_datec-network        Created                                                                0.2s
+ ✔ Volume datec-db_mongo_primary_data    Created                                                                0.1s
+ ✔ Volume datec-db_mongo_secondary_data  Created                                                                0.1s
+ ✔ Volume datec-db_redis_primary_data    Created                                                                0.1s
+ ✔ Volume datec-db_redis_replica_data    Created                                                                0.1s
+ ✔ Container datec-mongo-primary         Healthy                                                               11.8s
+ ✔ Container datec-redis-primary         Healthy                                                               16.3s
+ ✔ Container datec-mongo-secondary       Healthy                                                               21.4s
+ ✔ Container datec-redis-replica         Healthy                                                               15.5s
+ ✔ Container datec-mongo-setup           Started                                                               20.1s
+ ✔ Container datec-redis-setup           Started                                                               14.0s
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker logs -f datec-mongo-setup
+Waiting for MongoDB nodes...
+Configuring Replica Set...
+============================================================
+Starting MongoDB Replica Set Configuration
+============================================================
+
+Waiting for MongoDB nodes to be ready...
+Attempting to initialize replica set...
+Initializing new replica set...
+Replica set initiation command sent
+Waiting for replica set to stabilize (40 seconds)...
+✓ Replica set initialization complete: datecRS
+
+Using database: datec
+
+Creating collections with validation...
+✓ Created users collection with validation
+✓ Created datasets collection with validation
+✓ Created comments collection with validation
+✓ Created votes collection with validation
+✓ Created private_messages collection with validation
+
+Creating indexes...
+✓ Created users indexes
+✓ Created datasets indexes
+✓ Created comments indexes
+✓ Created votes indexes
+✓ Created private_messages indexes
+
+Creating sample admin user...
+✓ Sample admin user created: datec_admin
+
+Creating sample datasets...
+✓ Created sample dataset: Global Sales Analysis 2024
+✓ Created sample dataset: Climate Change Indicators
+
+Verifying setup...
+  - private_messages: 5 indexes
+  - datasets: 7 indexes
+  - users: 5 indexes
+  - comments: 6 indexes
+  - votes: 5 indexes
+
+============================================================
+MongoDB Setup Complete!
+============================================================
+
+Summary:
+  - Replica Set: datecRS
+  - Database: datec
+  - Collections: 5
+  - Indexes: 28
+  - Users: 1
+  - Datasets: 2
+  - Validation: Enabled for all collections
+
+Ready for DaTEC application development!
+MongoDB setup complete!
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker logs -f datec-redis-setup
+Installing Redis client...
+
+added 10 packages, and audited 11 packages in 5s
+
+found 0 vulnerabilities
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 11.6.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.1
+npm notice To update run: npm install -g npm@11.6.1
+npm notice
+Configuring Redis...
+============================================================
+Starting Redis Primary-Replica Configuration
+============================================================
+
+Connecting to Redis Primary...
+✓ Redis Primary connection test: OK
+
+Redis Primary Replication Info:
+role:master
+connected_slaves:1
+
+Connecting to Redis Replica...
+✓ Redis Replica connection test: OK
+
+Redis Replica Replication Info:
+role:slave
+master_host:redis-primary
+
+Initializing Redis counters...
+  - Initialized counters for dataset: john_doe_20250928_001
+  - Initialized counters for dataset: maria_garcia_20250929_001
+  - Initialized counters for dataset: carlos_lopez_20250930_001
+
+Testing notification queues...
+✓ Notification queue test: 1 messages in queue
+
+Verifying data replication...
+✓ Data replication test: SUCCESS
+
+============================================================
+Redis Primary-Replica Setup Complete!
+============================================================
+
+Summary:
+  - Primary: redis://redis-primary:6379
+  - Replica: redis://redis-replica:6379
+  - Counters initialized: download_count, vote_count
+  - Notification queues: ready
+  - Replication: verified
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker-compose ps
+NAME                    IMAGE            COMMAND                  SERVICE           CREATED         STATUS                   PORTS
+datec-mongo-primary     mongo:8.0        "docker-entrypoint.s…"   mongo-primary     2 minutes ago   Up 2 minutes (healthy)   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
+datec-mongo-secondary   mongo:8.0        "docker-entrypoint.s…"   mongo-secondary   2 minutes ago   Up 2 minutes (healthy)   0.0.0.0:27018->27017/tcp, [::]:27018->27017/tcp
+datec-redis-primary     redis:8-alpine   "docker-entrypoint.s…"   redis-primary     2 minutes ago   Up 2 minutes (healthy)   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+datec-redis-replica     redis:8-alpine   "docker-entrypoint.s…"   redis-replica     2 minutes ago   Up 2 minutes (healthy)   0.0.0.0:6380->6379/tcp, [::]:6380->6379/tcp
