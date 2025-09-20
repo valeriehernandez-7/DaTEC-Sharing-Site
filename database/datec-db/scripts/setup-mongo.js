@@ -62,7 +62,7 @@ try {
             validator: {
                 $jsonSchema: {
                     bsonType: "object",
-                    required: ["user_id", "username", "email_address", "password_hash", "full_name", "birth_date", "created_at"],
+                    required: ["user_id", "username", "email_address", "password_hash", "full_name", "birth_date", "is_admin", "created_at", "updated_at"],
                     properties: {
                         user_id: { bsonType: "string", description: "UUID required" },
                         username: {
@@ -78,18 +78,23 @@ try {
                             description: "Valid email format required"
                         },
                         password_hash: { bsonType: "string", description: "Bcrypt hash required" },
-                        password_salt: { bsonType: "string", description: "Password salt required" },
                         full_name: { bsonType: "string", minLength: 1, description: "Full name required" },
                         birth_date: { bsonType: "date", description: "Birth date required" },
                         avatar_ref: {
-                            bsonType: "object",
-                            description: "Avatar file reference to CouchDB",
-                            properties: {
-                                couchdb_document_id: { bsonType: "string" },
-                                file_name: { bsonType: "string" },
-                                file_size_bytes: { bsonType: "int" },
-                                mime_type: { bsonType: "string" }
-                            }
+                            anyOf: [
+                                { bsonType: "null" },
+                                {
+                                    bsonType: "object",
+                                    required: ["couchdb_document_id", "file_name", "file_size_bytes", "mime_type"],
+                                    properties: {
+                                        couchdb_document_id: { bsonType: "string" },
+                                        file_name: { bsonType: "string" },
+                                        file_size_bytes: { bsonType: "int" },
+                                        mime_type: { bsonType: "string" }
+                                    }
+                                }
+                            ],
+                            description: "Optional avatar reference to CouchDB"
                         },
                         is_admin: { bsonType: "bool" },
                         created_at: { bsonType: "date" },
@@ -107,11 +112,17 @@ try {
             validator: {
                 $jsonSchema: {
                     bsonType: "object",
-                    required: ["dataset_id", "owner_user_id", "dataset_name", "description", "status", "is_public", "created_at"],
+                    required: ["dataset_id", "owner_user_id", "dataset_name", "description", "file_references", "status", "is_public", "created_at", "updated_at"],
                     properties: {
                         dataset_id: { bsonType: "string" },
                         owner_user_id: { bsonType: "string" },
-                        parent_dataset_id: { bsonType: "string" },
+                        parent_dataset_id: { 
+                            anyOf: [
+                                { bsonType: "null" },
+                                { bsonType: "string" }
+                            ],
+                            description: "References original dataset_id if cloned, null otherwise"
+                        },
                         dataset_name: {
                             bsonType: "string",
                             minLength: 3,
@@ -124,17 +135,32 @@ try {
                             maxLength: 5000,
                             description: "Description 10-5000 chars required"
                         },
-                        tags: { bsonType: "array" },
+                        tags: { 
+                            bsonType: "array",
+                            description: "Optional array for search, can be empty"
+                        },
                         status: {
                             enum: ["pending", "approved", "rejected"],
                             description: "Status must be pending, approved, or rejected"
                         },
-                        reviewed_at: { bsonType: ["date", "null"] },
-                        admin_review: { bsonType: ["string", "null"] },
+                        reviewed_at: { 
+                            anyOf: [
+                                { bsonType: "null" },
+                                { bsonType: "date" }
+                            ],
+                            description: "Timestamp when admin reviewed, null if not reviewed"
+                        },
+                        admin_review: { 
+                            anyOf: [
+                                { bsonType: "null" },
+                                { bsonType: "string" }
+                            ],
+                            description: "Admin review comment, null if not reviewed"
+                        },
                         is_public: { bsonType: "bool" },
                         file_references: {
                             bsonType: "array",
-                            minItems: 1, // Requiere al menos 1 archivo
+                            minItems: 1,
                             description: "At least one file reference required",
                             items: {
                                 bsonType: "object",
@@ -149,32 +175,37 @@ try {
                             }
                         },
                         header_photo_ref: {
-                            bsonType: "object",
-                            description: "Header photo reference to CouchDB",
-                            required: ["couchdb_document_id", "file_name", "file_size_bytes", "mime_type"],
-                            properties: {
-                                couchdb_document_id: { bsonType: "string" },
-                                file_name: { bsonType: "string" },
-                                file_size_bytes: { bsonType: "int" },
-                                mime_type: { bsonType: "string" }
-                            }
+                            anyOf: [
+                                { bsonType: "null" },
+                                {
+                                    bsonType: "object",
+                                    required: ["couchdb_document_id", "file_name", "file_size_bytes", "mime_type"],
+                                    properties: {
+                                        couchdb_document_id: { bsonType: "string" },
+                                        file_name: { bsonType: "string" },
+                                        file_size_bytes: { bsonType: "int" },
+                                        mime_type: { bsonType: "string" }
+                                    }
+                                }
+                            ],
+                            description: "Optional header photo reference to CouchDB"
                         },
                         tutorial_video_ref: {
-                            bsonType: "object",
-                            description: "Tutorial video reference",
-                            required: ["storage_type"],
-                            properties: {
-                                storage_type: {
-                                    enum: ["url", "couchdb"],
-                                    description: "Must be url or couchdb"
-                                },
-                                external_url: { bsonType: "string" },
-                                platform: {
-                                    enum: ["youtube", "vimeo"],
-                                    description: "Must be youtube or vimeo for URL storage"
-                                },
-                                couchdb_document_id: { bsonType: "string" }
-                            }
+                            anyOf: [
+                                { bsonType: "null" },
+                                {
+                                    bsonType: "object",
+                                    required: ["url", "platform"],
+                                    properties: {
+                                        url: { bsonType: "string" },
+                                        platform: {
+                                            enum: ["youtube", "vimeo"],
+                                            description: "Must be youtube or vimeo"
+                                        }
+                                    }
+                                }
+                            ],
+                            description: "Optional tutorial video reference"
                         },
                         download_count: { bsonType: "int" },
                         vote_count: { bsonType: "int" },
@@ -199,7 +230,13 @@ try {
                         comment_id: { bsonType: "string" },
                         target_dataset_id: { bsonType: "string" },
                         author_user_id: { bsonType: "string" },
-                        parent_comment_id: { bsonType: "string" },
+                        parent_comment_id: { 
+                            anyOf: [
+                                { bsonType: "null" },
+                                { bsonType: "string" }
+                            ],
+                            description: "References parent comment_id, null if top-level"
+                        },
                         content: {
                             bsonType: "string",
                             minLength: 1,
@@ -207,8 +244,7 @@ try {
                             description: "Content 1-2000 chars required"
                         },
                         is_active: { bsonType: "bool" },
-                        created_at: { bsonType: "date" },
-                        updated_at: { bsonType: "date" }
+                        created_at: { bsonType: "date" }
                     }
                 }
             }
@@ -317,18 +353,12 @@ try {
     print('\nCreating sample admin user...');
     const adminUser = {
         user_id: "550e8400-e29b-41d4-a716-446655440000",
-        username: "datec_master",
-        email_address: "admin@datec.cr",
+        username: "sudod4t3c",
+        email_address: "sudo@datec.com",
         password_hash: "$2b$12$KZXvH8QjWZ.example",
-        password_salt: "e8f7d6c5b4a39281f0e3c2b1a",
-        full_name: "DaTEC Administrator",
+        full_name: "DaTEC System Administrator",
         birth_date: new Date("2000-05-07"),
-        avatar_ref: {
-            couchdb_document_id: "avatar_550e8400-e29b-41d4-a716-446655440000",
-            file_name: "default_admin_avatar.jpg",
-            file_size_bytes: 204800,
-            mime_type: "image/jpeg"
-        },
+        avatar_ref: null,
         is_admin: true,
         created_at: new Date(),
         updated_at: new Date()
@@ -336,7 +366,7 @@ try {
 
     try {
         db.users.insertOne(adminUser);
-        print('✓ Sample admin user created: datec_admin');
+        print('✓ Sample admin user created: sudod4t3c');
     } catch (e) {
         if (e.code === 11000) {
             print('✓ Admin user already exists');
@@ -351,6 +381,7 @@ try {
         {
             dataset_id: "john_doe_20250928_001",
             owner_user_id: "550e8400-e29b-41d4-a716-446655440000",
+            parent_dataset_id: null,
             dataset_name: "Global Sales Analysis 2024",
             description: "Comprehensive analysis of global sales patterns and trends for 2024 with detailed regional breakdowns and performance metrics.",
             tags: ["sales", "analytics", "business", "2024"],
@@ -374,8 +405,7 @@ try {
                 mime_type: "image/jpeg"
             },
             tutorial_video_ref: {
-                storage_type: "url",
-                external_url: "https://youtube.com/watch?v=abc123",
+                url: "https://youtube.com/watch?v=abc123",
                 platform: "youtube"
             },
             download_count: 156,
@@ -387,11 +417,25 @@ try {
         {
             dataset_id: "maria_garcia_20250929_001",
             owner_user_id: "550e8400-e29b-41d4-a716-446655440000",
+            parent_dataset_id: null,
             dataset_name: "Climate Change Indicators",
             description: "Long-term climate data showing temperature changes, precipitation patterns, and extreme weather events from 2000-2024.",
             tags: ["climate", "environment", "science", "temperature"],
             status: "approved",
+            reviewed_at: new Date(),
+            admin_review: "Approved for research purposes",
             is_public: true,
+            file_references: [
+                {
+                    couchdb_document_id: "file_maria_garcia_20250929_001_001",
+                    file_name: "climate_data.csv",
+                    file_size_bytes: 25600000,
+                    mime_type: "text/csv",
+                    uploaded_at: new Date()
+                }
+            ],
+            header_photo_ref: null,
+            tutorial_video_ref: null,
             download_count: 89,
             vote_count: 23,
             comment_count: 5,

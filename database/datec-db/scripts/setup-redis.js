@@ -48,14 +48,13 @@ async function setupRedis() {
         console.log('\nRedis Replica Replication Info:');
         console.log(replicaInfo.split('\n').filter(line => line.includes('role:') || line.includes('master_host:')).join('\n'));
 
-        // Initialize counters for datasets (from your model)
+        // Initialize counters for datasets (matching setup-mongo.js)
         console.log('\nInitializing Redis counters...');
         
-        // Sample datasets from your model
+        // Sample datasets matching MongoDB seed data
         const sampleDatasets = [
             'john_doe_20250928_001',
-            'maria_garcia_20250929_001', 
-            'carlos_lopez_20250930_001'
+            'maria_garcia_20250929_001'
         ];
 
         for (const datasetId of sampleDatasets) {
@@ -64,13 +63,14 @@ async function setupRedis() {
             console.log(`  - Initialized counters for dataset: ${datasetId}`);
         }
 
-        // Test notification queues
+        // Test notification queues with valid notification type
         console.log('\nTesting notification queues...');
         await primaryClient.lPush(
             'notifications:user:550e8400-e29b-41d4-a716-446655440000',
             JSON.stringify({
-                type: 'welcome',
-                message: 'Bienvenido a DaTEC!',
+                type: 'dataset_approved',
+                dataset_id: 'john_doe_20250928_001',
+                dataset_name: 'Global Sales Analysis 2024',
                 timestamp: new Date().toISOString()
             })
         );
@@ -95,6 +95,7 @@ async function setupRedis() {
         console.log('  - Counters initialized: download_count, vote_count');
         console.log('  - Notification queues: ready');
         console.log('  - Replication: verified');
+        console.log(`  - Sample datasets: ${sampleDatasets.length}`);
 
         await primaryClient.quit();
         await replicaClient.quit();
