@@ -20,6 +20,7 @@ services:
         --wiredTigerCacheSizeGB 0.5
     volumes:
       - mongo_primary_data:/data/db
+      - ./scripts:/scripts:ro
     deploy:
       resources:
         limits:
@@ -48,6 +49,7 @@ services:
         --wiredTigerCacheSizeGB 0.3
     volumes:
       - mongo_secondary_data:/data/db
+      - ./scripts:/scripts:ro
     deploy:
       resources:
         limits:
@@ -85,6 +87,7 @@ services:
       --appendfsync everysec
     volumes:
       - redis_primary_data:/data
+      - ./scripts:/scripts:ro
     deploy:
       resources:
         limits:
@@ -114,6 +117,7 @@ services:
       --replica-read-only yes
     volumes:
       - redis_replica_data:/data
+      - ./scripts:/scripts:ro
     deploy:
       resources:
         limits:
@@ -143,26 +147,40 @@ services:
       mongo-secondary:
         condition: service_healthy
     volumes:
-      - ./scripts/setup-replica.js:/scripts/setup-replica.js:ro
+      - ./scripts:/scripts:ro
     command: >
       bash -c "
-        echo 'Waiting for MongoDB nodes to be ready...' &&
+        echo 'Waiting for MongoDB nodes...' &&
         sleep 30 &&
         echo 'Configuring Replica Set...' &&
-        mongosh --host mongo-primary:27017 --eval '
-          rs.initiate({
-            _id: \"datecRS\",
-            members: [
-              {_id: 0, host: \"mongo-primary:27017\", priority: 2},
-              {_id: 1, host: \"mongo-secondary:27017\", priority: 1}
-            ]
-          })
-        ' &&
-        echo 'Waiting for replica set to stabilize...' &&
-        sleep 20 &&
-        echo 'Running setup script...' &&
-        mongosh --host mongo-primary:27017 /scripts/setup-replica.js &&
-        echo 'Replica Set configured successfully!'
+        mongosh --host mongo-primary:27017 /scripts/setup-mongo.js &&
+        echo 'MongoDB setup complete!'
+      "
+    networks:
+      - datec-network
+    restart: "no"
+
+  # ================================================
+  # Redis Replica Set Configurator
+  # ================================================
+
+  redis-setup:
+    image: node:18-alpine
+    container_name: datec-redis-setup
+    depends_on:
+      redis-primary:
+        condition: service_healthy
+      redis-replica:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts
+    working_dir: /scripts
+    command: >
+      sh -c "
+        echo 'Installing Redis client...' &&
+        npm install redis --no-save &&
+        echo 'Configuring Redis...' &&
+        node setup-redis.js
       "
     networks:
       - datec-network

@@ -1,0 +1,9 @@
+{
+  "name": "datec-redis-setup",
+  "version": "1.0.0",
+  "description": "Redis setup script for DaTEC",
+  "main": "setup-redis.js",
+  "dependencies": {
+    "redis": "^4.6.0"
+  }
+}
