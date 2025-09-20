@@ -77,7 +77,7 @@ private_messages         # Direct messages
 **User ID (user_id)**
 ```
 Format: UUID v4
-Example: "550e8400-e29b-41d4-a716-446655440000"
+Example: "00000000-0000-5000-8000-00005a317347"
 ```
 
 **Dataset ID (dataset_id)**
@@ -161,7 +161,7 @@ Email: admin@datec.cr
 ```javascript
 {
   // Identification
-  user_id: "550e8400-e29b-41d4-a716-446655440000",     // PK: UUID v4
+  user_id: "00000000-0000-5000-8000-00005a317347",     // PK: UUID v4
   username: "john_doe",                                 // Unique username
   email_address: "john@datec.cr",                       // Unique email
   
@@ -194,7 +194,7 @@ db.users.createIndex({ email_address: 1 }, { unique: true })
 {
   // Identification
   dataset_id: "john_doe_20250928_001",                  // PK: {username}_{date}_{seq}
-  owner_user_id: "550e8400-e29b-41d4-a716-446655440000", // FK to users.user_id
+  owner_user_id: "00000000-0000-5000-8000-00005a317347", // FK to users.user_id
   parent_dataset_id: null,                              // FK to datasets.dataset_id (HU18: cloning)
   
   // Metadata
@@ -271,7 +271,7 @@ db.datasets.createIndex({                                       // Full-text sea
   
   // Relationships
   target_dataset_id: "john_doe_20250928_001",          // FK to datasets.dataset_id
-  author_user_id: "550e8400-e29b-41d4-a716-446655440000", // FK to users.user_id
+  author_user_id: "00000000-0000-5000-8000-00005a317347", // FK to users.user_id
   parent_comment_id: null,                             // FK to comments.comment_id (null = top-level)
   
   // Content
@@ -304,7 +304,7 @@ db.comments.createIndex({ author_user_id: 1 })                      // User's co
   
   // Relationships
   comment_id: "cmt_john_doe_20250928_001_20250928143022_001",  // FK to comments.comment_id
-  user_id: "550e8400-e29b-41d4-a716-446655440000",             // FK to users.user_id
+  user_id: "00000000-0000-5000-8000-00005a317347",             // FK to users.user_id
   
   // Timestamp
   created_at: ISODate("2025-09-28T16:25:00Z")
@@ -326,7 +326,7 @@ db.comment_likes.createIndex({ user_id: 1 })                                    
   
   // Relationships
   target_dataset_id: "john_doe_20250928_001",           // FK to datasets.dataset_id
-  user_id: "550e8400-e29b-41d4-a716-446655440000",      // FK to users.user_id
+  user_id: "00000000-0000-5000-8000-00005a317347",      // FK to users.user_id
   
   // Timestamp
   created_at: ISODate("2025-09-28T16:30:00Z")
@@ -347,7 +347,7 @@ db.votes.createIndex({ user_id: 1 })                                           /
   message_id: "msg_from_550e8400_to_449d7344_20250928_001",  // PK
   
   // Relationships
-  from_user_id: "550e8400-e29b-41d4-a716-446655440000",      // FK to users.user_id (sender)
+  from_user_id: "00000000-0000-5000-8000-00005a317347",      // FK to users.user_id (sender)
   to_user_id: "449d7344-e29b-41d4-a716-446655440001",        // FK to users.user_id (recipient)
   
   // Content
@@ -373,7 +373,7 @@ db.private_messages.createIndex({ from_user_id: 1, created_at: -1 })            
 ```cypher
 // User node
 CREATE (u:User {
-  user_id: "550e8400-e29b-41d4-a716-446655440000",
+  user_id: "00000000-0000-5000-8000-00005a317347",
   username: "john_doe"
 })
 
@@ -444,16 +444,16 @@ SET vote_count:dataset:john_doe_20250928_001 42
 INCR vote_count:dataset:john_doe_20250928_001
 
 // Notification queues (HU19) - FIFO lists
-LPUSH notifications:user:550e8400-e29b-41d4-a716-446655440000 {
+LPUSH notifications:user:00000000-0000-5000-8000-00005a317347 {
   "type": "new_dataset",
   "from_user_id": "followed_uuid",
   "dataset_id": "new_dataset_id",
   "timestamp": "2025-09-28T17:00:00Z"
 }
-LRANGE notifications:user:550e8400-e29b-41d4-a716-446655440000 0 9  // Get 10 most recent
+LRANGE notifications:user:00000000-0000-5000-8000-00005a317347 0 9  // Get 10 most recent
 
 // User sessions - Hash with TTL
-HSET session:abc123xyz user_id "550e8400-e29b-41d4-a716-446655440000"
+HSET session:abc123xyz user_id "00000000-0000-5000-8000-00005a317347"
 HSET session:abc123xyz username "john_doe"
 EXPIRE session:abc123xyz 3600  // 1 hour
 
@@ -469,9 +469,9 @@ EXPIRE cache:dataset:john_doe_20250928_001 300  // 5 minutes
 ```javascript
 // User avatar document
 {
-  "_id": "avatar_550e8400-e29b-41d4-a716-446655440000",
+  "_id": "avatar_00000000-0000-5000-8000-00005a317347",
   "type": "user_avatar",
-  "owner_user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "owner_user_id": "00000000-0000-5000-8000-00005a317347",
   "uploaded_at": "2025-09-28T10:00:00Z",
   "_attachments": {
     "profile.jpg": {
@@ -485,7 +485,7 @@ EXPIRE cache:dataset:john_doe_20250928_001 300  // 5 minutes
 {
   "_id": "file_john_doe_20250928_001_001",
   "type": "dataset_file",
-  "owner_user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "owner_user_id": "00000000-0000-5000-8000-00005a317347",
   "dataset_id": "john_doe_20250928_001",
   "uploaded_at": "2025-09-28T10:30:00Z",
   "_attachments": {
@@ -500,7 +500,7 @@ EXPIRE cache:dataset:john_doe_20250928_001 300  // 5 minutes
 {
   "_id": "photo_john_doe_20250928_001_header",
   "type": "header_photo",
-  "owner_user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "owner_user_id": "00000000-0000-5000-8000-00005a317347",
   "dataset_id": "john_doe_20250928_001",
   "uploaded_at": "2025-09-28T10:15:00Z",
   "_attachments": {
@@ -515,7 +515,7 @@ EXPIRE cache:dataset:john_doe_20250928_001 300  // 5 minutes
 {
   "_id": "video_john_doe_20250928_001_tutorial",
   "type": "tutorial_video",
-  "owner_user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "owner_user_id": "00000000-0000-5000-8000-00005a317347",
   "dataset_id": "john_doe_20250928_001",
   "uploaded_at": "2025-09-28T10:20:00Z",
   "_attachments": {

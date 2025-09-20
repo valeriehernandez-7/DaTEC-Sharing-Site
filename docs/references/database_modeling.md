@@ -40,7 +40,7 @@ Connection: mongodb://sudod4t3c:dat3c_master_4dmin@localhost:27017/datec?authSou
   _id: ObjectId("507f1f77bcf86cd799439011"),
 
   // Unique Identifier (HU1)
-  user_id: "550e8400-e29b-41d4-a716-446655440000",  // UUID v4 - Used across all databases
+  user_id: "00000000-0000-5000-8000-00005a317347",  // UUID v5 - Used across all databases
 
   // Authentication (HU1)
   username: "john_doe",                               // Unique username, 3-30 chars, alphanumeric + underscore
@@ -53,7 +53,7 @@ Connection: mongodb://sudod4t3c:dat3c_master_4dmin@localhost:27017/datec?authSou
 
   // Avatar Reference - CouchDB (HU1)
   avatar_ref: {
-    couchdb_document_id: "avatar_550e8400-e29b-41d4-a716-446655440000",
+    couchdb_document_id: "avatar_00000000-0000-5000-8000-00005a317347",
     file_name: "profile.jpg",
     file_size_bytes: 204800,                          // 200 KB - for HU10 display
     mime_type: "image/jpeg"
@@ -100,7 +100,7 @@ db.users.createIndex({ username: "text", full_name: "text" });  // HU14 - User s
   dataset_id: "john_doe_20250928_001",                // Format: {username}_{YYYYMMDD}_{sequence}
 
   // Ownership (HU5)
-  owner_user_id: "550e8400-e29b-41d4-a716-446655440000",  // FK to users.user_id
+  owner_user_id: "00000000-0000-5000-8000-00005a317347",  // FK to users.user_id
 
   // Cloning Reference (HU18)
   parent_dataset_id: null,                             // If cloned, references original dataset_id, otherwise null
@@ -222,7 +222,7 @@ db.datasets.createIndex(
 
   // Relationships (HU15)
   target_dataset_id: "john_doe_20250928_001",          // FK to datasets.dataset_id
-  author_user_id: "550e8400-e29b-41d4-a716-446655440000",  // FK to users.user_id
+  author_user_id: "00000000-0000-5000-8000-00005a317347",  // FK to users.user_id
   parent_comment_id: null,                             // FK to comments.comment_id - null if top-level
 
   // Content (HU15)
@@ -269,7 +269,7 @@ db.comments.createIndex({ is_active: 1 });                           // HU16
 
   // Relationships (HU17)
   target_dataset_id: "john_doe_20250928_001",          // FK to datasets.dataset_id
-  user_id: "550e8400-e29b-41d4-a716-446655440000",     // FK to users.user_id
+  user_id: "00000000-0000-5000-8000-00005a317347",     // FK to users.user_id
 
   // Timestamp (HU17)
   created_at: ISODate("2025-09-28T16:30:00Z")          // When vote was cast
@@ -307,7 +307,7 @@ db.votes.createIndex({ user_id: 1 });
   message_id: "msg_from_550e8400_to_449d7344_20250928163000_001",  // Format: msg_from_{sender}_to_{recipient}_{timestamp}_{seq}
 
   // Relationships (HU21)
-  from_user_id: "550e8400-e29b-41d4-a716-446655440000",  // FK to users.user_id - sender
+  from_user_id: "00000000-0000-5000-8000-00005a317347",  // FK to users.user_id - sender
   to_user_id: "449d7344-e29b-41d4-a716-446655440001",    // FK to users.user_id - recipient
 
   // Content (HU21)
@@ -357,7 +357,7 @@ Database: datec
 
 ```cypher
 CREATE (u:User {
-  user_id: "550e8400-e29b-41d4-a716-446655440000",     // UUID matching MongoDB users.user_id
+  user_id: "00000000-0000-5000-8000-00005a317347",     // UUID matching MongoDB users.user_id
   username: "john_doe"                                 // Username for display in queries
 })
 ```
@@ -574,7 +574,7 @@ GET vote_count:dataset:john_doe_20250928_001         # Get current count
 notifications:user:{user_id}
 
 # Push new follower notification
-LPUSH notifications:user:550e8400-e29b-41d4-a716-446655440000 '{
+LPUSH notifications:user:00000000-0000-5000-8000-00005a317347 '{
   "type": "new_follower",
   "from_user_id": "follower_uuid",
   "from_username": "maria_garcia",
@@ -582,7 +582,7 @@ LPUSH notifications:user:550e8400-e29b-41d4-a716-446655440000 '{
 }'
 
 # Push new dataset notification
-LPUSH notifications:user:550e8400-e29b-41d4-a716-446655440000 '{
+LPUSH notifications:user:00000000-0000-5000-8000-00005a317347 '{
   "type": "new_dataset",
   "from_user_id": "followed_uuid",
   "dataset_id": "new_dataset_id",
@@ -591,13 +591,13 @@ LPUSH notifications:user:550e8400-e29b-41d4-a716-446655440000 '{
 }'
 
 # Get latest 10 notifications (for navbar badge)
-LRANGE notifications:user:550e8400-e29b-41d4-a716-446655440000 0 9
+LRANGE notifications:user:00000000-0000-5000-8000-00005a317347 0 9
 
 # Get total notification count
-LLEN notifications:user:550e8400-e29b-41d4-a716-446655440000
+LLEN notifications:user:00000000-0000-5000-8000-00005a317347
 
 # Clear old notifications (keep only last 50)
-LTRIM notifications:user:550e8400-e29b-41d4-a716-446655440000 0 49
+LTRIM notifications:user:00000000-0000-5000-8000-00005a317347 0 49
 ```
 
 **Notification Message Format (JSON strings):**
@@ -659,12 +659,12 @@ Password: dat3c_master_4dmin
 ```javascript
 {
   // Document ID
-  "_id": "avatar_550e8400-e29b-41d4-a716-446655440000",  // Format: avatar_{user_id}
+  "_id": "avatar_00000000-0000-5000-8000-00005a317347",  // Format: avatar_{user_id}
   "_rev": "1-abc123...",                                  // CouchDB revision
   
   // Metadata
   "type": "user_avatar",                                  // Document type for queries
-  "owner_user_id": "550e8400-e29b-41d4-a716-446655440000",  // FK to MongoDB users.user_id
+  "owner_user_id": "00000000-0000-5000-8000-00005a317347",  // FK to MongoDB users.user_id
   "uploaded_at": "2025-09-28T10:00:00Z",                  // Upload timestamp
   
   // Binary Attachment
@@ -697,7 +697,7 @@ Password: dat3c_master_4dmin
   "_rev": "1-def456...",
 
   "type": "dataset_file",
-  "owner_user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "owner_user_id": "00000000-0000-5000-8000-00005a317347",
   "dataset_id": "john_doe_20250928_001",
   "uploaded_at": "2025-09-28T10:30:00Z",
 
@@ -735,7 +735,7 @@ Password: dat3c_master_4dmin
   "_rev": "1-ghi789...",
 
   "type": "header_photo",
-  "owner_user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "owner_user_id": "00000000-0000-5000-8000-00005a317347",
   "dataset_id": "john_doe_20250928_001",
   "uploaded_at": "2025-09-28T10:15:00Z",
 

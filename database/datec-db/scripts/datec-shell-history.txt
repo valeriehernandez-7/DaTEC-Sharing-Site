@@ -113,8 +113,8 @@ datec-redis-setup  | role:slave
 datec-redis-setup  | master_host:redis-primary
 datec-redis-setup  |
 datec-redis-setup  | Initializing Redis counters...
-datec-redis-setup  |   - Initialized counters for dataset: john_doe_20250928_001
-datec-redis-setup  |   - Initialized counters for dataset: maria_garcia_20250929_001
+datec-redis-setup  |   - Initialized counters for dataset: erickhernandez_20250101_001
+datec-redis-setup  |   - Initialized counters for dataset: armandogarcia_20250201_001
 datec-redis-setup  |
 datec-redis-setup  | Testing notification queues...
 datec-redis-setup  | ✓ Notification queue test: 1 messages in queue

@@ -116,7 +116,7 @@ try {
                     properties: {
                         dataset_id: { bsonType: "string" },
                         owner_user_id: { bsonType: "string" },
-                        parent_dataset_id: { 
+                        parent_dataset_id: {
                             anyOf: [
                                 { bsonType: "null" },
                                 { bsonType: "string" }
@@ -135,7 +135,7 @@ try {
                             maxLength: 5000,
                             description: "Description 10-5000 chars required"
                         },
-                        tags: { 
+                        tags: {
                             bsonType: "array",
                             description: "Optional array for search, can be empty"
                         },
@@ -143,14 +143,14 @@ try {
                             enum: ["pending", "approved", "rejected"],
                             description: "Status must be pending, approved, or rejected"
                         },
-                        reviewed_at: { 
+                        reviewed_at: {
                             anyOf: [
                                 { bsonType: "null" },
                                 { bsonType: "date" }
                             ],
                             description: "Timestamp when admin reviewed, null if not reviewed"
                         },
-                        admin_review: { 
+                        admin_review: {
                             anyOf: [
                                 { bsonType: "null" },
                                 { bsonType: "string" }
@@ -230,7 +230,7 @@ try {
                         comment_id: { bsonType: "string" },
                         target_dataset_id: { bsonType: "string" },
                         author_user_id: { bsonType: "string" },
-                        parent_comment_id: { 
+                        parent_comment_id: {
                             anyOf: [
                                 { bsonType: "null" },
                                 { bsonType: "string" }
@@ -349,29 +349,69 @@ try {
     db.private_messages.createIndex({ "from_user_id": 1, "created_at": -1 }, { name: "user_sent_index" });
     print('✓ Created private_messages indexes');
 
-    // Insert sample admin user
-    print('\nCreating sample admin user...');
-    const adminUser = {
-        user_id: "00000000-0000-5000-8000-00005a317347",
-        username: "sudod4t3c",
-        email_address: "sudo@datec.com",
-        password_hash: "$2a$12$V2xmRSFncBkDwmWkOmgtdemlUr8THwep2TlrbkHq1o1IyAFW0KUBm",
-        full_name: "DaTEC System Administrator",
-        birth_date: new Date("2000-05-07"),
-        avatar_ref: null,
-        is_admin: true,
-        created_at: new Date(),
-        updated_at: new Date()
-    };
+    // Insert sample users
+    print('\nCreating sample users...');
+    const sampleUsers = [
+        {
+            user_id: "00000000-0000-5000-8000-00005a317347",
+            username: "sudod4t3c",
+            email_address: "sudo@datec.com",
+            password_hash: "$2a$12$V2xmRSFncBkDwmWkOmgtdemlUr8THwep2TlrbkHq1o1IyAFW0KUBm",
+            full_name: "DaTEC System Administrator",
+            birth_date: new Date("1999-09-09"),
+            avatar_ref: null,
+            is_admin: true,
+            created_at: new Date(),
+            updated_at: new Date()
+        },
+        {
+            user_id: "00000000-0000-5000-8000-00002a10550c",
+            username: "erickhernandez",
+            email_address: "erick.hernandez@itcr.ac.cr",
+            password_hash: "$2y$12$sSYn37rv0ODJfCTnVw/6u.78qFogXPAF5nvrrqhmBiUv6edswRsD.",
+            full_name: "Erick Hernandez Bonilla",
+            birth_date: new Date("1985-01-01"),
+            avatar_ref: null,
+            is_admin: false,
+            created_at: new Date(),
+            updated_at: new Date()
+        },
+        {
+            user_id: "00000000-0000-5000-8000-000050c163e7",
+            username: "armandogarcia",
+            email_address: "armandgp07@estudiantec.cr",
+            password_hash: "$2y$12$f8KquSeU7EBctWKFOJvnqugivQjpohyte.ZxzEiKmEs7DOgcb2GJW",
+            full_name: "Armando Garcia Paniagua",
+            birth_date: new Date("2005-07-01"),
+            avatar_ref: null,
+            is_admin: false,
+            created_at: new Date(),
+            updated_at: new Date()
+        },
+        {
+            user_id: "00000000-0000-5000-8000-000004637677",
+            username: "valeriehernandez",
+            email_address: "valeriehernandez@estudiantec.cr",
+            password_hash: "$2y$12$FG91QJcTF7eWXQu1PinWH.A0kBYaF2w9Hpuch3Ko1xPV/Y6IX.MLK",
+            full_name: "Valerie Hernandez Fernandez",
+            birth_date: new Date("2005-05-07"),
+            avatar_ref: null,
+            is_admin: false,
+            created_at: new Date(),
+            updated_at: new Date()
+        }
+    ];
 
-    try {
-        db.users.insertOne(adminUser);
-        print('✓ Sample admin user created: sudod4t3c');
-    } catch (e) {
-        if (e.code === 11000) {
-            print('✓ Admin user already exists');
-        } else {
-            throw e;
+    for (const user of sampleUsers) {
+        try {
+            db.users.insertOne(user);
+            print(`✓ Sample user created: ${user.username}`);
+        } catch (e) {
+            if (e.code === 11000) {
+                print(`✓ User already exists: ${user.username}`);
+            } else {
+                throw e;
+            }
         }
     }
 
@@ -379,8 +419,8 @@ try {
     print('\nCreating sample datasets...');
     const sampleDatasets = [
         {
-            dataset_id: "john_doe_20250928_001",
-            owner_user_id: "00000000-0000-5000-8000-00000870c5c3",
+            dataset_id: "erickhernandez_20250101_001",
+            owner_user_id: "00000000-0000-5000-8000-00002a10550c",
             parent_dataset_id: null,
             dataset_name: "Global Sales Analysis 2024",
             description: "Comprehensive analysis of global sales patterns and trends for 2024 with detailed regional breakdowns and performance metrics.",
@@ -391,7 +431,7 @@ try {
             is_public: true,
             file_references: [
                 {
-                    couchdb_document_id: "file_john_doe_20250928_001_001",
+                    couchdb_document_id: "file_erickhernandez_20250101_001_001",
                     file_name: "sales_q1.csv",
                     file_size_bytes: 15728640,
                     mime_type: "text/csv",
@@ -399,7 +439,7 @@ try {
                 }
             ],
             header_photo_ref: {
-                couchdb_document_id: "photo_john_doe_20250928_001_header",
+                couchdb_document_id: "photo_erickhernandez_20250101_001_header",
                 file_name: "header.jpg",
                 file_size_bytes: 2048000,
                 mime_type: "image/jpeg"
@@ -415,8 +455,8 @@ try {
             updated_at: new Date()
         },
         {
-            dataset_id: "maria_garcia_20250929_001",
-            owner_user_id: "00000000-0000-5000-8000-00005101f6c7",
+            dataset_id: "armandogarcia_20250201_001",
+            owner_user_id: "00000000-0000-5000-8000-000050c163e7",
             parent_dataset_id: null,
             dataset_name: "Climate Change Indicators",
             description: "Long-term climate data showing temperature changes, precipitation patterns, and extreme weather events from 2000-2024.",
@@ -427,7 +467,7 @@ try {
             is_public: true,
             file_references: [
                 {
-                    couchdb_document_id: "file_maria_garcia_20250929_001_001",
+                    couchdb_document_id: "file_armandogarcia_20250201_001_001",
                     file_name: "climate_data.csv",
                     file_size_bytes: 25600000,
                     mime_type: "text/csv",

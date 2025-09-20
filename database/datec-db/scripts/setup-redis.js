@@ -20,7 +20,7 @@ async function setupRedis() {
         });
 
         await primaryClient.connect();
-        
+
         // Test primary connection
         await primaryClient.set('test_connection', 'OK');
         const testResult = await primaryClient.get('test_connection');
@@ -50,11 +50,11 @@ async function setupRedis() {
 
         // Initialize counters for datasets (matching setup-mongo.js)
         console.log('\nInitializing Redis counters...');
-        
+
         // Sample datasets matching MongoDB seed data
         const sampleDatasets = [
-            'john_doe_20250928_001',
-            'maria_garcia_20250929_001'
+            'erickhernandez_20250101_001',
+            'armandogarcia_20250201_001'
         ];
 
         for (const datasetId of sampleDatasets) {
@@ -66,16 +66,16 @@ async function setupRedis() {
         // Test notification queues with valid notification type
         console.log('\nTesting notification queues...');
         await primaryClient.lPush(
-            'notifications:user:550e8400-e29b-41d4-a716-446655440000',
+            'notifications:user:00000000-0000-5000-8000-00002a10550c',
             JSON.stringify({
                 type: 'dataset_approved',
-                dataset_id: 'john_doe_20250928_001',
+                dataset_id: 'erickhernandez_20250101_001',
                 dataset_name: 'Global Sales Analysis 2024',
                 timestamp: new Date().toISOString()
             })
         );
-        
-        const queueLength = await primaryClient.lLen('notifications:user:550e8400-e29b-41d4-a716-446655440000');
+
+        const queueLength = await primaryClient.lLen('notifications:user:00000000-0000-5000-8000-00002a10550c');
         console.log(`✓ Notification queue test: ${queueLength} messages in queue`);
 
         // Verify data replication

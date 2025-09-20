@@ -79,16 +79,21 @@ async function setupNeo4j() {
         // 3. Seed users (matching MongoDB)
         console.log('\nCreating sample users...');
 
-        await session.run(`
-            MERGE (u:User {
-                user_id: $userId,
-                username: $username
-            })
-        `, {
-            userId: '00000000-0000-5000-8000-00005a317347',
-            username: 'sudod4t3c'
-        });
-        console.log('✓ Admin user created');
+        const sampleUsers = [
+            { userId: '00000000-0000-5000-8000-00005a317347', username: 'sudod4t3c' },
+            { userId: '00000000-0000-5000-8000-00002a10550c', username: 'erickhernandez' },
+            { userId: '00000000-0000-5000-8000-000050c163e7', username: 'armandogarcia' },
+            { userId: '00000000-0000-5000-8000-000004637677', username: 'valeriehernandez' }
+        ];
+
+        for (const user of sampleUsers) {
+            await session.run(`
+                MERGE (u:User {
+                    user_id: $userId,
+                    username: $username
+                })`, user);
+            console.log(`✓ User created: ${user.username}`);
+        }
 
         // 4. Seed datasets (matching MongoDB)
         console.log('\nCreating sample datasets...');
@@ -99,7 +104,7 @@ async function setupNeo4j() {
                 dataset_name: $datasetName
             })
         `, {
-            datasetId: 'john_doe_20250928_001',
+            datasetId: 'erickhernandez_20250101_001',
             datasetName: 'Global Sales Analysis 2024'
         });
         console.log('✓ Dataset 1 created');
@@ -110,7 +115,7 @@ async function setupNeo4j() {
                 dataset_name: $datasetName
             })
         `, {
-            datasetId: 'maria_garcia_20250929_001',
+            datasetId: 'armandogarcia_20250201_001',
             datasetName: 'Climate Change Indicators'
         });
         console.log('✓ Dataset 2 created');
