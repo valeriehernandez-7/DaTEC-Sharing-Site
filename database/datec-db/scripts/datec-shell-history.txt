@@ -1,24 +1,25 @@
 ﻿PS C:\Users\velysian> cd C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker-compose up -d
 [+] Running 11/11
- ✔ Network datec-db_datec-network        Created                                                                   0.1s
- ✔ Volume datec-db_mongo_primary_data    Created                                                                   0.0s
- ✔ Volume datec-db_mongo_secondary_data  Created                                                                   0.0s
- ✔ Volume datec-db_redis_primary_data    Created                                                                   0.0s
- ✔ Volume datec-db_redis_replica_data    Created                                                                   0.0s
- ✔ Container datec-mongo-primary         Healthy                                                                   7.0s
- ✔ Container datec-redis-primary         Healthy                                                                  11.5s
- ✔ Container datec-redis-replica         Healthy                                                                  11.9s
- ✔ Container datec-mongo-secondary       Healthy                                                                  17.4s
- ✔ Container datec-mongo-setup           Started                                                                  17.5s
- ✔ Container datec-redis-setup           Started                                                                  12.0s
+ ✔ Network datec-db_datec-network        Created                                                            0.1s
+ ✔ Volume datec-db_mongo_primary_data    Created                                                            0.0s
+ ✔ Volume datec-db_mongo_secondary_data  Created                                                            0.0s
+ ✔ Volume datec-db_redis_primary_data    Created                                                            0.0s
+ ✔ Volume datec-db_redis_replica_data    Created                                                            0.0s
+ ✔ Container datec-redis-primary         Healthy                                                           11.4s
+ ✔ Container datec-mongo-primary         Healthy                                                            7.4s
+ ✔ Container datec-mongo-secondary       Healthy                                                           17.8s
+ ✔ Container datec-redis-replica         Healthy                                                           12.2s
+ ✔ Container datec-mongo-setup           Started                                                           17.9s
+ ✔ Container datec-redis-setup           Started                                                           12.7s
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker-compose ps
-NAME                    IMAGE            COMMAND                  SERVICE           CREATED              STATUS                        PORTS
-datec-mongo-primary     mongo:8.0        "docker-entrypoint.s…"   mongo-primary     About a minute ago   Up About a minute (healthy)   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
-datec-mongo-secondary   mongo:8.0        "docker-entrypoint.s…"   mongo-secondary   About a minute ago   Up About a minute (healthy)   0.0.0.0:27018->27017/tcp, [::]:27018->27017/tcp
-datec-mongo-setup       mongo:8.0        "docker-entrypoint.s…"   mongo-setup       About a minute ago   Up About a minute             27017/tcp
-datec-redis-primary     redis:8-alpine   "docker-entrypoint.s…"   redis-primary     About a minute ago   Up About a minute (healthy)   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
-datec-redis-replica     redis:8-alpine   "docker-entrypoint.s…"   redis-replica     About a minute ago   Up About a minute (healthy)   0.0.0.0:6380->6379/tcp, [::]:6380->6379/tcp
+NAME                    IMAGE            COMMAND                  SERVICE           CREATED          STATUS                    PORTS
+datec-mongo-primary     mongo:8.0        "docker-entrypoint.s…"   mongo-primary     45 seconds ago   Up 43 seconds (healthy)   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
+datec-mongo-secondary   mongo:8.0        "docker-entrypoint.s…"   mongo-secondary   44 seconds ago   Up 42 seconds (healthy)   0.0.0.0:27018->27017/tcp, [::]:27018->27017/tcp
+datec-mongo-setup       mongo:8.0        "docker-entrypoint.s…"   mongo-setup       44 seconds ago   Up 26 seconds             27017/tcp
+datec-redis-primary     redis:8-alpine   "docker-entrypoint.s…"   redis-primary     45 seconds ago   Up 43 seconds (healthy)   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+datec-redis-replica     redis:8-alpine   "docker-entrypoint.s…"   redis-replica     44 seconds ago   Up 42 seconds (healthy)   0.0.0.0:6380->6379/tcp, [::]:6380->6379/tcp
+datec-redis-setup       node:24-alpine   "docker-entrypoint.s…"   redis-setup       44 seconds ago   Up 31 seconds
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker-compose logs -f mongo-setup
 datec-mongo-setup  | Waiting for MongoDB nodes...
 datec-mongo-setup  | Configuring Replica Set...
@@ -49,18 +50,21 @@ datec-mongo-setup  | ✓ Created comments indexes
 datec-mongo-setup  | ✓ Created votes indexes
 datec-mongo-setup  | ✓ Created private_messages indexes
 datec-mongo-setup  |
-datec-mongo-setup  | Creating sample admin user...
-datec-mongo-setup  | ✓ Sample admin user created: sudod4t3c
+datec-mongo-setup  | Creating sample users...
+datec-mongo-setup  | ✓ Sample user created: sudod4t3c
+datec-mongo-setup  | ✓ Sample user created: erickhernandez
+datec-mongo-setup  | ✓ Sample user created: armandogarcia
+datec-mongo-setup  | ✓ Sample user created: valeriehernandez
 datec-mongo-setup  |
 datec-mongo-setup  | Creating sample datasets...
 datec-mongo-setup  | ✓ Created sample dataset: Global Sales Analysis 2024
 datec-mongo-setup  | ✓ Created sample dataset: Climate Change Indicators
 datec-mongo-setup  |
 datec-mongo-setup  | Verifying setup...
-datec-mongo-setup  |   - votes: 5 indexes
-datec-mongo-setup  |   - comments: 6 indexes
 datec-mongo-setup  |   - datasets: 7 indexes
 datec-mongo-setup  |   - private_messages: 5 indexes
+datec-mongo-setup  |   - comments: 6 indexes
+datec-mongo-setup  |   - votes: 5 indexes
 datec-mongo-setup  |   - users: 5 indexes
 datec-mongo-setup  |
 datec-mongo-setup  | ============================================================
@@ -72,13 +76,13 @@ datec-mongo-setup  |   - Replica Set: datecRS
 datec-mongo-setup  |   - Database: datec
 datec-mongo-setup  |   - Collections: 5
 datec-mongo-setup  |   - Indexes: 28
-datec-mongo-setup  |   - Users: 1
+datec-mongo-setup  |   - Users: 4
 datec-mongo-setup  |   - Datasets: 2
 datec-mongo-setup  |   - Validation: Enabled for all collections
 datec-mongo-setup  |
 datec-mongo-setup  | Ready for DaTEC application development!
 datec-mongo-setup  | MongoDB setup complete!
-datec-mongo-setup exited with code 0
+
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker-compose logs -f redis-setup
 datec-redis-setup  | Installing Redis client...
 datec-redis-setup  |
@@ -134,49 +138,15 @@ datec-redis-setup  |   - Notification queues: ready
 datec-redis-setup  |   - Replication: verified
 datec-redis-setup  |   - Sample datasets: 2
 
-up to date, audited 19 packages in 1s\DaTEC-Sharing-Site\database\datec-db> cd scripts
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> cd scripts
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db\scripts> npm install
+
+up to date, audited 19 packages in 1s
 
 4 packages are looking for funding
   run `npm fund` for details
 
 found 0 vulnerabilities
-PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db\scripts> node setup-neo4j.js
-============================================================
-Starting Neo4j Configuration
-============================================================
-
-Creating datec database...
-✓ Database "datec" created or already exists
-
-Creating constraints...
-✓ User constraint created
-✓ Dataset constraint created
-
-Creating indexes...
-✓ User username index created
-✓ Dataset name index created
-
-Creating sample users...
-✓ Admin user created
-
-Creating sample datasets...
-✓ Dataset 1 created
-✓ Dataset 2 created
-
-Verifying setup...
-
-============================================================
-Neo4j Setup Complete!
-============================================================
-
-Summary:
-  - URL: bolt://localhost:7687
-  - Database: datec
-  - Constraints: 2 (User, Dataset)
-  - Indexes: 2 (username, dataset_name)
-  - Users: 1
-  - Datasets: 2
-  - Ready for relationship tracking
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db\scripts> node setup-couchdb.js
 ============================================================
 Starting CouchDB Configuration
@@ -208,4 +178,51 @@ Summary:
   - Ready for file uploads
 
 Note: Binary attachments will be added via application
-PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db\scripts>
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db\scripts> node setup-neo4j.js
+============================================================
+Starting Neo4j Configuration
+============================================================
+
+Creating datec database...
+✓ Database "datec" created or already exists
+
+Creating constraints...
+✓ User constraint created
+✓ Dataset constraint created
+
+Creating indexes...
+✓ User username index created
+✓ Dataset name index created
+
+Creating sample users...
+✓ User created: sudod4t3c
+✓ User created: erickhernandez
+✓ User created: armandogarcia
+✓ User created: valeriehernandez
+
+Creating sample datasets...
+✓ Dataset 1 created
+✓ Dataset 2 created
+
+Verifying setup...
+
+============================================================
+Neo4j Setup Complete!
+============================================================
+
+Summary:
+  - URL: bolt://localhost:7687
+  - Database: datec
+  - Constraints: 2 (User, Dataset)
+  - Indexes: 2 (username, dataset_name)
+  - Users: 4
+  - Datasets: 2
+  - Ready for relationship tracking
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db\scripts> cd ..
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker-compose ps
+NAME                    IMAGE            COMMAND                  SERVICE           CREATED         STATUS                   PORTS
+datec-mongo-primary     mongo:8.0        "docker-entrypoint.s…"   mongo-primary     7 minutes ago   Up 7 minutes (healthy)   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
+datec-mongo-secondary   mongo:8.0        "docker-entrypoint.s…"   mongo-secondary   7 minutes ago   Up 7 minutes (healthy)   0.0.0.0:27018->27017/tcp, [::]:27018->27017/tcp
+datec-redis-primary     redis:8-alpine   "docker-entrypoint.s…"   redis-primary     7 minutes ago   Up 7 minutes (healthy)   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+datec-redis-replica     redis:8-alpine   "docker-entrypoint.s…"   redis-replica     7 minutes ago   Up 7 minutes (healthy)   0.0.0.0:6380->6379/tcp, [::]:6380->6379/tcp
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db>
