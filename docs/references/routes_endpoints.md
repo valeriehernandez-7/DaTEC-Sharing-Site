@@ -1,49 +1,56 @@
 # API Endpoints
 
-| Endpoint | Method | HU | Auth | Database(s) | Description |
-|----------|--------|----|----- |-------------|-------------|
-| **AUTENTICACIÓN** |
-| `/api/auth/register` | POST | #1 | No | Mongo + Neo4j + CouchDB | Registro con avatar opcional |
-| `/api/auth/login` | POST | #1 | No | Mongo | Login → JWT token |
-| `/api/auth/me` | GET | #1 | Yes | Mongo | Info usuario actual |
-| **USUARIOS** |
-| `/api/users/` | GET | #14 | No | Mongo | Listar usuarios |
-| `/api/users/search?q=term` | GET | #14 | No | Mongo | Buscar usuarios |
-| `/api/users/:username` | GET | #4, #14 | No | Mongo | Perfil público |
-| `/api/users/:username` | PUT | #4 | Yes (owner) | Mongo + CouchDB | Editar perfil + avatar |
-| `/api/users/:username/datasets` | GET | #12 | No* | Mongo | Datasets del usuario |
-| `/api/users/:username/followers` | GET | #20 | No | Neo4j | Lista de seguidores |
-| `/api/users/:username/following` | GET | #19 | No | Neo4j | Lista de seguidos |
-| `/api/users/:username/follow` | POST | #19 | Yes | Neo4j + Redis | Seguir usuario |
-| `/api/users/:username/follow` | DELETE | #19 | Yes | Neo4j | Dejar de seguir |
+| Route File | Frontend URL | API Endpoint | Method | HU | Auth | Database(s) | Description |
+|------------|--------------|--------------|--------|----|----- |-------------|-------------|
+| **AUTHENTICATION** |
+| auth.routes.js | `/login` | `/api/auth/login` | POST | #1 | No | Mongo | Login → JWT token |
+| auth.routes.js | `/register` | `/api/auth/register` | POST | #1 | No | Mongo + Neo4j + CouchDB | User registration with optional avatar |
+| auth.routes.js | `/profile` | `/api/auth/me` | GET | #1 | Yes | Mongo | Current user info |
+| **USERS** |
+| users.routes.js | `/users` | `/api/users` | GET | #14 | No | Mongo | List users |
+| users.routes.js | `/search` | `/api/users/search?q=term` | GET | #14 | No | Mongo | Search users |
+| users.routes.js | `/:username` | `/api/users/:username` | GET | #4, #14 | No | Mongo | Public profile |
+| users.routes.js | `/:username/settings` | `/api/users/:username` | PUT | #4 | Yes (owner) | Mongo + CouchDB | Edit profile + avatar |
+| users.routes.js | `/:username` | `/api/users/:username/datasets` | GET | #12 | No* | Mongo | User's datasets |
+| users.routes.js | `/:username` | `/api/users/:username/followers` | GET | #20 | No | Neo4j | Followers list |
+| users.routes.js | `/:username` | `/api/users/:username/following` | GET | #19 | No | Neo4j | Following list |
+| users.routes.js | `/:username` | `/api/users/:username/follow` | POST | #19 | Yes | Neo4j + Redis | Follow user |
+| users.routes.js | `/:username` | `/api/users/:username/follow` | DELETE | #19 | Yes | Neo4j | Unfollow user |
 | **DATASETS** |
-| `/api/datasets` | POST | #5 | Yes | Mongo + CouchDB + Neo4j + Redis | Crear dataset (multipart) |
-| `/api/datasets` | GET | #9, #10 | No | Mongo | Listar datasets públicos |
-| `/api/datasets/search?q=term` | GET | #9 | No | Mongo | Buscar datasets |
-| `/api/datasets/:datasetId` | GET | #10, #11 | No* | Mongo | Detalles completos |
-| `/api/datasets/:datasetId` | PUT | #7 | Yes (owner) | Mongo + CouchDB | Editar metadata/archivos |
-| `/api/datasets/:datasetId` | DELETE | #7 | Yes (owner/admin) | All 4 DBs | Eliminar dataset |
-| `/api/datasets/:datasetId/visibility` | PATCH | #7 | Yes (owner) | Mongo | Toggle público/privado |
-| `/api/datasets/:datasetId/request-approval` | POST | #6 | Yes (owner) | Mongo | Solicitar aprobación |
-| `/api/datasets/:datasetId/clone` | POST | #18 | Yes | All 4 DBs | Clonar dataset |
-| `/api/datasets/:datasetId/downloads` | GET | #13 | Yes | Neo4j + Mongo | Estadísticas descarga |
-| `/api/datasets/:datasetId/files/` | GET | #10 | Yes | CouchDB + Neo4j + Redis | Listar archivos o descargar archivos |
-| `/api/datasets/:datasetId/files/:fileId` | GET | #13 | Yes | CouchDB + Neo4j + Redis | Descargar archivo |
-| **COMENTARIOS** |
-| `/api/datasets/:datasetId/comments` | GET | #15 | No | Mongo | Árbol de comentarios |
-| `/api/datasets/:datasetId/comments` | POST | #15 | Yes | Mongo | Crear comentario/reply |
-| `/api/comments/:commentId` | PATCH | #16 | Yes (admin) | Mongo | Soft delete (is_active=false) |
-| **VOTOS** |
-| `/api/datasets/:datasetId/votes` | GET | #17 | No | Mongo | Listar votantes |
-| `/api/datasets/:datasetId/votes` | POST | #17 | Yes | Mongo + Redis | Votar dataset |
-| `/api/datasets/:datasetId/votes` | DELETE | #17 | Yes | Mongo + Redis | Quitar voto |
-| `/api/datasets/:datasetId/votes/me` | GET | #17 | Yes | Mongo | Verificar si votó |
-| **MENSAJES** |
-| `/api/messages/:username` | GET | #21 | Yes | Mongo | Thread con usuario |
-| `/api/messages/:username` | POST | #21 | Yes | Mongo | Enviar mensaje a usuario |
-| **NOTIFICACIONES** |
-| `/api/notifications/me` | GET | #8, #19 | Yes | Redis | Notificaciones usuario |
+| datasets.routes.js | `/` | `/api/datasets` | GET | #9, #10 | No | Mongo | List public datasets |
+| datasets.routes.js | `/create` | `/api/datasets` | POST | #5 | Yes | Mongo + CouchDB + Neo4j + Redis | Create dataset (multipart) |
+| datasets.routes.js | `/search` | `/api/datasets/search?q=term` | GET | #9 | No | Mongo | Search datasets |
+| datasets.routes.js | `/:username/:datasetName` | `/api/datasets/:datasetId` | GET | #10, #11 | No* | Mongo | Complete details |
+| datasets.routes.js | `/:username/:datasetName` | `/api/datasets/:datasetId/files` | GET | #10 | Yes | CouchDB + Neo4j + Redis | List files or download files |
+| datasets.routes.js | `/:username/:datasetName/edit` | `/api/datasets/:datasetId` | PUT | #7 | Yes (owner) | Mongo + CouchDB | Edit metadata/files |
+| datasets.routes.js | `/:username/:datasetName/edit` | `/api/datasets/:datasetId` | DELETE | #7 | Yes (owner/admin) | All 4 DBs | Delete dataset |
+| datasets.routes.js | `/:username/:datasetName/edit` | `/api/datasets/:datasetId/visibility` | PATCH | #7 | Yes (owner) | Mongo | Toggle public/private |
+| datasets.routes.js | `/:username/:datasetName/review` | `/api/datasets/:datasetId/review` | POST | #6 | Yes (owner) | Mongo | Request approval |
+| datasets.routes.js | `/:username/:datasetName/clone` | `/api/datasets/:datasetId/clone` | POST | #18 | Yes | All 4 DBs | Clone dataset |
+| datasets.routes.js | `/:username/:datasetName/stats` | `/api/datasets/:datasetId/downloads` | GET | #13 | Yes (owner) | Neo4j + Mongo | Download statistics |
+| datasets.routes.js | `/:username/:datasetName/download` | `/api/datasets/:datasetId/files/:fileId` | GET | #13 | Yes | CouchDB + Neo4j + Redis | Download file |
+| **COMMENTS** |
+| comments.routes.js | `/:username/:datasetName` | `/api/datasets/:datasetId/comments` | GET | #15 | No | Mongo | Comment tree |
+| comments.routes.js | `/:username/:datasetName` | `/api/datasets/:datasetId/comments` | POST | #15 | Yes | Mongo | Create comment/reply |
+| **VOTES** |
+| votes.routes.js | `/:username/:datasetName` | `/api/datasets/:datasetId/votes` | GET | #17 | No | Mongo | List voters |
+| votes.routes.js | `/:username/:datasetName` | `/api/datasets/:datasetId/votes` | POST | #17 | Yes | Mongo + Redis | Vote dataset |
+| votes.routes.js | `/:username/:datasetName` | `/api/datasets/:datasetId/votes` | DELETE | #17 | Yes | Mongo + Redis | Remove vote |
+| votes.routes.js | `/:username/:datasetName` | `/api/datasets/:datasetId/votes/me` | GET | #17 | Yes | Mongo | Check if voted |
+| **MESSAGES** |
+| messages.routes.js | `/:username/messages` | `/api/messages/:username` | GET | #21 | Yes | Mongo | Thread with user |
+| messages.routes.js | `/:username/messages` | `/api/messages/:username` | POST | #21 | Yes | Mongo | Send message to user |
+| **NOTIFICATIONS** |
+| notifications.routes.js | `/notifications` | `/api/notifications/me` | GET | #8, #19 | Yes | Redis | User notifications |
 | **ADMIN** |
-| `/api/admin/datasets/pending` | GET | #8 | Yes (admin) | Mongo | Datasets pendientes |
-| `/api/admin/datasets/:id/review` | POST | #8 | Yes (admin) | Mongo + Redis | Aprobar/rechazar + notif |
-| `/api/admin/users/:username/promote` | PATCH | #3 | Yes (admin) | Mongo | Promover a admin |
+| admin.routes.js | `/admin/datasets` | `/api/admin/datasets/` | GET | #8 | Yes (admin) | Mongo | Pending datasets |
+| admin.routes.js | `/admin/datasets/review` | `/api/admin/datasets/:id` | POST | #8 | Yes (admin) | Mongo + Redis | Approve/reject + notification |
+| admin.routes.js | `/admin/users` | `/api/admin/users/:username/promote` | PATCH | #3 | Yes (admin) | Mongo | Promote to admin |
+| comments.routes.js | `/admin/comments/` | `/api/comments/:commentId` | PATCH | #16 | Yes (admin) | Mongo | Soft delete (is_active=false) |
+
+**Notes**:
+- `*` = Some actions require authentication (vote, comment, download)
+- `owner` = Resource owner only
+- `admin` = Administrators only
+- **All 4 DBs** = Operation affects MongoDB, CouchDB, Neo4j, and Redis
+- **Multipart** = Form-data with file uploads
