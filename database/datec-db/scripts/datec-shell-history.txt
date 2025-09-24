@@ -225,4 +225,123 @@ datec-mongo-primary     mongo:8.0        "docker-entrypoint.s…"   mongo-primar
 datec-mongo-secondary   mongo:8.0        "docker-entrypoint.s…"   mongo-secondary   7 minutes ago   Up 7 minutes (healthy)   0.0.0.0:27018->27017/tcp, [::]:27018->27017/tcp
 datec-redis-primary     redis:8-alpine   "docker-entrypoint.s…"   redis-primary     7 minutes ago   Up 7 minutes (healthy)   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
 datec-redis-replica     redis:8-alpine   "docker-entrypoint.s…"   redis-replica     7 minutes ago   Up 7 minutes (healthy)   0.0.0.0:6380->6379/tcp, [::]:6380->6379/tcp
-PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db>
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database> docker exec -it datec-mongo-primary mongosh --eval "rs.status()"
+{
+  set: 'datecRS',
+  date: ISODate('2025-10-04T02:44:13.955Z'),
+  myState: 1,
+  term: Long('5'),
+  syncSourceHost: '',
+  syncSourceId: -1,
+  heartbeatIntervalMillis: Long('2000'),
+  majorityVoteCount: 2,
+  writeMajorityCount: 2,
+  votingMembersCount: 2,
+  writableVotingMembersCount: 2,
+  optimes: {
+    lastCommittedOpTime: { ts: Timestamp({ t: 1759545850, i: 1 }), t: Long('5') },
+    lastCommittedWallTime: ISODate('2025-10-04T02:44:10.537Z'),
+    readConcernMajorityOpTime: { ts: Timestamp({ t: 1759545850, i: 1 }), t: Long('5') },
+    appliedOpTime: { ts: Timestamp({ t: 1759545850, i: 1 }), t: Long('5') },
+    durableOpTime: { ts: Timestamp({ t: 1759545850, i: 1 }), t: Long('5') },
+    writtenOpTime: { ts: Timestamp({ t: 1759545850, i: 1 }), t: Long('5') },
+    lastAppliedWallTime: ISODate('2025-10-04T02:44:10.537Z'),
+    lastDurableWallTime: ISODate('2025-10-04T02:44:10.537Z'),
+    lastWrittenWallTime: ISODate('2025-10-04T02:44:10.537Z')
+  },
+  lastStableRecoveryTimestamp: Timestamp({ t: 1759545810, i: 72 }),
+  electionCandidateMetrics: {
+    lastElectionReason: 'electionTimeout',
+    lastElectionDate: ISODate('2025-10-04T02:28:40.558Z'),
+    electionTerm: Long('5'),
+    lastCommittedOpTimeAtElection: { ts: Timestamp({ t: 0, i: 0 }), t: Long('-1') },
+    lastSeenWrittenOpTimeAtElection: { ts: Timestamp({ t: 1759381088, i: 53 }), t: Long('4') },
+    lastSeenOpTimeAtElection: { ts: Timestamp({ t: 1759381088, i: 53 }), t: Long('4') },
+    numVotesNeeded: 2,
+    priorityAtElection: 2,
+    electionTimeoutMillis: Long('10000'),
+    numCatchUpOps: Long('0'),
+    newTermStartDate: ISODate('2025-10-04T02:28:40.569Z'),
+    wMajorityWriteAvailabilityDate: ISODate('2025-10-04T02:28:40.589Z')
+  },
+  members: [
+    {
+      _id: 0,
+      name: 'mongo-primary:27017',
+      health: 1,
+      state: 1,
+      stateStr: 'PRIMARY',
+      uptime: 944,
+      optime: { ts: Timestamp({ t: 1759545850, i: 1 }), t: Long('5') },
+      optimeDate: ISODate('2025-10-04T02:44:10.000Z'),
+      optimeWritten: { ts: Timestamp({ t: 1759545850, i: 1 }), t: Long('5') },
+      optimeWrittenDate: ISODate('2025-10-04T02:44:10.000Z'),
+      lastAppliedWallTime: ISODate('2025-10-04T02:44:10.537Z'),
+      lastDurableWallTime: ISODate('2025-10-04T02:44:10.537Z'),
+      lastWrittenWallTime: ISODate('2025-10-04T02:44:10.537Z'),
+      syncSourceHost: '',
+      syncSourceId: -1,
+      infoMessage: '',
+      electionTime: Timestamp({ t: 1759544920, i: 1 }),
+      electionDate: ISODate('2025-10-04T02:28:40.000Z'),
+      configVersion: 1,
+      configTerm: 5,
+      self: true,
+      lastHeartbeatMessage: ''
+    },
+    {
+      _id: 1,
+      name: 'mongo-secondary:27017',
+      health: 1,
+      state: 2,
+      stateStr: 'SECONDARY',
+      uptime: 943,
+      optime: { ts: Timestamp({ t: 1759545850, i: 1 }), t: Long('5') },
+      optimeDurable: { ts: Timestamp({ t: 1759545850, i: 1 }), t: Long('5') },
+      optimeWritten: { ts: Timestamp({ t: 1759545850, i: 1 }), t: Long('5') },
+      optimeDate: ISODate('2025-10-04T02:44:10.000Z'),
+      optimeDurableDate: ISODate('2025-10-04T02:44:10.000Z'),
+      optimeWrittenDate: ISODate('2025-10-04T02:44:10.000Z'),
+      lastAppliedWallTime: ISODate('2025-10-04T02:44:10.537Z'),
+      lastDurableWallTime: ISODate('2025-10-04T02:44:10.537Z'),
+      lastWrittenWallTime: ISODate('2025-10-04T02:44:10.537Z'),
+      lastHeartbeat: ISODate('2025-10-04T02:44:12.919Z'),
+      lastHeartbeatRecv: ISODate('2025-10-04T02:44:13.425Z'),
+      pingMs: Long('0'),
+      lastHeartbeatMessage: '',
+      syncSourceHost: 'mongo-primary:27017',
+      syncSourceId: 0,
+      infoMessage: '',
+      configVersion: 1,
+      configTerm: 5
+    }
+  ],
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp({ t: 1759545850, i: 1 }),
+    signature: {
+      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),
+      keyId: Long('0')
+    }
+  },
+  operationTime: Timestamp({ t: 1759545850, i: 1 })
+}
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database> docker exec -it datec-mongo-primary mongosh datec --eval "db.users.countDocuments()"
+4
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database> docker exec -it datec-redis-primary redis-cli ping
+PONG
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database> docker exec -it datec-redis-primary redis-cli INFO replication
+# Replication
+role:master
+connected_slaves:1
+slave0:ip=172.18.0.2,port=6379,state=online,offset=32130,lag=1
+master_failover_state:no-failover
+master_replid:12e9a1fe01642902052f336f53bfc02ffbca57e6
+master_replid2:0000000000000000000000000000000000000000
+master_repl_offset:32130
+second_repl_offset:-1
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:30038
+repl_backlog_histlen:2093
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database>

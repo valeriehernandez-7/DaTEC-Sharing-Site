@@ -1,2 +1,2 @@
-/database/datec-db/scripts/node_modules
-database/datec-db/scripts/package-lock.json
+node_modules
+package-lock.json

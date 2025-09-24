@@ -1,0 +1,61 @@
+RUNNING https://github.com/valeriehernandez-7/DaTEC-Sharing-Site 
+
+Docker conts. path
+C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec
+
+Server path
+C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\backend
+
+**********************************************************************
+
+1. Start Docker Desktop
+
+2. 
+cd C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec
+
+3. 
+docker-compose up -d
+
+4. 
+docker-compose ps
+
+5. 
+docker logs -f datec-mongo-setup
+
+docker exec -it datec-mongo-primary mongosh --eval "rs.status()"
+
+docker exec -it datec-mongo-primary mongosh datec --eval "db.users.countDocuments()"
+
+6. 
+docker logs -f datec-redis-setup
+
+docker exec -it datec-redis-primary redis-cli ping
+
+docker exec -it datec-redis-primary redis-cli INFO replication
+
+7. 
+cls
+
+8. Start Neo4j Desktop
+
+9. Start instance : 'datec' & refresh
+
+10. http://localhost:7474/browser/
+neo4j
+dat3c_master_4dmin
+
+11. Switch to Database : 'datec'
+MATCH (u:User) RETURN count(u)
+
+12. http://localhost:5984/_utils/
+sudod4t3c
+dat3c_master_4dmin
+
+13. Switch to Database : 'datec'
+2 design documents
+
+14. 
+cd C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\backend
+
+15. 
+npm run dev
