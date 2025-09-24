@@ -7,13 +7,14 @@
  */
 
 require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
-const { 
-    connectMongo, 
-    connectRedis, 
-    connectNeo4j, 
-    connectCouchDB 
+const {
+    connectMongo,
+    connectRedis,
+    connectNeo4j,
+    connectCouchDB
 } = require('./config/databases');
 
 const app = express();
@@ -25,8 +26,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-    res.status(200).json({ 
-        status: 'OK', 
+    res.status(200).json({
+        status: 'OK',
         message: 'DaTEC API is running',
         timestamp: new Date().toISOString()
     });
@@ -45,15 +46,15 @@ app.get('/api/health', (req, res) => {
 async function startServer() {
     try {
         console.log('Connecting to databases...\n');
-        
+
         // Connect to all databases
         await connectMongo();
         await connectRedis();
         await connectNeo4j();
         await connectCouchDB();
-        
+
         console.log('\nAll databases connected successfully');
-        
+
         // Start Express server
         const PORT = process.env.PORT || 3000;
         app.listen(PORT, () => {
@@ -61,7 +62,7 @@ async function startServer() {
             console.log(`Health check: http://localhost:${PORT}/api/health`);
             console.log(`Environment: ${process.env.NODE_ENV || 'development'}\n`);
         });
-        
+
     } catch (error) {
         console.error('Failed to start server:', error.message);
         process.exit(1);

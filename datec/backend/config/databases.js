@@ -16,17 +16,14 @@ let mongoDB;
 
 async function connectMongo() {
     try {
-        mongoClient = new MongoClient(process.env.MONGO_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
-        
+        mongoClient = new MongoClient(process.env.MONGO_URI);
+
         await mongoClient.connect();
         mongoDB = mongoClient.db('datec');
-        
+
         // Verify connection
         await mongoDB.command({ ping: 1 });
-        
+
         console.log('Connected to MongoDB replica set: datecRS');
         return mongoDB;
     } catch (error) {
@@ -41,25 +38,21 @@ let redisReplica;
 
 async function connectRedis() {
     try {
-        redisPrimary = redis.createClient({ 
-            url: process.env.REDIS_PRIMARY 
-        });
-        redisReplica = redis.createClient({ 
-            url: process.env.REDIS_REPLICA 
-        });
-        
+        redisPrimary = redis.createClient({ url: process.env.REDIS_PRIMARY });
+        redisReplica = redis.createClient({ url: process.env.REDIS_REPLICA });
+
         await redisPrimary.connect();
         await redisReplica.connect();
-        
+
         // Verify connection
         await redisPrimary.set('connection_test', 'OK');
         const testResult = await redisPrimary.get('connection_test');
         await redisPrimary.del('connection_test');
-        
+
         if (testResult !== 'OK') {
             throw new Error('Redis primary connection test failed');
         }
-        
+
         console.log('Connected to Redis primary and replica');
         return { primary: redisPrimary, replica: redisReplica };
     } catch (error) {
@@ -77,12 +70,12 @@ async function connectNeo4j() {
             process.env.NEO4J_URI,
             neo4j.auth.basic(process.env.NEO4J_USER, process.env.NEO4J_PASSWORD)
         );
-        
+
         // Verify connection
         const session = neo4jDriver.session({ database: 'datec' });
         await session.run('RETURN 1');
         await session.close();
-        
+
         console.log('Connected to Neo4j database: datec');
         return neo4jDriver;
     } catch (error) {
@@ -97,10 +90,10 @@ let couchdb;
 async function connectCouchDB() {
     try {
         couchdb = nano(process.env.COUCHDB_URL);
-        
+
         // Verify connection
         await couchdb.db.list();
-        
+
         console.log('Connected to CouchDB database: datec');
         return couchdb;
     } catch (error) {
