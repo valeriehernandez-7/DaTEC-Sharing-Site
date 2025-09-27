@@ -1,7 +1,7 @@
 RUNNING https://github.com/valeriehernandez-7/DaTEC-Sharing-Site 
 
 Docker conts. path
-C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec
+C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db
 
 Server path
 C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\backend
@@ -10,8 +10,8 @@ C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\backend
 
 1. Start Docker Desktop
 
-2. 
-cd C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec
+2. Start Powershell
+cd C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db
 
 3. 
 docker-compose up -d
@@ -47,15 +47,17 @@ dat3c_master_4dmin
 11. Switch to Database : 'datec'
 MATCH (u:User) RETURN count(u)
 
-12. http://localhost:5984/_utils/
+12. Start Apache CouchDB Service
+
+13. http://localhost:5984/_utils/
 sudod4t3c
 dat3c_master_4dmin
 
-13. Switch to Database : 'datec'
+14. Access to Database : 'datec'
 2 design documents
 
-14. 
+15. 
 cd C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\backend
 
-15. 
+16. 
 npm run dev
