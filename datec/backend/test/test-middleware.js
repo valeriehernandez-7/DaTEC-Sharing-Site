@@ -7,8 +7,8 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
 // Import middlewares
-const { verifyToken, verifyAdmin, createError } = require('../middleware/auth');
-const { asyncHandler } = require('../middleware/errorHandler');
+const { verifyToken, verifyAdmin } = require('../middleware/auth');
+const { asyncHandler, createError } = require('../middleware/errorHandler');
 const { validateUsername, validateEmail, validateAge } = require('../utils/validators');
 
 console.log('Starting middleware tests...\n');

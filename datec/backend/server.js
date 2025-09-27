@@ -16,6 +16,7 @@ const {
     connectNeo4j,
     connectCouchDB
 } = require('./config/databases');
+const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 
@@ -33,7 +34,7 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// TODO: Add route handlers
+// Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 // app.use('/api/users', require('./routes/user.routes'));
 // app.use('/api/datasets', require('./routes/dataset.routes'));
@@ -42,7 +43,7 @@ app.use('/api/auth', require('./routes/auth.routes'));
 // 404 handler
 app.use(notFoundHandler);
 
-// Error handler
+// Error handler (must be last)
 app.use(errorHandler);
 
 // Start server and connect to databases
