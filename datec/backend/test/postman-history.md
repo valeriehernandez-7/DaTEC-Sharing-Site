@@ -35,7 +35,7 @@ Content-Type: application/json
 }
 ```
 
-# T2 : Registro con avatar ❌
+# T2 : Registro con avatar
 
 ## Request
 
@@ -53,14 +53,19 @@ full_name:Albert Einstein
 birth_date:1979-03-14
 avatar:C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\multimedia\avatar\avatar_einst3in.jpg
 
-## Response [500]
+## Response [201]
 
 ```json
 {
-  "success": false,
-  "error": "Failed to upload file: Document update conflict.",
-  "stack": "Error: Failed to upload file: Document update conflict.\n    at uploadFile (C:\\Users\\velysian\\Documents\\GitHub\\DaTEC-Sharing-Site\\datec\\backend\\utils\\couchdb-manager.js:77:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async C:\\Users\\velysian\\Documents\\GitHub\\DaTEC-Sharing-Site\\datec\\backend\\controllers\\auth.controller.js:78:22",
-  "details": {}
+  "success": true,
+  "message": "User registered successfully",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiNDJiYzE0Ni1lZDU1LTVjNTMtYTI4NC0yYjM5ZDA3NDI3NGUiLCJ1c2VybmFtZSI6ImVpbnN0M2luIiwiaXNBZG1pbiI6ZmFsc2UsImlhdCI6MTc1OTYxNDc4NywiZXhwIjoxNzYwMjE5NTg3fQ.RaGTsdfbawmeO-DLPqKP-1eYnBXLLPFNiy2BSyFPYK0",
+  "user": {
+    "userId": "b42bc146-ed55-5c53-a284-2b39d074274e",
+    "username": "einst3in",
+    "fullName": "Albert Einstein",
+    "isAdmin": false
+  }
 }
 ```
 
@@ -122,14 +127,14 @@ Auth Type : Bearer Token
 {
     "success": true,
     "user": {
-        "userId": "78bffe51-a28b-598a-885d-0e1b04fc3325",
-        "username": "dhodgkin",
-        "email": "dhodgkin@datec.com",
-        "fullName": "Dorothy Crowfoot Hodgkin",
-        "birthDate": "2010-05-12T00:00:00.000Z",
+        "userId": "b42bc146-ed55-5c53-a284-2b39d074274e",
+        "username": "einst3in",
+        "email": "einst3in@datec.com",
+        "fullName": "Albert Einstein",
+        "birthDate": "1979-03-14T00:00:00.000Z",
         "isAdmin": false,
-        "avatarUrl": null,
-        "createdAt": "2025-10-04T20:08:23.342Z"
+        "avatarUrl": "http://sudod4t3c:dat3c_master_4dmin@localhost:5984/datec/avatar_b42bc146-ed55-5c53-a284-2b39d074274e/avatar_einst3in.jpg",
+        "createdAt": "2025-10-04T21:53:07.079Z"
     }
 }
 ```

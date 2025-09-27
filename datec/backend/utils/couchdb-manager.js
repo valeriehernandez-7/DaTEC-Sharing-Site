@@ -44,25 +44,37 @@ async function uploadFile(docId, file, metadata) {
             }
         }
 
-        // Create document with metadata
+        // Check if document exists and get its revision
+        let rev = null;
+        try {
+            const existingDoc = await db.get(docId);
+            rev = existingDoc._rev;
+        } catch (error) {
+            // Document doesn't exist, which is fine
+        }
+
+        // Create document with attachment in one operation
         const document = {
             _id: docId,
             type: metadata.type,
             owner_user_id: metadata.owner_user_id,
             uploaded_at: new Date().toISOString(),
-            ...metadata
+            ...metadata,
+            _attachments: {
+                [file.originalname]: {
+                    content_type: file.mimetype,
+                    data: file.buffer.toString('base64')
+                }
+            }
         };
 
-        // Insert document
-        await db.insert(document);
+        // Include revision if document exists (update instead of create)
+        if (rev) {
+            document._rev = rev;
+        }
 
-        // Attach file to document
-        await db.attachment.insert(
-            docId,
-            file.originalname,
-            file.buffer,
-            file.mimetype
-        );
+        // Insert document with attachment
+        await db.insert(document);
 
         // Return file reference
         return {
