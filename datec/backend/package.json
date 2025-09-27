@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "test-utils": "node test/test-utilities.js"
+    "test-utils": "node test/test-utilities.js",
+    "test-middleware": "node test/test-middleware.js"
   },
   "keywords": [],
   "author": "",
