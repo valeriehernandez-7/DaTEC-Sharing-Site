@@ -18,31 +18,29 @@ async function setupNeo4j() {
     );
 
     try {
-        // Primero, conectar a la DB system para crear datec
+        // Create datec database
         console.log('\nCreating datec database...');
         const systemSession = driver.session({ database: 'system' });
 
         try {
             await systemSession.run('CREATE DATABASE datec IF NOT EXISTS');
-            console.log('✓ Database "datec" created or already exists');
+            console.log('Database "datec" created or already exists');
         } catch (e) {
-            // Si la versión de Neo4j no soporta múltiples DB, usar default
-            console.log('⚠ Using default database "neo4j" (multi-db not supported)');
+            console.log('Using default database "neo4j" (multi-db not supported)');
         } finally {
             await systemSession.close();
         }
 
-        // Esperar un momento para que la DB esté lista
+        // Wait for database to be ready
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // Ahora conectar a la DB datec (o neo4j si datec no existe)
+        // Connect to datec database
         let session;
         try {
             session = driver.session({ database: 'datec' });
-            // Test connection
             await session.run('RETURN 1');
         } catch (e) {
-            console.log('⚠ Falling back to default database "neo4j"');
+            console.log('Falling back to default database "neo4j"');
             session = driver.session({ database: 'neo4j' });
         }
 
@@ -53,13 +51,13 @@ async function setupNeo4j() {
             CREATE CONSTRAINT user_id_unique IF NOT EXISTS
             FOR (u:User) REQUIRE u.user_id IS UNIQUE
         `);
-        console.log('✓ User constraint created');
+        console.log('User constraint created');
 
         await session.run(`
             CREATE CONSTRAINT dataset_id_unique IF NOT EXISTS
             FOR (d:Dataset) REQUIRE d.dataset_id IS UNIQUE
         `);
-        console.log('✓ Dataset constraint created');
+        console.log('Dataset constraint created');
 
         // 2. Create indexes
         console.log('\nCreating indexes...');
@@ -68,13 +66,13 @@ async function setupNeo4j() {
             CREATE INDEX user_username IF NOT EXISTS
             FOR (u:User) ON (u.username)
         `);
-        console.log('✓ User username index created');
+        console.log('User username index created');
 
         await session.run(`
             CREATE INDEX dataset_name IF NOT EXISTS
             FOR (d:Dataset) ON (d.dataset_name)
         `);
-        console.log('✓ Dataset name index created');
+        console.log('Dataset name index created');
 
         // 3. Seed users (matching MongoDB)
         console.log('\nCreating sample users...');
@@ -92,7 +90,7 @@ async function setupNeo4j() {
                     user_id: $userId,
                     username: $username
                 })`, user);
-            console.log(`✓ User created: ${user.username}`);
+            console.log(`User created: ${user.username}`);
         }
 
         // 4. Seed datasets (matching MongoDB)
@@ -107,7 +105,7 @@ async function setupNeo4j() {
             datasetId: 'erickhernandez_20250101_001',
             datasetName: 'Global Sales Analysis 2024'
         });
-        console.log('✓ Dataset 1 created');
+        console.log('Dataset 1 created');
 
         await session.run(`
             MERGE (d:Dataset {
@@ -118,9 +116,64 @@ async function setupNeo4j() {
             datasetId: 'armandogarcia_20250201_001',
             datasetName: 'Climate Change Indicators'
         });
-        console.log('✓ Dataset 2 created');
+        console.log('Dataset 2 created');
 
-        // 5. Verification
+        // 5. Create FOLLOWS relationships
+        console.log('\nCreating FOLLOWS relationships...');
+
+        // armandogarcia follows erickhernandez
+        await session.run(`
+            MATCH (follower:User {username: $followerUsername})
+            MATCH (followee:User {username: $followeeUsername})
+            MERGE (follower)-[r:FOLLOWS {followed_at: $timestamp}]->(followee)
+            RETURN r
+        `, {
+            followerUsername: 'armandogarcia',
+            followeeUsername: 'erickhernandez',
+            timestamp: new Date('2025-10-01T10:00:00Z').toISOString()
+        });
+        console.log('armandogarcia -> FOLLOWS -> erickhernandez');
+
+        // erickhernandez follows armandogarcia (mutual follow)
+        await session.run(`
+            MATCH (follower:User {username: $followerUsername})
+            MATCH (followee:User {username: $followeeUsername})
+            MERGE (follower)-[r:FOLLOWS {followed_at: $timestamp}]->(followee)
+            RETURN r
+        `, {
+            followerUsername: 'erickhernandez',
+            followeeUsername: 'armandogarcia',
+            timestamp: new Date('2025-10-01T11:00:00Z').toISOString()
+        });
+        console.log('erickhernandez -> FOLLOWS -> armandogarcia');
+
+        // armandogarcia follows valeriehernandez
+        await session.run(`
+            MATCH (follower:User {username: $followerUsername})
+            MATCH (followee:User {username: $followeeUsername})
+            MERGE (follower)-[r:FOLLOWS {followed_at: $timestamp}]->(followee)
+            RETURN r
+        `, {
+            followerUsername: 'armandogarcia',
+            followeeUsername: 'valeriehernandez',
+            timestamp: new Date('2025-10-03T14:20:00Z').toISOString()
+        });
+        console.log('armandogarcia -> FOLLOWS -> valeriehernandez');
+
+        // erickhernandez follows valeriehernandez
+        await session.run(`
+            MATCH (follower:User {username: $followerUsername})
+            MATCH (followee:User {username: $followeeUsername})
+            MERGE (follower)-[r:FOLLOWS {followed_at: $timestamp}]->(followee)
+            RETURN r
+        `, {
+            followerUsername: 'erickhernandez',
+            followeeUsername: 'valeriehernandez',
+            timestamp: new Date('2025-10-04T14:20:00Z').toISOString()
+        });
+        console.log('erickhernandez -> FOLLOWS -> valeriehernandez');
+
+        // 6. Verification
         console.log('\nVerifying setup...');
 
         const userCountResult = await session.run('MATCH (u:User) RETURN count(u) AS count');
@@ -129,37 +182,54 @@ async function setupNeo4j() {
         const datasetCountResult = await session.run('MATCH (d:Dataset) RETURN count(d) AS count');
         const datasetCount = datasetCountResult.records[0].get('count').toNumber();
 
-        const dbNameResult = await session.run('CALL db.info()');
-        const dbName = dbNameResult.records[0].get('name');
+        const followsCountResult = await session.run('MATCH ()-[r:FOLLOWS]->() RETURN count(r) AS count');
+        const followsCount = followsCountResult.records[0].get('count').toNumber();
+
+        // Get followers count for each user
+        console.log('\nFollowers summary:');
+
+        for (const user of sampleUsers) {
+            const followersResult = await session.run(`
+                MATCH (follower:User)-[:FOLLOWS]->(u:User {username: $username})
+                RETURN count(follower) AS followers
+            `, { username: user.username });
+
+            const followingResult = await session.run(`
+                MATCH (u:User {username: $username})-[:FOLLOWS]->(following:User)
+                RETURN count(following) AS following
+            `, { username: user.username });
+
+            const followers = followersResult.records[0].get('followers').toNumber();
+            const following = followingResult.records[0].get('following').toNumber();
+
+            console.log(`${user.username}: ${followers} followers, ${following} following`);
+        }
 
         console.log('\n' + '='.repeat(60));
         console.log('Neo4j Setup Complete!');
         console.log('='.repeat(60));
-        console.log('\nSummary:');
-        console.log('  - URL: bolt://localhost:7687');
-        console.log(`  - Database: ${dbName}`);
-        console.log('  - Constraints: 2 (User, Dataset)');
-        console.log('  - Indexes: 2 (username, dataset_name)');
-        console.log(`  - Users: ${userCount}`);
-        console.log(`  - Datasets: ${datasetCount}`);
-        console.log('  - Ready for relationship tracking');
+        console.log(`Database: datec`);
+        console.log(`Users created: ${userCount}`);
+        console.log(`Datasets created: ${datasetCount}`);
+        console.log(`FOLLOWS relationships: ${followsCount}`);
+        console.log('='.repeat(60));
 
         await session.close();
+        await driver.close();
 
     } catch (error) {
-        console.error('\n' + '!'.repeat(60));
-        console.error('ERROR during Neo4j setup:');
-        console.error('!'.repeat(60));
+        console.error('\nSetup failed:', error.message);
         console.error(error);
-        throw error;
-    } finally {
-        await driver.close();
+        process.exit(1);
     }
 }
 
-// Run if called directly
-if (require.main === module) {
-    setupNeo4j();
-}
-
-module.exports = setupNeo4j;
+setupNeo4j()
+    .then(() => {
+        console.log('\nSetup script completed successfully');
+        process.exit(0);
+    })
+    .catch(error => {
+        console.error('\nSetup script failed:', error.message);
+        process.exit(1);
+    });

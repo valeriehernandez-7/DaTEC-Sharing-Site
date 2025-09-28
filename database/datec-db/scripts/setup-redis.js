@@ -24,7 +24,7 @@ async function setupRedis() {
         // Test primary connection
         await primaryClient.set('test_connection', 'OK');
         const testResult = await primaryClient.get('test_connection');
-        console.log('✓ Redis Primary connection test:', testResult);
+        console.log('Redis Primary connection test:', testResult);
 
         // Get primary info
         const primaryInfo = await primaryClient.info('replication');
@@ -41,7 +41,7 @@ async function setupRedis() {
 
         // Test replica connection (read-only)
         const replicaTest = await replicaClient.get('test_connection');
-        console.log('✓ Redis Replica connection test:', replicaTest);
+        console.log('Redis Replica connection test:', replicaTest);
 
         // Get replica info
         const replicaInfo = await replicaClient.info('replication');
@@ -63,25 +63,114 @@ async function setupRedis() {
             console.log(`  - Initialized counters for dataset: ${datasetId}`);
         }
 
-        // Test notification queues with valid notification type
-        console.log('\nTesting notification queues...');
+        // Create sample notifications matching Neo4j FOLLOWS relationships
+        console.log('\nCreating sample notifications...');
+
+        // User IDs from setup-mongo.js
+        const users = {
+            sudod4t3c: '00000000-0000-5000-8000-00005a317347',
+            erickhernandez: '00000000-0000-5000-8000-00002a10550c',
+            armandogarcia: '00000000-0000-5000-8000-000050c163e7',
+            valeriehernandez: '00000000-0000-5000-8000-000004637677'
+        };
+
+        // Notification 1: erickhernandez receives notification from armandogarcia (new_follower)
+        // Matches: armandogarcia -> FOLLOWS -> erickhernandez from setup-neo4j.js
         await primaryClient.lPush(
-            'notifications:user:00000000-0000-5000-8000-00002a10550c',
+            `notifications:user:${users.erickhernandez}`,
+            JSON.stringify({
+                type: 'new_follower',
+                from_user_id: users.armandogarcia,
+                from_username: 'armandogarcia',
+                timestamp: new Date('2025-10-01T10:00:00Z').toISOString()
+            })
+        );
+        console.log('  - erickhernandez: new_follower from armandogarcia');
+
+        // Notification 2: armandogarcia receives notification from erickhernandez (new_follower)
+        // Matches: erickhernandez -> FOLLOWS -> armandogarcia from setup-neo4j.js
+        await primaryClient.lPush(
+            `notifications:user:${users.armandogarcia}`,
+            JSON.stringify({
+                type: 'new_follower',
+                from_user_id: users.erickhernandez,
+                from_username: 'erickhernandez',
+                timestamp: new Date('2025-10-01T11:00:00Z').toISOString()
+            })
+        );
+        console.log('  - armandogarcia: new_follower from erickhernandez');
+
+        // Notification 3: valeriehernandez receives notification from armandogarcia (new_follower)
+        // Matches: armandogarcia -> FOLLOWS -> valeriehernandez from setup-neo4j.js
+        await primaryClient.lPush(
+            `notifications:user:${users.valeriehernandez}`,
+            JSON.stringify({
+                type: 'new_follower',
+                from_user_id: users.armandogarcia,
+                from_username: 'armandogarcia',
+                timestamp: new Date('2025-10-03T14:20:00Z').toISOString()
+            })
+        );
+        console.log('  - valeriehernandez: new_follower from armandogarcia');
+
+        // Notification 4: valeriehernandez receives notification from erickhernandez (new_follower)
+        // Matches: erickhernandez -> FOLLOWS -> valeriehernandez from setup-neo4j.js
+        await primaryClient.lPush(
+            `notifications:user:${users.valeriehernandez}`,
+            JSON.stringify({
+                type: 'new_follower',
+                from_user_id: users.erickhernandez,
+                from_username: 'erickhernandez',
+                timestamp: new Date('2025-10-03T14:20:00Z').toISOString()
+            })
+        );
+        console.log('  - valeriehernandez: new_follower from erickhernandez');
+
+        // Notification 5: erickhernandez receives dataset approval notification
+        await primaryClient.lPush(
+            `notifications:user:${users.erickhernandez}`,
             JSON.stringify({
                 type: 'dataset_approved',
                 dataset_id: 'erickhernandez_20250101_001',
                 dataset_name: 'Global Sales Analysis 2024',
-                timestamp: new Date().toISOString()
+                admin_review: 'Excellent dataset with comprehensive data',
+                timestamp: new Date('2025-10-01T15:00:00Z').toISOString()
             })
         );
+        console.log('  - erickhernandez: dataset_approved notification');
 
-        const queueLength = await primaryClient.lLen('notifications:user:00000000-0000-5000-8000-00002a10550c');
-        console.log(`✓ Notification queue test: ${queueLength} messages in queue`);
+        // Notification 6: armandogarcia receives dataset approval notification
+        await primaryClient.lPush(
+            `notifications:user:${users.armandogarcia}`,
+            JSON.stringify({
+                type: 'dataset_approved',
+                dataset_id: 'armandogarcia_20250201_001',
+                dataset_name: 'Climate Change Indicators',
+                admin_review: 'Well-documented climate data',
+                timestamp: new Date('2025-10-02T16:30:00Z').toISOString()
+            })
+        );
+        console.log('  - armandogarcia: dataset_approved notification');
+
+        // Verify notification queues
+        console.log('\nVerifying notification queues...');
+
+        const notificationCounts = {
+            sudod4t3c: await primaryClient.lLen(`notifications:user:${users.sudod4t3c}`),
+            erickhernandez: await primaryClient.lLen(`notifications:user:${users.erickhernandez}`),
+            armandogarcia: await primaryClient.lLen(`notifications:user:${users.armandogarcia}`),
+            valeriehernandez: await primaryClient.lLen(`notifications:user:${users.valeriehernandez}`)
+        };
+
+        console.log('Notification counts by user:');
+        for (const [username, count] of Object.entries(notificationCounts)) {
+            console.log(`  - ${username}: ${count} notifications`);
+        }
 
         // Verify data replication
         console.log('\nVerifying data replication...');
         const replicatedData = await replicaClient.get('test_connection');
-        console.log(`✓ Data replication test: ${replicatedData === 'OK' ? 'SUCCESS' : 'FAILED'}`);
+        console.log(`Data replication test: ${replicatedData === 'OK' ? 'SUCCESS' : 'FAILED'}`);
 
         // Cleanup test data
         await primaryClient.del('test_connection');
@@ -96,6 +185,10 @@ async function setupRedis() {
         console.log('  - Notification queues: ready');
         console.log('  - Replication: verified');
         console.log(`  - Sample datasets: ${sampleDatasets.length}`);
+        console.log(`  - Total notifications: ${Object.values(notificationCounts).reduce((a, b) => a + b, 0)}`);
+        console.log('\nNotification breakdown:');
+        console.log('  - new_follower: 4');
+        console.log('  - dataset_approved: 2');
 
         await primaryClient.quit();
         await replicaClient.quit();

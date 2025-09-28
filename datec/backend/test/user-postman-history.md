@@ -195,22 +195,13 @@ GET {{base_url}}/api/users/unknown
 **HU20**: Get followers list
 
 ```
-GET {{base_url}}/api/users/john_doe/followers
+GET {{base_url}}/api/users/sudod4t3c/followers
 ```
 
-**Expected Response** (200 OK):
+**Response** (500):
 ```json
 {
-  "success": true,
-  "count": 1,
-  "followers": [
-    {
-      "userId": "uuid",
-      "username": "jane_smith",
-      "fullName": "Jane Smith",
-      "avatarUrl": null
-    }
-  ]
+    "error": "Internal server error"
 }
 ```
 

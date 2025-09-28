@@ -103,42 +103,42 @@ async function deleteRelationship(fromId, toId, relType) {
 }
 
 /**
- * Get all relationships for a node
+ * Get relationships for a node
  * 
- * @param {string} nodeId - Node ID (user_id or dataset_id)
- * @param {string} relType - Relationship type
+ * @param {string} nodeId - Node ID
+ * @param {string} relType - Relationship type ('FOLLOWS' or 'DOWNLOADED')
  * @param {string} direction - 'outgoing', 'incoming', or 'both'
- * @returns {Array} Array of related nodes with relationship properties
+ * @returns {Array} Array of relationship objects with related node info
  * @throws {Error} If query fails
  */
-async function getRelationships(nodeId, relType, direction = 'outgoing') {
+async function getRelationships(nodeId, relType, direction = 'both') {
     const driver = getNeo4j();
     const session = driver.session({ database: 'datec' });
 
     try {
-        let query;
-        const nodeLabel = relType === 'FOLLOWS' ? 'User' :
-            direction === 'incoming' ? 'Dataset' : 'User';
+        // Determine node types based on relationship
+        const nodeLabel = relType === 'DOWNLOADED' ? 'User' : 'User';
         const relatedLabel = relType === 'FOLLOWS' ? 'User' : 'Dataset';
 
+        let query;
         if (direction === 'outgoing') {
             query = `
                 MATCH (n:${nodeLabel} {${nodeLabel === 'User' ? 'user_id' : 'dataset_id'}: $nodeId})
                 -[r:${relType}]->(related:${relatedLabel})
-                RETURN related, r
+                RETURN related, r, properties(r) as props
             `;
         } else if (direction === 'incoming') {
             query = `
                 MATCH (related:${relatedLabel})
                 -[r:${relType}]->
                 (n:${nodeLabel} {${nodeLabel === 'User' ? 'user_id' : 'dataset_id'}: $nodeId})
-                RETURN related, r
+                RETURN related, r, properties(r) as props
             `;
-        } else { // both
+        } else {
             query = `
                 MATCH (n:${nodeLabel} {${nodeLabel === 'User' ? 'user_id' : 'dataset_id'}: $nodeId})
                 -[r:${relType}]-(related:${relatedLabel})
-                RETURN related, r
+                RETURN related, r, properties(r) as props
             `;
         }
 
@@ -146,10 +146,13 @@ async function getRelationships(nodeId, relType, direction = 'outgoing') {
 
         return result.records.map(record => {
             const relatedNode = record.get('related').properties;
-            const relationship = record.get('r').properties;
+            const relProps = record.get('props');
+
             return {
-                node: relatedNode,
-                relationship: relationship
+                nodeId: relatedNode.user_id || relatedNode.dataset_id,
+                username: relatedNode.username,
+                datasetName: relatedNode.dataset_name,
+                relationshipProperties: relProps
             };
         });
 
@@ -162,11 +165,59 @@ async function getRelationships(nodeId, relType, direction = 'outgoing') {
 }
 
 /**
+ * Get related node IDs only (simplified version for HU20)
+ * Returns only the IDs of related nodes
+ * 
+ * @param {string} nodeId - Node ID
+ * @param {string} relType - Relationship type ('FOLLOWS' or 'DOWNLOADED')
+ * @param {string} direction - 'outgoing' or 'incoming'
+ * @returns {Array<string>} Array of related node IDs
+ * @throws {Error} If query fails
+ */
+async function getRelatedNodes(nodeId, relType, direction) {
+    const driver = getNeo4j();
+    const session = driver.session({ database: 'datec' });
+
+    try {
+        // Determine node types based on relationship
+        const nodeLabel = 'User';
+        const relatedLabel = relType === 'FOLLOWS' ? 'User' : 'Dataset';
+        const relatedIdField = relType === 'FOLLOWS' ? 'user_id' : 'dataset_id';
+
+        let query;
+        if (direction === 'outgoing') {
+            query = `
+                MATCH (n:${nodeLabel} {user_id: $nodeId})
+                -[:${relType}]->(related:${relatedLabel})
+                RETURN related.${relatedIdField} as id
+            `;
+        } else {
+            query = `
+                MATCH (related:${relatedLabel})
+                -[:${relType}]->
+                (n:${nodeLabel} {user_id: $nodeId})
+                RETURN related.${relatedIdField} as id
+            `;
+        }
+
+        const result = await session.run(query, { nodeId });
+
+        return result.records.map(record => record.get('id'));
+
+    } catch (error) {
+        console.error('Neo4j get related nodes failed:', error.message);
+        throw new Error(`Failed to get related nodes: ${error.message}`);
+    } finally {
+        await session.close();
+    }
+}
+
+/**
  * Check if a relationship exists between two nodes
  * 
  * @param {string} fromId - Source node ID
  * @param {string} toId - Target node ID
- * @param {string} relType - Relationship type
+ * @param {string} relType - Relationship type ('FOLLOWS' or 'DOWNLOADED')
  * @returns {boolean} True if relationship exists
  * @throws {Error} If query fails
  */
@@ -191,7 +242,7 @@ async function relationshipExists(fromId, toId, relType) {
 
     } catch (error) {
         console.error('Neo4j relationship exists check failed:', error.message);
-        throw new Error(`Failed to check relationship existence: ${error.message}`);
+        throw new Error(`Failed to check relationship: ${error.message}`);
     } finally {
         await session.close();
     }
@@ -201,18 +252,18 @@ async function relationshipExists(fromId, toId, relType) {
  * Count relationships for a node
  * 
  * @param {string} nodeId - Node ID
- * @param {string} relType - Relationship type
+ * @param {string} relType - Relationship type ('FOLLOWS' or 'DOWNLOADED')
  * @param {string} direction - 'outgoing' or 'incoming'
  * @returns {number} Count of relationships
  * @throws {Error} If query fails
  */
-async function countRelationships(nodeId, relType, direction = 'outgoing') {
+async function countRelationships(nodeId, relType, direction) {
     const driver = getNeo4j();
     const session = driver.session({ database: 'datec' });
 
     try {
-        const nodeLabel = relType === 'FOLLOWS' ? 'User' :
-            direction === 'incoming' ? 'Dataset' : 'User';
+        // Determine node types based on relationship
+        const nodeLabel = relType === 'DOWNLOADED' ? 'User' : 'User';
         const relatedLabel = relType === 'FOLLOWS' ? 'User' : 'Dataset';
 
         let query;
@@ -343,6 +394,7 @@ module.exports = {
     createRelationship,
     deleteRelationship,
     getRelationships,
+    getRelatedNodes,
     relationshipExists,
     countRelationships,
     createUserNode,
