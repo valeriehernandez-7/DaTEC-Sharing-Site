@@ -411,8 +411,6 @@ Content-Type: multipart/form-data
 
 **Body** (form-data):
 
-<!-- TODO: This is not allowed change controller-->
-
 - `username`: `newuser123`
 
 **Response** (expected 400):
@@ -420,7 +418,7 @@ Content-Type: multipart/form-data
 ```json
 {
   "success": true,
-  "message": "Profile updated successfully"
+  "message": "Username cannot be changed"
 }
 ```
 

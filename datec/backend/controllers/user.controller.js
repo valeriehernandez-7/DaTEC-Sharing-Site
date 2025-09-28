@@ -34,9 +34,15 @@ async function searchUsers(req, res) {
             return res.status(400).json({ error: 'Query parameter required' });
         }
 
-        // MongoDB text search on username and full_name
+        // Use regex for partial matching on username and full_name
+        // Case-insensitive search
+        const searchRegex = new RegExp(query, 'i');
+
         const users = await db.collection('users').find({
-            $text: { $search: query }
+            $or: [
+                { username: searchRegex },
+                { full_name: searchRegex }
+            ]
         }).limit(20).toArray();
 
         res.json({
@@ -113,6 +119,14 @@ async function updateUser(req, res) {
         const user = await db.collection('users').findOne({ username: req.params.username });
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Prevent username update
+        if (req.body.username) {
+            return res.status(400).json({
+                success: false,
+                error: 'Username cannot be changed'
+            });
         }
 
         const updates = {};
