@@ -25,7 +25,7 @@ Content-Type: application/json
 {
     "success": true,
     "message": "User registered successfully",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3OGJmZmU1MS1hMjhiLTU5OGEtODg1ZC0wZTFiMDRmYzMzMjUiLCJ1c2VybmFtZSI6ImRob2Rna2luIiwiaXNBZG1pbiI6ZmFsc2UsImlhdCI6MTc1OTYwODUwNCwiZXhwIjoxNzYwMjEzMzA0fQ.c-KNlPT3SI7JUhjLUwjq_37Q2Yng08uhWattPSzsAE0",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3OGJmZmU1MS1hMjhiLTU5OGEtODg1ZC0wZTFiMDRmYzMzMjUiLCJ1c2VybmFtZSI6ImRob2Rna2luIiwiaXNBZG1pbiI6ZmFsc2UsImlhdCI6MTc1OTYyNzAxMywiZXhwIjoxNzYwMjMxODEzfQ.eHg8Eoh-u786RVmQgmiCVgrgNgKCMcx8VaLPdNdRlDI",
     "user": {
         "userId": "78bffe51-a28b-598a-885d-0e1b04fc3325",
         "username": "dhodgkin",
@@ -59,7 +59,7 @@ avatar:C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\multimedia
 {
   "success": true,
   "message": "User registered successfully",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiNDJiYzE0Ni1lZDU1LTVjNTMtYTI4NC0yYjM5ZDA3NDI3NGUiLCJ1c2VybmFtZSI6ImVpbnN0M2luIiwiaXNBZG1pbiI6ZmFsc2UsImlhdCI6MTc1OTYxNDc4NywiZXhwIjoxNzYwMjE5NTg3fQ.RaGTsdfbawmeO-DLPqKP-1eYnBXLLPFNiy2BSyFPYK0",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiNDJiYzE0Ni1lZDU1LTVjNTMtYTI4NC0yYjM5ZDA3NDI3NGUiLCJ1c2VybmFtZSI6ImVpbnN0M2luIiwiaXNBZG1pbiI6ZmFsc2UsImlhdCI6MTc1OTYyNzExMiwiZXhwIjoxNzYwMjMxOTEyfQ.0aPVOan_dXZlkBVldKj7xfEoQDZvorY4Ih94Ic8U2L8",
   "user": {
     "userId": "b42bc146-ed55-5c53-a284-2b39d074274e",
     "username": "einst3in",
@@ -93,7 +93,7 @@ Content-Type: application/json
 {
   "success": true,
   "message": "Login successful",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3OGJmZmU1MS1hMjhiLTU5OGEtODg1ZC0wZTFiMDRmYzMzMjUiLCJ1c2VybmFtZSI6ImRob2Rna2luIiwiaXNBZG1pbiI6ZmFsc2UsImlhdCI6MTc1OTYwOTg3NCwiZXhwIjoxNzYwMjE0Njc0fQ.NuaIgXzwPXtCYxVDpWtR_11w7oC2zmvxg2EyILfpF5w",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3OGJmZmU1MS1hMjhiLTU5OGEtODg1ZC0wZTFiMDRmYzMzMjUiLCJ1c2VybmFtZSI6ImRob2Rna2luIiwiaXNBZG1pbiI6ZmFsc2UsImlhdCI6MTc1OTYyNzE0NCwiZXhwIjoxNzYwMjMxOTQ0fQ.h7GKsqT103p_N94jvHCi8xVfYXG5X9_hcKJ8ivxZifQ",
   "user": {
     "userId": "78bffe51-a28b-598a-885d-0e1b04fc3325",
     "username": "dhodgkin",
@@ -127,14 +127,14 @@ Auth Type : Bearer Token
 {
     "success": true,
     "user": {
-        "userId": "b42bc146-ed55-5c53-a284-2b39d074274e",
-        "username": "einst3in",
-        "email": "einst3in@datec.com",
-        "fullName": "Albert Einstein",
-        "birthDate": "1979-03-14T00:00:00.000Z",
+        "userId": "78bffe51-a28b-598a-885d-0e1b04fc3325",
+        "username": "dhodgkin",
+        "email": "dhodgkin@datec.com",
+        "fullName": "Dorothy Crowfoot Hodgkin",
+        "birthDate": "2010-05-12T00:00:00.000Z",
         "isAdmin": false,
-        "avatarUrl": "http://sudod4t3c:dat3c_master_4dmin@localhost:5984/datec/avatar_b42bc146-ed55-5c53-a284-2b39d074274e/avatar_einst3in.jpg",
-        "createdAt": "2025-10-04T21:53:07.079Z"
+        "avatarUrl": null,
+        "createdAt": "2025-10-05T01:16:53.530Z"
     }
 }
 ```
@@ -163,7 +163,7 @@ Content-Type: application/json
 {
     "success": true,
     "message": "Login successful",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMDAwMDAwMC0wMDAwLTUwMDAtODAwMC0wMDAwNWEzMTczNDciLCJ1c2VybmFtZSI6InN1ZG9kNHQzYyIsImlzQWRtaW4iOnRydWUsImlhdCI6MTc1OTYxMjQ5MiwiZXhwIjoxNzYwMjE3MjkyfQ.2GZI9nV6Wc1al0WZrz26v4nmwNxb9SGss2MLLAbebf8",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMDAwMDAwMC0wMDAwLTUwMDAtODAwMC0wMDAwNWEzMTczNDciLCJ1c2VybmFtZSI6InN1ZG9kNHQzYyIsImlzQWRtaW4iOnRydWUsImlhdCI6MTc1OTYyNzI0NCwiZXhwIjoxNzYwMjMyMDQ0fQ.Y0wlgGcQT4x9ikXSxyRUq0Vok7UosOqpLmL3UFnZJmY",
     "user": {
         "userId": "00000000-0000-5000-8000-00005a317347",
         "username": "sudod4t3c",

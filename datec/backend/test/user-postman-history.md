@@ -12,14 +12,14 @@
 
 Create a new environment in Postman with these variables:
 
-| Variable | Initial Value | Current Value |
-|----------|---------------|---------------|
-| `base_url` | `http://localhost:3000` |
-| `admin_token` | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMDAwMDAwMC0wMDAwLTUwMDAtODAwMC0wMDAwNWEzMTczNDciLCJ1c2VybmFtZSI6InN1ZG9kNHQzYyIsImlzQWRtaW4iOnRydWUsImlhdCI6MTc1OTYxOTYwNCwiZXhwIjoxNzYwMjI0NDA0fQ.0MncefJbKE4KI0a0qlSvDKV3MahU_l5E4VbIHk_pkC4` |
-| `admin_username` | `sudod4t3c` |
-| `admin_password` | `dat3c_master_4dmin` |
-| `test_username` | `einst3in` |
-| `test_password` | `einst3in` |
+| Variable         | Initial Value                                                                                                                                                                                                                                         | Current Value |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `base_url`       | `http://localhost:3000`                                                                                                                                                                                                                               |
+| `user_token`     | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMDAwMDAwMC0wMDAwLTUwMDAtODAwMC0wMDAwNWEzMTczNDciLCJ1c2VybmFtZSI6InN1ZG9kNHQzYyIsImlzQWRtaW4iOnRydWUsImlhdCI6MTc1OTYxOTYwNCwiZXhwIjoxNzYwMjI0NDA0fQ.0MncefJbKE4KI0a0qlSvDKV3MahU_l5E4VbIHk_pkC4` |
+| `admin_username` | `sudod4t3c`                                                                                                                                                                                                                                           |
+| `admin_password` | `dat3c_master_4dmin`                                                                                                                                                                                                                                  |
+| `test_username`  | `einst3in`                                                                                                                                                                                                                                            |
+| `test_password`  | `einst3in`                                                                                                                                                                                                                                            |
 
 ---
 
@@ -28,10 +28,15 @@ Create a new environment in Postman with these variables:
 Execute tests in this order:
 
 ### **1. Health Check**
+
 ### **2. Authentication (prerequisite for other tests)**
+
 ### **3. Public User Endpoints**
+
 ### **4. Protected User Endpoints**
+
 ### **5. Admin Endpoints**
+
 ### **6. Social Features**
 
 ---
@@ -40,16 +45,17 @@ Execute tests in this order:
 
 **Purpose**: Verify server is running
 
-```
+```txt
 GET {{base_url}}/api/health
 ```
 
 **Expected Response** (200 OK):
+
 ```json
 {
   "status": "OK",
   "message": "DaTEC API is running",
-  "timestamp": "2025-10-04T..."
+  "timestamp": "2025-10-05T01:24:51.070Z"
 }
 ```
 
@@ -61,90 +67,97 @@ GET {{base_url}}/api/health
 
 **HU14**: Search users by name/username
 
-```
+```txt
 GET {{base_url}}/api/users/search?q={{test_username}}
 ```
 
 **Response** (200 OK):
+
 ```json
 {
-    "success": true,
-    "count": 1,
-    "users": [
-        {
-            "userId": "b42bc146-ed55-5c53-a284-2b39d074274e",
-            "username": "einst3in",
-            "fullName": "Albert Einstein",
-            "avatarUrl": "http://localhost:5984/datec/avatar_b42bc146-ed55-5c53-a284-2b39d074274e/avatar_einst3in.jpg",
-            "isAdmin": false,
-            "createdAt": "2025-10-04T21:53:07.079Z"
-        }
-    ]
+  "success": true,
+  "count": 1,
+  "users": [
+    {
+      "userId": "b42bc146-ed55-5c53-a284-2b39d074274e",
+      "username": "einst3in",
+      "fullName": "Albert Einstein",
+      "avatarUrl": "http://localhost:5984/datec/avatar_b42bc146-ed55-5c53-a284-2b39d074274e/avatar_einst3in.jpg",
+      "isAdmin": false,
+      "createdAt": "2025-10-05T01:18:32.805Z"
+    }
+  ]
 }
 ```
 
 **Test Cases**:
+
 - Search with `q=hernandez` (find 2 users)
-```json
-{
-    "success": true,
-    "count": 2,
-    "users": [
-        {
-            "userId": "00000000-0000-5000-8000-000004637677",
-            "username": "valeriehernandez",
-            "fullName": "Valerie Hernandez Fernandez",
-            "avatarUrl": null,
-            "isAdmin": false,
-            "createdAt": "2025-10-01T21:15:41.744Z"
-        },
-        {
-            "userId": "00000000-0000-5000-8000-00002a10550c",
-            "username": "erickhernandez",
-            "fullName": "Erick Hernandez Bonilla",
-            "avatarUrl": null,
-            "isAdmin": false,
-            "createdAt": "2025-10-01T21:15:41.744Z"
-        }
-    ]
-}
+
+```txt
+GET {{base_url}}/api/users/search?q=hernandez
 ```
 
+```json
+{
+  "success": true,
+  "count": 2,
+  "users": [
+    {
+      "userId": "00000000-0000-5000-8000-000004637677",
+      "username": "valeriehernandez",
+      "fullName": "Valerie Hernandez Fernandez",
+      "avatarUrl": null,
+      "isAdmin": false,
+      "createdAt": "2025-10-05T00:56:37.109Z"
+    },
+    {
+      "userId": "00000000-0000-5000-8000-00002a10550c",
+      "username": "erickhernandez",
+      "fullName": "Erick Hernandez Bonilla",
+      "avatarUrl": null,
+      "isAdmin": false,
+      "createdAt": "2025-10-05T00:56:37.109Z"
+    }
+  ]
+}
+```
 
 - Search with `q=DaTEC System Administrator` (find sudod4t3c)
 - Search with `q=sudod4t3c` (find sudod4t3c)
+
 ```json
 {
-    "success": true,
-    "count": 1,
-    "users": [
-        {
-            "userId": "00000000-0000-5000-8000-00005a317347",
-            "username": "sudod4t3c",
-            "fullName": "DaTEC System Administrator",
-            "avatarUrl": null,
-            "isAdmin": true,
-            "createdAt": "2025-10-01T21:15:41.744Z"
-        }
-    ]
+  "success": true,
+  "count": 1,
+  "users": [
+    {
+      "userId": "00000000-0000-5000-8000-00005a317347",
+      "username": "sudod4t3c",
+      "fullName": "DaTEC System Administrator",
+      "avatarUrl": null,
+      "isAdmin": true,
+      "createdAt": "2025-10-01T21:15:41.744Z"
+    }
+  ]
 }
 ```
-
 
 - Search without `q` parameter (return 400 error)
+
 ```json
 {
-    "error": "Query parameter required"
+  "error": "Query parameter required"
 }
 ```
 
-
 - Search with `q=xyz123` (should return empty array)
+
 ```json
 {
-    "success": true,
-    "count": 0,
-    "users": []
+  "success": true,
+  "count": 0,
+  "users": []
 }
 ```
 
@@ -152,39 +165,45 @@ GET {{base_url}}/api/users/search?q={{test_username}}
 
 ### 3.2 Get User Profile
 
+```txt
+GET {{base_url}}/api/users/:username
 ```
-GET {{base_url}}/api/users/{{username}}
+
+```txt
+GET {{base_url}}/api/users/{{admin_username}}
 ```
 
 **Response** (200 OK):
+
 ```json
 {
-    "success": true,
-    "user": {
-        "userId": "00000000-0000-5000-8000-00005a317347",
-        "username": "sudod4t3c",
-        "fullName": "DaTEC System Administrator",
-        "birthDate": "1999-09-09T00:00:00.000Z",
-        "emailAddress": "sudo@datec.com",
-        "avatarUrl": null,
-        "isAdmin": true,
-        "createdAt": "2025-10-01T21:15:41.744Z",
-        "updatedAt": "2025-10-01T21:15:41.744Z"
-    }
+  "success": true,
+  "user": {
+    "userId": "00000000-0000-5000-8000-00005a317347",
+    "username": "sudod4t3c",
+    "fullName": "DaTEC System Administrator",
+    "birthDate": "1999-09-09T00:00:00.000Z",
+    "emailAddress": "sudo@datec.com",
+    "avatarUrl": null,
+    "isAdmin": true,
+    "createdAt": "2025-10-05T00:56:37.109Z",
+    "updatedAt": "2025-10-05T00:56:37.109Z"
+  }
 }
 ```
 
-```
+```txt
 GET {{base_url}}/api/users/unknown
 ```
 
 ```json
 {
-    "error": "User not found"
+  "error": "User not found"
 }
 ```
 
 **Test Cases**:
+
 - Get profile of existing user (sudod4t3c)
 - Get profile of non-existent user (should return 404)
 
@@ -194,14 +213,56 @@ GET {{base_url}}/api/users/unknown
 
 **HU20**: Get followers list
 
-```
-GET {{base_url}}/api/users/sudod4t3c/followers
+```txt
+GET {{base_url}}/api/users/unknown/followers
 ```
 
-**Response** (500):
+**Response** (404):
+
 ```json
 {
-    "error": "Internal server error"
+  "error": "User not found"
+}
+```
+
+```txt
+GET {{base_url}}/api/users/{{admin_username}}/followers
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "success": true,
+  "count": 0,
+  "followers": []
+}
+```
+
+```
+GET {{base_url}}/api/users/valeriehernandez/followers
+```
+
+**Response** (200 OK):
+
+```json
+{
+  "success": true,
+  "count": 2,
+  "followers": [
+    {
+      "userId": "00000000-0000-5000-8000-00002a10550c",
+      "username": "erickhernandez",
+      "fullName": "Erick Hernandez Bonilla",
+      "avatarUrl": null
+    },
+    {
+      "userId": "00000000-0000-5000-8000-000050c163e7",
+      "username": "armandogarcia",
+      "fullName": "Armando Garcia Paniagua",
+      "avatarUrl": null
+    }
+  ]
 }
 ```
 
@@ -211,23 +272,56 @@ GET {{base_url}}/api/users/sudod4t3c/followers
 
 **HU20**: Get following list
 
-```
-GET {{base_url}}/api/users/jane_smith/following
+```txt
+GET {{base_url}}/api/users/vaeleriehernandez/following
 ```
 
-**Expected Response** (200 OK):
+**Response** (200 OK):
+
+```json
+{
+  "success": true,
+  "count": 0,
+  "following": []
+}
+```
+
+```txt
+GET {{base_url}}/api/users/erickhernandez/following
+```
+
+**Response** (200 OK):
+
 ```json
 {
   "success": true,
   "count": 2,
   "following": [
     {
-      "userId": "uuid",
-      "username": "john_doe",
-      "fullName": "John Doe",
+      "userId": "00000000-0000-5000-8000-000004637677",
+      "username": "valeriehernandez",
+      "fullName": "Valerie Hernandez Fernandez",
+      "avatarUrl": null
+    },
+    {
+      "userId": "00000000-0000-5000-8000-000050c163e7",
+      "username": "armandogarcia",
+      "fullName": "Armando Garcia Paniagua",
       "avatarUrl": null
     }
   ]
+}
+```
+
+```txt
+GET {{base_url}}/api/users/unknown/following
+```
+
+**Response** (404):
+
+```json
+{
+  "error": "User not found"
 }
 ```
 
@@ -242,18 +336,59 @@ GET {{base_url}}/api/users/jane_smith/following
 **IMPORTANT**: Login as the user first to get their token
 
 ```
-PUT {{base_url}}/api/users/{{test_username}}
-Authorization: Bearer {{auth_token}}
+POST {{base_url}}/api/auth/login
+Content-Type: application/json
+```
+
+## Body (raw JSON)
+
+```json
+{
+  "username": "dhodgkin",
+  "password": "dhodgkin"
+}
+```
+
+## Response [200]
+
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3OGJmZmU1MS1hMjhiLTU5OGEtODg1ZC0wZTFiMDRmYzMzMjUiLCJ1c2VybmFtZSI6ImRob2Rna2luIiwiaXNBZG1pbiI6ZmFsc2UsImlhdCI6MTc1OTYyODU3NSwiZXhwIjoxNzYwMjMzMzc1fQ.RWhqmESFkkHcZQ5bxmhO7iNC7bpbSWweFmG1bgB85Jw",
+  "user": {
+    "userId": "78bffe51-a28b-598a-885d-0e1b04fc3325",
+    "username": "dhodgkin",
+    "fullName": "Dorothy Crowfoot Hodgkin",
+    "isAdmin": false,
+    "avatarUrl": null
+  }
+}
+```
+
+```txt
+PUT {{base_url}}/api/users/dhodgkin
+Authorization: Bearer {{user_token}}
 Content-Type: multipart/form-data
 ```
 
-**Body** (form-data):
-- `full_name`: `Updated Test User`
-- `birth_date`: `2000-06-15`
-- `email_address`: `newemail@example.com`
-- `avatar`: (optional) Select new image file
+**No token response**
 
-**Expected Response** (200 OK):
+```json
+{
+  "success": false,
+  "error": "Access denied. No token provided"
+}
+```
+
+**Token response**
+
+**Body** (form-data):
+
+- `avatar`: `C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\multimedia\avatar\avatar_dhodgkin.jpg`
+
+**Response** (200 OK):
+
 ```json
 {
   "success": true,
@@ -261,10 +396,57 @@ Content-Type: multipart/form-data
 }
 ```
 
+**Body** (form-data):
+
+- `avatar`: `C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\multimedia\avatar\avatar_dhodgkin.jpg`
+
+**Response** (200 OK):
+
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully"
+}
+```
+
+**Body** (form-data):
+
+<!-- TODO: This is not allowed change controller-->
+
+- `username`: `newuser123`
+
+**Response** (expected 400):
+
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully"
+}
+```
+
+```txt
+PUT {{base_url}}/api/users/valeriehernandez
+```
+
+**Body** (form-data):
+
+- `email_address`: `other@estudiantec.cr`
+
+**Response** (200 OK):
+
+```json
+{
+  "error": "Forbidden: You can only edit your own profile"
+}
+```
+
 **Test Cases**:
-- Update with all fields
-- Update only full_name
+
+- Update only email
+- Update only fullName
+- Update only birthDate
 - Update only avatar
+- Try to update another tribute (should return 400 or 401)
 - Try to update another user's profile (should return 403)
 - Try to update with duplicate email (should return 409)
 
@@ -278,12 +460,13 @@ Content-Type: multipart/form-data
 
 **HU3**: Admin promotion
 
-```
-PATCH {{base_url}}/api/users/testuser01/promote
-Authorization: Bearer {{auth_token}}
+```text
+PATCH {{base_url}}/api/users/valeriehernandez/promote
+Authorization: Bearer {{user_token}}
 ```
 
-**Expected Response** (200 OK):
+**Response** (200 OK):
+
 ```json
 {
   "success": true,
@@ -292,7 +475,45 @@ Authorization: Bearer {{auth_token}}
 }
 ```
 
+_PATCH again_
+
+```json
+{
+  "success": true,
+  "isAdmin": false,
+  "message": "User demoted from admin"
+}
+```
+
+```text
+PATCH {{base_url}}/api/users/sudod4t3c/promote
+Authorization: Bearer {{user_token}}
+```
+
+**Response** (400):
+
+```json
+{
+  "error": "Cannot demote yourself"
+}
+```
+
+```text
+PATCH {{base_url}}/api/users/valeriehernandez/promote
+Authorization: Bearer {{user_token}}
+```
+
+**Response** (403):
+
+```json
+{
+  "success": false,
+  "error": "Access denied. Administrator privileges required"
+}
+```
+
 **Test Cases**:
+
 - Promote regular user to admin (isAdmin: false → true)
 - Demote admin to regular user (isAdmin: true → false)
 - Try to demote yourself (should return 400)
@@ -306,27 +527,66 @@ Authorization: Bearer {{auth_token}}
 
 **HU19**: Follow another user
 
-**IMPORTANT**: Login as testuser01 first
+**IMPORTANT**: Login as dhodgkin first
 
 ```
-POST {{base_url}}/api/users/john_doe/follow
-Authorization: Bearer {{auth_token}}
+POST {{base_url}}/api/users/valeriehernandez/follow
+Authorization: Bearer {{user_token}}
 ```
 
-**Expected Response** (200 OK):
+**Response** (200 OK):
+
 ```json
 {
   "success": true,
-  "message": "Now following john_doe"
+  "message": "Now following valeriehernandez"
+}
+```
+
+**Response** (409):
+
+Follow again
+
+```json
+{
+  "error": "Already following this user"
+}
+```
+
+```
+POST {{base_url}}/api/users/unknown/follow
+Authorization: Bearer {{user_token}}
+```
+
+**Response** (404):
+
+```json
+{
+  "error": "User not found"
+}
+```
+
+```
+POST {{base_url}}/api/users/dhodgkin/follow
+Authorization: Bearer {{user_token}}
+```
+
+**Response** (400):
+
+```json
+{
+  "error": "Cannot follow yourself"
 }
 ```
 
 **Verification**:
 After successful follow, check:
+
 1. Neo4j has FOLLOWS relationship
 2. john_doe received notification in Redis
 
 **Test Cases**:
+
 - Follow a user successfully
 - Try to follow the same user again (should return 409)
 - Try to follow yourself (should return 400)
@@ -339,70 +599,30 @@ After successful follow, check:
 **HU19**: Unfollow user
 
 ```
-DELETE {{base_url}}/api/users/john_doe/follow
-Authorization: Bearer {{auth_token}}
+DELETE {{base_url}}/api/users/valeriehernandez/follow
+Authorization: Bearer {{user_token}}
 ```
 
-**Expected Response** (200 OK):
+**Response** (200 OK):
+
 ```json
 {
   "success": true,
-  "message": "Unfollowed john_doe"
+  "message": "Unfollowed valeriehernandez"
+}
+```
+
+Unfollow again
+
+**Response** (404):
+
+```json
+{
+  "error": "Not following this user"
 }
 ```
 
 **Test Cases**:
+
 - Unfollow a user you're following
 - Try to unfollow a user you're not following (should return 404)
-
----
-
-## Common Error Responses
-
-### 400 Bad Request
-```json
-{
-  "success": false,
-  "error": "Query parameter required"
-}
-```
-
-### 401 Unauthorized
-```json
-{
-  "success": false,
-  "error": "Invalid authentication token"
-}
-```
-
-### 403 Forbidden
-```json
-{
-  "success": false,
-  "error": "Forbidden: You can only edit your own profile"
-}
-```
-
-### 404 Not Found
-```json
-{
-  "success": false,
-  "error": "User not found"
-}
-```
-
-### 409 Conflict
-```json
-{
-  "success": false,
-  "error": "Email already in use"
-}
-```
-
-### 500 Internal Server Error
-```json
-{
-  "success": false,
-  "error": "Internal server error"
-}
-```
