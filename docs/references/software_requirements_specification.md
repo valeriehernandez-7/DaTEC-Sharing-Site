@@ -171,7 +171,7 @@ Email: admin@datec.cr
   
   // Profile information
   full_name: "John Doe",                                // Display name
-  birth_date: ISODate("1995-03-15"),                    // Birth date (min age 13)
+  birth_date: ISODate("1995-03-15"),                    // Birth date (min age 15)
   avatar_couchdb_id: "avatar_550e8400...",              // CouchDB reference
   
   // Permissions

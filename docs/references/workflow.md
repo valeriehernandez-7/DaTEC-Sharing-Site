@@ -510,9 +510,9 @@ async function register(req, res) {
   const { error } = userSchema.validate(req.body);
   if (error) return res.status(400).json({ error: error.details[0].message });
   
-  // 2. Check age >= 13
+  // 2. Check age >= 15
   const age = calculateAge(req.body.birth_date);
-  if (age < 13) return res.status(400).json({ error: 'Must be 13+' });
+  if (age < 15) return res.status(400).json({ error: 'Must be 15+' });
   
   // 3. Check duplicates (username, email)
   const exists = await db.users.findOne({
@@ -2650,7 +2650,7 @@ const handleLogin = async () => {
         <div class="mb-4">
           <label class="block text-sm font-medium mb-1">Birth Date</label>
           <input v-model="form.birth_date" type="date" class="input" required 
-                 :max="maxDate" title="Must be 13+ years old" />
+                 :max="maxDate" title="Must be 15+ years old" />
         </div>
         
         <div class="mb-6">
@@ -2698,7 +2698,7 @@ const error = ref('');
 
 const maxDate = computed(() => {
   const date = new Date();
-  date.setFullYear(date.getFullYear() - 13);
+  date.setFullYear(date.getFullYear() - 15);
   return date.toISOString().split('T')[0];
 });
 
@@ -3845,7 +3845,7 @@ Register new user with optional avatar upload
 - email_address: string (valid email)
 - password: string (min 8 chars)
 - full_name: string
-- birth_date: date (user must be 13+)
+- birth_date: date (user must be 15+)
 - avatar: file (optional, max 2MB, image/*)
 
 **Response:**

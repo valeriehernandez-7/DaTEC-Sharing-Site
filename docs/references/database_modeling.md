@@ -49,7 +49,7 @@ Connection: mongodb://sudod4t3c:dat3c_master_4dmin@localhost:27017/datec?authSou
 
   // Profile Information (HU1, HU4)
   full_name: "John Doe",                              // User's full display name
-  birth_date: ISODate("1995-03-15T00:00:00Z"),        // Birth date (user must be 13+ years old)
+  birth_date: ISODate("1995-03-15T00:00:00Z"),        // Birth date (user must be 15+ years old)
 
   // Avatar Reference - CouchDB (HU1)
   avatar_ref: {
@@ -81,7 +81,7 @@ db.users.createIndex({ username: "text", full_name: "text" });  // HU14 - User s
 
 - username: 3-30 characters, alphanumeric + underscore only
 - password: Minimum 8 characters (enforced before hashing)
-- birth_date: User must be at least 13 years old at registration
+- birth_date: User must be at least 15 years old at registration
 - email_address: Must be valid email format
 - avatar_ref: Optional (null allowed, default avatar used)
 
