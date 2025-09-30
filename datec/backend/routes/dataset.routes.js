@@ -43,8 +43,10 @@ router.get('/search', controller.searchDatasets);
  * Returns only public datasets unless viewing own profile
  * 
  * Response: { success, count, username, datasets[] }
+ * 
+ * Note: Authentication is optional but recommended to see your own private datasets
  */
-router.get('/user/:username', controller.getUserDatasets);
+router.get('/user/:username', verifyToken, controller.getUserDatasets);
 
 /**
  * GET /api/datasets/:datasetId

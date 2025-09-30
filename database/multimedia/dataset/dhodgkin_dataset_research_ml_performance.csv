@@ -1,0 +1,11 @@
+Algorithm,Dataset Size (rows),Hyperparameters Used,Accuracy (%),Training Time (s)
+Decision Tree,10000,"max_depth=10, min_samples_leaf=5",85.4,12.5
+Random Forest,10000,"n_estimators=100, max_features=sqrt",89.1,45.8
+Support Vector Machine,5000,"C=1.0, kernel=rbf",88.5,62.3
+Logistic Regression,10000,"solver=lbfgs, C=0.1",82.9,8.9
+K-Nearest Neighbors,10000,"n_neighbors=5, weights=uniform",79.2,5.1
+Random Forest,50000,"n_estimators=200, max_features=0.5",91.3,180.5
+Decision Tree,50000,"max_depth=5, min_samples_split=10",83.7,35.2
+Support Vector Machine,10000,"C=10.0, kernel=linear",86.1,110.1
+XGBoost,10000,"learning_rate=0.1, n_estimators=100",92.5,95.6
+XGBoost,50000,"learning_rate=0.05, n_estimators=200",93.1,350.2

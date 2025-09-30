@@ -56,6 +56,22 @@ async function createDataset(req, res) {
 
         const { dataset_name, description, tags, tutorial_video_url } = value;
 
+        // Normalize dataset name: replace spaces with hyphens, convert to lowercase
+        const normalizedName = dataset_name.trim().replace(/\s+/g, '-').toLowerCase();
+
+        // Check if user already has a dataset with this normalized name
+        const existingDataset = await db.collection('datasets').findOne({
+            owner_user_id: req.user.userId,
+            dataset_name: normalizedName
+        });
+
+        if (existingDataset) {
+            return res.status(409).json({
+                success: false,
+                error: 'You already have a dataset with this name'
+            });
+        }
+
         // Generate unique dataset ID
         const dataset_id = await generateDatasetId(req.user.username);
 
@@ -112,7 +128,7 @@ async function createDataset(req, res) {
             dataset_id: dataset_id,
             owner_user_id: req.user.userId,
             parent_dataset_id: null,
-            dataset_name: dataset_name,
+            dataset_name: normalizedName,  // Use normalized name
             description: description,
             tags: tags || [],
             status: 'pending',
@@ -132,7 +148,7 @@ async function createDataset(req, res) {
         await db.collection('datasets').insertOne(dataset);
 
         // Create dataset node in Neo4j
-        await createDatasetNode(dataset_id, dataset_name);
+        await createDatasetNode(dataset_id, normalizedName);  // Use normalized name
 
         // Initialize counters in Redis
         await initCounter(`download_count:dataset:${dataset_id}`, 0);
@@ -143,7 +159,7 @@ async function createDataset(req, res) {
             message: 'Dataset created successfully',
             dataset: {
                 dataset_id: dataset_id,
-                dataset_name: dataset_name,
+                dataset_name: normalizedName,  // Return normalized name
                 status: 'pending',
                 file_count: file_references.length
             }

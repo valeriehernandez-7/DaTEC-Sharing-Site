@@ -104,7 +104,7 @@ Content-Type: application/json
 }
 ```
 
-# T4 LogiGet Current User (token)
+# T4 Get Current User (token)
 
 ## Request
 

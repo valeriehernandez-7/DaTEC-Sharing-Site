@@ -1,0 +1,65 @@
+[
+    {
+        "CustomerID": 1001,
+        "Age": 35,
+        "Income (k$)": 75,
+        "Time Spent Online (min/day)": 120,
+        "Items Purchased (last year)": 15,
+        "Is High Value Customer": true,
+        "Region": "North"
+    },
+    {
+        "CustomerID": 1002,
+        "Age": 22,
+        "Income (k$)": 40,
+        "Time Spent Online (min/day)": 240,
+        "Items Purchased (last year)": 5,
+        "Is High Value Customer": false,
+        "Region": "South"
+    },
+    {
+        "CustomerID": 1003,
+        "Age": 58,
+        "Income (k$)": 110,
+        "Time Spent Online (min/day)": 45,
+        "Items Purchased (last year)": 30,
+        "Is High Value Customer": true,
+        "Region": "West"
+    },
+    {
+        "CustomerID": 1004,
+        "Age": 45,
+        "Income (k$)": 60,
+        "Time Spent Online (min/day)": 90,
+        "Items Purchased (last year)": 8,
+        "Is High Value Customer": false,
+        "Region": "East"
+    },
+    {
+        "CustomerID": 1005,
+        "Age": 30,
+        "Income (k$)": 50,
+        "Time Spent Online (min/day)": 180,
+        "Items Purchased (last year)": 12,
+        "Is High Value Customer": true,
+        "Region": "North"
+    },
+    {
+        "CustomerID": 1006,
+        "Age": 65,
+        "Income (k$)": 150,
+        "Time Spent Online (min/day)": 15,
+        "Items Purchased (last year)": 40,
+        "Is High Value Customer": true,
+        "Region": "West"
+    },
+    {
+        "CustomerID": 1007,
+        "Age": 28,
+        "Income (k$)": 35,
+        "Time Spent Online (min/day)": 300,
+        "Items Purchased (last year)": 2,
+        "Is High Value Customer": false,
+        "Region": "South"
+    }
+]

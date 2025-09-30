@@ -121,7 +121,7 @@ const datasetCreateSchema = Joi.object({
 
     tutorial_video_url: Joi.string()
         .uri()
-        .pattern(/(youtube|vimeo)/)
+        .pattern(/(youtube|youtu.be|vimeo)/)
         .optional()
         .allow(null, '')
         .messages({
