@@ -972,12 +972,29 @@ async function downloadDataset(req, res) {
                 console.log(`Adding file: ${fileRef.file_name}`);
                 const fileData = await getFile(fileRef.couchdb_document_id, fileRef.file_name);
 
-                // Ensure fileData is a Buffer
-                const fileBuffer = Buffer.isBuffer(fileData) ? fileData : Buffer.from(fileData);
+                let fileBuffer;
+
+                // Handle different data types returned by CouchDB
+                if (Buffer.isBuffer(fileData)) {
+                    // Already a Buffer
+                    fileBuffer = fileData;
+                } else if (typeof fileData === 'string') {
+                    // String (like CSV) - convert to Buffer
+                    fileBuffer = Buffer.from(fileData, 'utf8');
+                } else if (typeof fileData === 'object') {
+                    // Object (like parsed JSON) - stringify and convert to Buffer
+                    const jsonString = JSON.stringify(fileData, null, 2);
+                    fileBuffer = Buffer.from(jsonString, 'utf8');
+                } else {
+                    // Fallback: try to convert whatever it is
+                    fileBuffer = Buffer.from(fileData);
+                }
 
                 archive.append(fileBuffer, { name: fileRef.file_name });
+                console.log(`Added ${fileRef.file_name} (${fileBuffer.length} bytes)`);
+
             } catch (fileError) {
-                console.error(`Error adding file ${fileRef.file_name} to archive:`, fileError.message);
+                console.error(`Error adding file ${fileRef.file_name}:`, fileError.message);
                 // Continue with other files even if one fails
             }
         }
