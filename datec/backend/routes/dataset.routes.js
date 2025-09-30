@@ -1,0 +1,169 @@
+/**
+ * Dataset Routes
+ * Defines all dataset-related endpoints
+ * 
+ * @module routes/dataset.routes
+ * 
+ * Routes:
+ * - POST   /api/datasets                          - Create dataset (HU5)
+ * - GET    /api/datasets/search                   - Search datasets (HU9)
+ * - GET    /api/datasets/user/:username           - Get user's datasets (HU12)
+ * - GET    /api/datasets/:datasetId               - Get dataset details (HU10)
+ * - PATCH  /api/datasets/:datasetId/review-request - Request approval (HU6)
+ * - PATCH  /api/datasets/:datasetId/visibility    - Toggle visibility (HU7)
+ * - DELETE /api/datasets/:datasetId               - Delete dataset (HU7)
+ * - POST   /api/datasets/:datasetId/clone         - Clone dataset (HU18)
+ */
+
+const express = require('express');
+const router = express.Router();
+const controller = require('../controllers/dataset.controller');
+const { verifyToken } = require('../middleware/auth');
+const { uploadDataset } = require('../middleware/upload');
+
+/**
+ * Public Routes
+ * No authentication required
+ */
+
+/**
+ * GET /api/datasets/search
+ * Search datasets by name, description, or tags
+ * Query params: q (search term, required)
+ * 
+ * Response: { success, count, datasets[] }
+ * 
+ * Example: /api/datasets/search?q=sales
+ */
+router.get('/search', controller.searchDatasets);
+
+/**
+ * GET /api/datasets/user/:username
+ * Get all datasets from a specific user
+ * Returns only public datasets unless viewing own profile
+ * 
+ * Response: { success, count, username, datasets[] }
+ */
+router.get('/user/:username', controller.getUserDatasets);
+
+/**
+ * GET /api/datasets/:datasetId
+ * Get complete dataset information
+ * Returns dataset details including file sizes and download URLs
+ * Only approved and public datasets accessible (unless owner or admin)
+ * 
+ * Response: { success, dataset }
+ */
+router.get('/:datasetId', controller.getDataset);
+
+/**
+ * Protected Routes
+ * Require authentication via JWT token
+ */
+
+/**
+ * POST /api/datasets
+ * Create new dataset
+ * Requires: Authenticated user
+ * 
+ * Body (multipart/form-data):
+ *   - dataset_name: string (required, 3-100 chars)
+ *   - description: string (required, 10-5000 chars)
+ *   - tags: array of strings (optional)
+ *   - tutorial_video_url: string (optional, must be YouTube or Vimeo)
+ * 
+ * Files:
+ *   - data_files: array of files (required, 1-10 files, max 1GB each)
+ *   - header_photo: single image file (optional, max 5MB)
+ * 
+ * Response: { success, message, dataset }
+ * 
+ * Databases affected:
+ *   - MongoDB: Creates dataset document
+ *   - CouchDB: Uploads all files and header photo
+ *   - Neo4j: Creates Dataset node
+ *   - Redis: Initializes download_count and vote_count counters
+ */
+router.post(
+    '/',
+    verifyToken,
+    uploadDataset,
+    controller.createDataset
+);
+
+/**
+ * PATCH /api/datasets/:datasetId/review-request
+ * Request admin approval for dataset
+ * Requires: Dataset owner
+ * 
+ * Response: { success, message, status }
+ * 
+ * Note: Dataset must be in 'pending' status
+ */
+router.patch(
+    '/:datasetId/review-request',
+    verifyToken,
+    controller.requestApproval
+);
+
+/**
+ * PATCH /api/datasets/:datasetId/visibility
+ * Toggle dataset visibility (public/private)
+ * Requires: Dataset owner
+ * 
+ * Body:
+ *   - is_public: boolean (required)
+ * 
+ * Response: { success, message, is_public }
+ * 
+ * Note: Only approved datasets can be made public
+ */
+router.patch(
+    '/:datasetId/visibility',
+    verifyToken,
+    controller.toggleVisibility
+);
+
+/**
+ * DELETE /api/datasets/:datasetId
+ * Permanently delete dataset
+ * Requires: Dataset owner or admin
+ * 
+ * Response: { success, message }
+ * 
+ * Side effects:
+ *   - Deletes from MongoDB (dataset document, votes, comments)
+ *   - Deletes from CouchDB (all files and header photo)
+ *   - Deletes from Neo4j (Dataset node and all relationships)
+ *   - Deletes from Redis (download_count and vote_count)
+ */
+router.delete(
+    '/:datasetId',
+    verifyToken,
+    controller.deleteDataset
+);
+
+/**
+ * POST /api/datasets/:datasetId/clone
+ * Clone an existing dataset
+ * Requires: Authenticated user (not the original owner)
+ * 
+ * Response: { success, message, dataset }
+ * 
+ * Conditions:
+ *   - Original dataset must be approved and public
+ *   - Cannot clone your own dataset
+ * 
+ * Side effects:
+ *   - Creates complete copy in all 4 databases
+ *   - Duplicates all files in CouchDB with new document IDs
+ *   - Sets parent_dataset_id to reference original
+ *   - New dataset starts with status='pending'
+ */
+router.post(
+    '/:datasetId/clone',
+    verifyToken,
+    controller.cloneDataset
+);
+
+module.exports = router;

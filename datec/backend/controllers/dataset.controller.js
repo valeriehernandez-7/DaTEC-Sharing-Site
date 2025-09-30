@@ -1,0 +1,761 @@
+/**
+ * Dataset Controller
+ * Handles dataset operations across 4 databases
+ * HU5, HU6, HU7, HU9, HU10, HU11, HU12, HU13, HU18
+ * 
+ * @module controllers/dataset.controller
+ * 
+ * Database Operations:
+ * - MongoDB: Dataset metadata
+ * - CouchDB: File storage (data files, header photos)
+ * - Neo4j: Dataset nodes
+ * - Redis: Counters (downloads, votes)
+ */
+
+const { getMongo } = require('../config/databases');
+const { uploadFile, deleteFile, getFileUrl } = require('../utils/couchdb-manager');
+const {
+    generateDatasetId,
+    generateDatasetFileDocId,
+    generateHeaderPhotoDocId
+} = require('../utils/id-generators');
+const { datasetCreateSchema } = require('../utils/validators');
+const { initCounter, getCounter } = require('../utils/redis-counters');
+const { createDatasetNode, deleteNode } = require('../utils/neo4j-relations');
+
+/**
+ * HU5 - Create new dataset
+ * POST /api/datasets
+ * 
+ * Requires: Authentication
+ * Body: dataset_name, description, tags (optional), tutorial_video_url (optional)
+ * Files: data_files (required, max 10), header_photo (optional)
+ * 
+ * Databases affected: MongoDB, CouchDB, Neo4j, Redis
+ */
+async function createDataset(req, res) {
+    try {
+        const db = getMongo();
+
+        // Validate request body
+        const { error, value } = datasetCreateSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({
+                success: false,
+                error: error.details[0].message
+            });
+        }
+
+        // Validate that at least one data file is provided
+        if (!req.files || !req.files.data_files || req.files.data_files.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'At least one data file is required'
+            });
+        }
+
+        const { dataset_name, description, tags, tutorial_video_url } = value;
+
+        // Generate unique dataset ID
+        const dataset_id = await generateDatasetId(req.user.username);
+
+        // Upload data files to CouchDB
+        const file_references = [];
+        for (let i = 0; i < req.files.data_files.length; i++) {
+            const file = req.files.data_files[i];
+            const docId = generateDatasetFileDocId(dataset_id, i + 1);
+
+            const fileRef = await uploadFile(docId, file, {
+                type: 'dataset_file',
+                owner_user_id: req.user.userId,
+                dataset_id: dataset_id,
+                file_index: i + 1,
+                uploaded_at: new Date().toISOString()
+            });
+
+            file_references.push({
+                ...fileRef,
+                uploaded_at: new Date()
+            });
+        }
+
+        // Upload header photo if provided (optional)
+        let header_photo_ref = null;
+        if (req.files.header_photo && req.files.header_photo[0]) {
+            const docId = generateHeaderPhotoDocId(dataset_id);
+            header_photo_ref = await uploadFile(
+                docId,
+                req.files.header_photo[0],
+                {
+                    type: 'header_photo',
+                    owner_user_id: req.user.userId,
+                    dataset_id: dataset_id,
+                    uploaded_at: new Date().toISOString()
+                }
+            );
+        }
+
+        // Parse video URL if provided (HU11)
+        let tutorial_video_ref = null;
+        if (tutorial_video_url) {
+            const platform = tutorial_video_url.includes('youtube') ? 'youtube' :
+                tutorial_video_url.includes('vimeo') ? 'vimeo' : 'other';
+
+            tutorial_video_ref = {
+                url: tutorial_video_url,
+                platform: platform
+            };
+        }
+
+        // Create dataset document in MongoDB
+        const dataset = {
+            dataset_id: dataset_id,
+            owner_user_id: req.user.userId,
+            parent_dataset_id: null,
+            dataset_name: dataset_name,
+            description: description,
+            tags: tags || [],
+            status: 'pending',
+            reviewed_at: null,
+            admin_review: null,
+            is_public: false,
+            file_references: file_references,
+            header_photo_ref: header_photo_ref,
+            tutorial_video_ref: tutorial_video_ref,
+            download_count: 0,
+            vote_count: 0,
+            comment_count: 0,
+            created_at: new Date(),
+            updated_at: new Date()
+        };
+
+        await db.collection('datasets').insertOne(dataset);
+
+        // Create dataset node in Neo4j
+        await createDatasetNode(dataset_id, dataset_name);
+
+        // Initialize counters in Redis
+        await initCounter(`download_count:dataset:${dataset_id}`, 0);
+        await initCounter(`vote_count:dataset:${dataset_id}`, 0);
+
+        res.status(201).json({
+            success: true,
+            message: 'Dataset created successfully',
+            dataset: {
+                dataset_id: dataset_id,
+                dataset_name: dataset_name,
+                status: 'pending',
+                file_count: file_references.length
+            }
+        });
+
+    } catch (error) {
+        console.error('Error creating dataset:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
+/**
+ * HU9 - Search datasets
+ * GET /api/datasets/search?q=query
+ * 
+ * Searches by dataset name, description, and tags
+ * Only returns approved and public datasets
+ */
+async function searchDatasets(req, res) {
+    try {
+        const db = getMongo();
+        const query = req.query.q;
+
+        if (!query || query.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Query parameter required'
+            });
+        }
+
+        // Use regex for partial matching (case-insensitive)
+        const searchRegex = new RegExp(query, 'i');
+
+        const datasets = await db.collection('datasets').find({
+            status: 'approved',
+            is_public: true,
+            $or: [
+                { dataset_name: searchRegex },
+                { description: searchRegex },
+                { tags: searchRegex }
+            ]
+        }).limit(20).toArray();
+
+        // Enrich with owner information
+        const enrichedDatasets = await Promise.all(
+            datasets.map(async (dataset) => {
+                const owner = await db.collection('users').findOne(
+                    { user_id: dataset.owner_user_id },
+                    { projection: { username: 1, full_name: 1 } }
+                );
+
+                return {
+                    dataset_id: dataset.dataset_id,
+                    dataset_name: dataset.dataset_name,
+                    description: dataset.description,
+                    tags: dataset.tags,
+                    owner: owner ? {
+                        username: owner.username,
+                        fullName: owner.full_name
+                    } : null,
+                    header_photo_url: dataset.header_photo_ref
+                        ? getFileUrl(dataset.header_photo_ref.couchdb_document_id, dataset.header_photo_ref.file_name)
+                        : null,
+                    file_count: dataset.file_references.length,
+                    download_count: dataset.download_count,
+                    vote_count: dataset.vote_count,
+                    created_at: dataset.created_at
+                };
+            })
+        );
+
+        res.json({
+            success: true,
+            count: enrichedDatasets.length,
+            datasets: enrichedDatasets
+        });
+
+    } catch (error) {
+        console.error('Error searching datasets:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
+/**
+ * HU10 - Get dataset details
+ * GET /api/datasets/:datasetId
+ * 
+ * Returns complete dataset information including file sizes
+ * Only approved and public datasets are accessible (unless owner or admin)
+ */
+async function getDataset(req, res) {
+    try {
+        const db = getMongo();
+        const dataset = await db.collection('datasets').findOne({
+            dataset_id: req.params.datasetId
+        });
+
+        if (!dataset) {
+            return res.status(404).json({
+                success: false,
+                error: 'Dataset not found'
+            });
+        }
+
+        // Check access permissions
+        const isOwner = req.user && req.user.userId === dataset.owner_user_id;
+        const isAdmin = req.user && req.user.isAdmin;
+        const isPublic = dataset.status === 'approved' && dataset.is_public;
+
+        if (!isPublic && !isOwner && !isAdmin) {
+            return res.status(403).json({
+                success: false,
+                error: 'Access denied: Dataset is not public'
+            });
+        }
+
+        // Get owner information
+        const owner = await db.collection('users').findOne(
+            { user_id: dataset.owner_user_id },
+            { projection: { username: 1, full_name: 1, avatar_ref: 1 } }
+        );
+
+        // Get real-time counters from Redis
+        const downloadCount = await getCounter(`download_count:dataset:${dataset.dataset_id}`);
+        const voteCount = await getCounter(`vote_count:dataset:${dataset.dataset_id}`);
+
+        res.json({
+            success: true,
+            dataset: {
+                dataset_id: dataset.dataset_id,
+                dataset_name: dataset.dataset_name,
+                description: dataset.description,
+                tags: dataset.tags,
+                status: dataset.status,
+                is_public: dataset.is_public,
+                parent_dataset_id: dataset.parent_dataset_id,
+                owner: owner ? {
+                    user_id: owner.user_id,
+                    username: owner.username,
+                    fullName: owner.full_name,
+                    avatarUrl: owner.avatar_ref
+                        ? getFileUrl(owner.avatar_ref.couchdb_document_id, owner.avatar_ref.file_name)
+                        : null
+                } : null,
+                files: dataset.file_references.map(file => ({
+                    file_name: file.file_name,
+                    file_size_bytes: file.file_size_bytes,
+                    mime_type: file.mime_type,
+                    download_url: getFileUrl(file.couchdb_document_id, file.file_name)
+                })),
+                header_photo_url: dataset.header_photo_ref
+                    ? getFileUrl(dataset.header_photo_ref.couchdb_document_id, dataset.header_photo_ref.file_name)
+                    : null,
+                tutorial_video: dataset.tutorial_video_ref,
+                download_count: downloadCount,
+                vote_count: voteCount,
+                comment_count: dataset.comment_count,
+                created_at: dataset.created_at,
+                updated_at: dataset.updated_at,
+                reviewed_at: dataset.reviewed_at,
+                admin_review: dataset.admin_review
+            }
+        });
+
+    } catch (error) {
+        console.error('Error getting dataset:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
+/**
+ * HU12 - Get user's datasets
+ * GET /api/datasets/user/:username
+ * 
+ * Returns all datasets from a specific user
+ * Privacy: Only shows public datasets unless viewing own profile
+ */
+async function getUserDatasets(req, res) {
+    try {
+        const db = getMongo();
+
+        // Get target user
+        const targetUser = await db.collection('users').findOne({
+            username: req.params.username
+        });
+
+        if (!targetUser) {
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+        }
+
+        // Check if viewing own profile
+        const isOwnProfile = req.user && req.user.userId === targetUser.user_id;
+        const isAdmin = req.user && req.user.isAdmin;
+
+        // Build query filter
+        const filter = { owner_user_id: targetUser.user_id };
+
+        // Only show public datasets unless owner or admin
+        if (!isOwnProfile && !isAdmin) {
+            filter.status = 'approved';
+            filter.is_public = true;
+        }
+
+        const datasets = await db.collection('datasets')
+            .find(filter)
+            .sort({ created_at: -1 })
+            .toArray();
+
+        const enrichedDatasets = datasets.map(dataset => ({
+            dataset_id: dataset.dataset_id,
+            dataset_name: dataset.dataset_name,
+            description: dataset.description,
+            tags: dataset.tags,
+            status: dataset.status,
+            is_public: dataset.is_public,
+            header_photo_url: dataset.header_photo_ref
+                ? getFileUrl(dataset.header_photo_ref.couchdb_document_id, dataset.header_photo_ref.file_name)
+                : null,
+            file_count: dataset.file_references.length,
+            download_count: dataset.download_count,
+            vote_count: dataset.vote_count,
+            created_at: dataset.created_at
+        }));
+
+        res.json({
+            success: true,
+            count: enrichedDatasets.length,
+            username: targetUser.username,
+            datasets: enrichedDatasets
+        });
+
+    } catch (error) {
+        console.error('Error getting user datasets:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
+/**
+ * HU6 - Request dataset approval
+ * PATCH /api/datasets/:datasetId/review-request
+ * 
+ * Changes dataset status to request admin review
+ * Only owner can request approval
+ */
+async function requestApproval(req, res) {
+    try {
+        const db = getMongo();
+        const dataset = await db.collection('datasets').findOne({
+            dataset_id: req.params.datasetId
+        });
+
+        if (!dataset) {
+            return res.status(404).json({
+                success: false,
+                error: 'Dataset not found'
+            });
+        }
+
+        // Only owner can request approval
+        if (dataset.owner_user_id !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                error: 'Forbidden: Only dataset owner can request approval'
+            });
+        }
+
+        // Dataset must be in pending status
+        if (dataset.status !== 'pending') {
+            return res.status(400).json({
+                success: false,
+                error: `Dataset is already ${dataset.status}`
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Dataset is pending approval. An administrator will review it soon.',
+            status: 'pending'
+        });
+
+    } catch (error) {
+        console.error('Error requesting approval:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
+/**
+ * HU7 - Toggle dataset visibility (public/private)
+ * PATCH /api/datasets/:datasetId/visibility
+ * 
+ * Body: { is_public: true/false }
+ * Only owner can change visibility
+ * Only approved datasets can be made public
+ */
+async function toggleVisibility(req, res) {
+    try {
+        const db = getMongo();
+        const dataset = await db.collection('datasets').findOne({
+            dataset_id: req.params.datasetId
+        });
+
+        if (!dataset) {
+            return res.status(404).json({
+                success: false,
+                error: 'Dataset not found'
+            });
+        }
+
+        // Only owner can change visibility
+        if (dataset.owner_user_id !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                error: 'Forbidden: Only dataset owner can change visibility'
+            });
+        }
+
+        // Can only make approved datasets public
+        if (dataset.status !== 'approved' && req.body.is_public === true) {
+            return res.status(400).json({
+                success: false,
+                error: 'Only approved datasets can be made public'
+            });
+        }
+
+        const newVisibility = req.body.is_public === true;
+
+        await db.collection('datasets').updateOne(
+            { dataset_id: req.params.datasetId },
+            {
+                $set: {
+                    is_public: newVisibility,
+                    updated_at: new Date()
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: `Dataset is now ${newVisibility ? 'public' : 'private'}`,
+            is_public: newVisibility
+        });
+
+    } catch (error) {
+        console.error('Error toggling visibility:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
+/**
+ * HU7 - Delete dataset
+ * DELETE /api/datasets/:datasetId
+ * 
+ * Permanently deletes dataset from all 4 databases
+ * Only owner or admin can delete
+ */
+async function deleteDataset(req, res) {
+    try {
+        const db = getMongo();
+        const dataset = await db.collection('datasets').findOne({
+            dataset_id: req.params.datasetId
+        });
+
+        if (!dataset) {
+            return res.status(404).json({
+                success: false,
+                error: 'Dataset not found'
+            });
+        }
+
+        // Only owner or admin can delete
+        const isOwner = req.user.userId === dataset.owner_user_id;
+        const isAdmin = req.user.isAdmin;
+
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({
+                success: false,
+                error: 'Forbidden: Only owner or admin can delete dataset'
+            });
+        }
+
+        const datasetId = req.params.datasetId;
+
+        // 1. Delete files from CouchDB
+        for (const fileRef of dataset.file_references) {
+            try {
+                await deleteFile(fileRef.couchdb_document_id);
+            } catch (error) {
+                console.warn(`Failed to delete file ${fileRef.couchdb_document_id}:`, error.message);
+            }
+        }
+
+        // Delete header photo if exists
+        if (dataset.header_photo_ref) {
+            try {
+                await deleteFile(dataset.header_photo_ref.couchdb_document_id);
+            } catch (error) {
+                console.warn('Failed to delete header photo:', error.message);
+            }
+        }
+
+        // 2. Delete from MongoDB
+        await db.collection('datasets').deleteOne({ dataset_id: datasetId });
+
+        // Also delete related votes and comments
+        await db.collection('votes').deleteMany({ dataset_id: datasetId });
+        await db.collection('comments').deleteMany({ dataset_id: datasetId });
+
+        // 3. Delete Neo4j node (DETACH DELETE removes relationships too)
+        await deleteNode(datasetId, 'Dataset');
+
+        // 4. Delete Redis counters
+        const { getRedis } = require('../config/databases');
+        const { primary } = getRedis();
+        await primary.del(`download_count:dataset:${datasetId}`);
+        await primary.del(`vote_count:dataset:${datasetId}`);
+
+        res.json({
+            success: true,
+            message: 'Dataset deleted successfully'
+        });
+
+    } catch (error) {
+        console.error('Error deleting dataset:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
+/**
+ * HU18 - Clone dataset
+ * POST /api/datasets/:datasetId/clone
+ * 
+ * Creates a complete copy of an approved public dataset
+ * Duplicates all files in CouchDB with new document IDs
+ * Creates new entries in all 4 databases
+ */
+async function cloneDataset(req, res) {
+    try {
+        const db = getMongo();
+        const originalDataset = await db.collection('datasets').findOne({
+            dataset_id: req.params.datasetId
+        });
+
+        if (!originalDataset) {
+            return res.status(404).json({
+                success: false,
+                error: 'Original dataset not found'
+            });
+        }
+
+        // Can only clone approved and public datasets
+        if (originalDataset.status !== 'approved' || !originalDataset.is_public) {
+            return res.status(403).json({
+                success: false,
+                error: 'Can only clone approved and public datasets'
+            });
+        }
+
+        // Cannot clone your own dataset
+        if (originalDataset.owner_user_id === req.user.userId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Cannot clone your own dataset'
+            });
+        }
+
+        // Generate new dataset ID for clone
+        const clonedDatasetId = await generateDatasetId(req.user.username);
+
+        // Clone files in CouchDB
+        const clonedFileReferences = [];
+        for (let i = 0; i < originalDataset.file_references.length; i++) {
+            const originalFile = originalDataset.file_references[i];
+            const newDocId = generateDatasetFileDocId(clonedDatasetId, i + 1);
+
+            // Get original file from CouchDB
+            const { getFile } = require('../utils/couchdb-manager');
+            const fileBuffer = await getFile(
+                originalFile.couchdb_document_id,
+                originalFile.file_name
+            );
+
+            // Upload as new file
+            const clonedFileRef = await uploadFile(newDocId, {
+                buffer: fileBuffer,
+                originalname: originalFile.file_name,
+                mimetype: originalFile.mime_type,
+                size: originalFile.file_size_bytes
+            }, {
+                type: 'dataset_file',
+                owner_user_id: req.user.userId,
+                dataset_id: clonedDatasetId,
+                file_index: i + 1,
+                cloned_from: originalFile.couchdb_document_id,
+                uploaded_at: new Date().toISOString()
+            });
+
+            clonedFileReferences.push({
+                ...clonedFileRef,
+                uploaded_at: new Date()
+            });
+        }
+
+        // Clone header photo if exists
+        let clonedHeaderPhotoRef = null;
+        if (originalDataset.header_photo_ref) {
+            const { getFile } = require('../utils/couchdb-manager');
+            const newDocId = generateHeaderPhotoDocId(clonedDatasetId);
+
+            const photoBuffer = await getFile(
+                originalDataset.header_photo_ref.couchdb_document_id,
+                originalDataset.header_photo_ref.file_name
+            );
+
+            clonedHeaderPhotoRef = await uploadFile(newDocId, {
+                buffer: photoBuffer,
+                originalname: originalDataset.header_photo_ref.file_name,
+                mimetype: originalDataset.header_photo_ref.mime_type,
+                size: originalDataset.header_photo_ref.file_size_bytes
+            }, {
+                type: 'header_photo',
+                owner_user_id: req.user.userId,
+                dataset_id: clonedDatasetId,
+                cloned_from: originalDataset.header_photo_ref.couchdb_document_id,
+                uploaded_at: new Date().toISOString()
+            });
+        }
+
+        // Create cloned dataset in MongoDB
+        const clonedDataset = {
+            dataset_id: clonedDatasetId,
+            owner_user_id: req.user.userId,
+            parent_dataset_id: req.params.datasetId,
+            dataset_name: `${originalDataset.dataset_name} (Clone)`,
+            description: originalDataset.description,
+            tags: [...originalDataset.tags],
+            status: 'pending',
+            reviewed_at: null,
+            admin_review: null,
+            is_public: false,
+            file_references: clonedFileReferences,
+            header_photo_ref: clonedHeaderPhotoRef,
+            tutorial_video_ref: originalDataset.tutorial_video_ref
+                ? { ...originalDataset.tutorial_video_ref }
+                : null,
+            download_count: 0,
+            vote_count: 0,
+            comment_count: 0,
+            created_at: new Date(),
+            updated_at: new Date()
+        };
+
+        await db.collection('datasets').insertOne(clonedDataset);
+
+        // Create dataset node in Neo4j
+        await createDatasetNode(clonedDatasetId, clonedDataset.dataset_name);
+
+        // Initialize counters in Redis
+        await initCounter(`download_count:dataset:${clonedDatasetId}`, 0);
+        await initCounter(`vote_count:dataset:${clonedDatasetId}`, 0);
+
+        res.status(201).json({
+            success: true,
+            message: 'Dataset cloned successfully',
+            dataset: {
+                dataset_id: clonedDatasetId,
+                dataset_name: clonedDataset.dataset_name,
+                parent_dataset_id: req.params.datasetId,
+                status: 'pending',
+                file_count: clonedFileReferences.length
+            }
+        });
+
+    } catch (error) {
+        console.error('Error cloning dataset:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
+module.exports = {
+    createDataset,      // HU5
+    searchDatasets,     // HU9
+    getDataset,         // HU10
+    getUserDatasets,    // HU12
+    requestApproval,    // HU6
+    toggleVisibility,   // HU7
+    deleteDataset,      // HU7
+    cloneDataset        // HU18
+};
