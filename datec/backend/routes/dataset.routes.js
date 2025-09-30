@@ -176,15 +176,32 @@ router.post(
 );
 
 /**
+ * GET /api/datasets/:datasetId/download
+ * Download complete dataset as ZIP file
+ * Requires: Authentication
+ * 
+ * Response: ZIP file download (binary)
+ * 
+ * Side effects (HU13):
+ *   - Creates DOWNLOADED relationship in Neo4j (once per user)
+ *   - Increments download_count in Redis (once per user)
+ * 
+ * Note: Downloads all files in a single ZIP archive
+ */
+router.get(
+    '/:datasetId/download',
+    verifyToken,
+    controller.downloadDataset
+);
+
+/**
  * GET /api/datasets/:datasetId/files/:fileId
- * Download a specific file from dataset
+ * Download a specific file from dataset (preview/exploration)
  * Requires: Authentication
  * 
  * Response: File download (binary)
  * 
- * Side effects (HU13):
- *   - Creates DOWNLOADED relationship in Neo4j
- *   - Increments download_count in Redis
+ * Note: Does NOT track in statistics. Use /:datasetId/download for full dataset download with tracking.
  */
 router.get(
     '/:datasetId/files/:fileId',

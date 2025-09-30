@@ -817,7 +817,7 @@ async function cloneDataset(req, res) {
  * HU13 - Download dataset file
  * GET /api/datasets/:datasetId/files/:fileId
  * 
- * Downloads a file and tracks the download in Neo4j + Redis
+ * Downloads a file without trackings
  * Only approved and public datasets can be downloaded
  * 
  * @param {Object} req - Express request object
@@ -875,34 +875,8 @@ async function downloadFile(req, res) {
             res.setHeader('Content-Disposition', `attachment; filename="${fileRef.file_name}"`);
             res.setHeader('Content-Length', fileRef.file_size_bytes);
 
-            // Send file
+            // Send file (NO TRACKING)
             res.send(fileBuffer);
-
-            // Track download asynchronously ONLY if NOT owner (don't wait for it)
-            if (!isOwner) {
-                setImmediate(async () => {
-                    try {
-                        // Create DOWNLOADED relationship in Neo4j
-                        const { createRelationship } = require('../utils/neo4j-relations');
-                        await createRelationship(
-                            req.user.userId,
-                            datasetId,
-                            'DOWNLOADED',
-                            { downloaded_at: new Date().toISOString() },
-                            'User',
-                            'Dataset'
-                        );
-
-                        // Increment download counter in Redis
-                        const { incrementCounter } = require('../utils/redis-counters');
-                        await incrementCounter(`download_count:dataset:${datasetId}`);
-
-                    } catch (trackingError) {
-                        console.error('Error tracking download:', trackingError.message);
-                        // Don't fail the download if tracking fails
-                    }
-                });
-            }
 
         } catch (error) {
             console.error('Error retrieving file:', error.message);
@@ -918,6 +892,144 @@ async function downloadFile(req, res) {
             success: false,
             error: 'Internal server error'
         });
+    }
+}
+
+/**
+ * HU13 - Download complete dataset as ZIP
+ * GET /api/datasets/:datasetId/download
+ * 
+ * Downloads all files in the dataset as a ZIP file
+ * Tracks download in Neo4j + Redis (once per user)
+ * Only approved and public datasets can be downloaded
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+async function downloadDataset(req, res) {
+    try {
+        const db = getMongo();
+        const { datasetId } = req.params;
+
+        // Verify dataset exists and is accessible
+        const dataset = await db.collection('datasets').findOne({
+            dataset_id: datasetId
+        });
+
+        if (!dataset) {
+            return res.status(404).json({
+                success: false,
+                error: 'Dataset not found'
+            });
+        }
+
+        // Check access permissions
+        const isOwner = req.user && req.user.userId === dataset.owner_user_id;
+        const isAdmin = req.user && req.user.isAdmin;
+        const isPublic = dataset.status === 'approved' && dataset.is_public;
+
+        // Only approved and public datasets can be downloaded (unless owner or admin)
+        if (!isPublic && !isOwner && !isAdmin) {
+            return res.status(403).json({
+                success: false,
+                error: 'Dataset not available for download'
+            });
+        }
+
+        // Check if dataset has files
+        if (!dataset.file_references || dataset.file_references.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Dataset has no files to download'
+            });
+        }
+
+        const archiver = require('archiver');
+        const { getFile } = require('../utils/couchdb-manager');
+
+        // Create ZIP archive
+        const archive = archiver('zip', {
+            zlib: { level: 9 } // Maximum compression
+        });
+
+        // Set response headers
+        const zipFilename = `${dataset.dataset_name.replace(/[^a-z0-9]/gi, '_')}.zip`;
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', `attachment; filename="${zipFilename}"`);
+
+        // Handle archive errors
+        archive.on('error', (err) => {
+            console.error('Archive error:', err);
+            throw err;
+        });
+
+        // Pipe archive to response
+        archive.pipe(res);
+
+        // Add all files to archive
+        for (const fileRef of dataset.file_references) {
+            try {
+                console.log(`Adding file: ${fileRef.file_name}`);
+                const fileData = await getFile(fileRef.couchdb_document_id, fileRef.file_name);
+
+                // Ensure fileData is a Buffer
+                const fileBuffer = Buffer.isBuffer(fileData) ? fileData : Buffer.from(fileData);
+
+                archive.append(fileBuffer, { name: fileRef.file_name });
+            } catch (fileError) {
+                console.error(`Error adding file ${fileRef.file_name} to archive:`, fileError.message);
+                // Continue with other files even if one fails
+            }
+        }
+
+        // Finalize archive (triggers the actual streaming)
+        archive.finalize();
+
+        // Track download asynchronously ONLY if NOT owner (don't wait for it)
+        if (!isOwner) {
+            setImmediate(async () => {
+                try {
+                    // Check if user already downloaded this dataset
+                    const { relationshipExists, createRelationship } = require('../utils/neo4j-relations');
+                    const alreadyDownloaded = await relationshipExists(
+                        req.user.userId,
+                        datasetId,
+                        'DOWNLOADED'
+                    );
+
+                    // Only track if first time downloading this dataset
+                    if (!alreadyDownloaded) {
+                        // Create DOWNLOADED relationship in Neo4j
+                        await createRelationship(
+                            req.user.userId,
+                            datasetId,
+                            'DOWNLOADED',
+                            { downloaded_at: new Date().toISOString() },
+                            'User',
+                            'Dataset'
+                        );
+
+                        // Increment download counter in Redis
+                        const { incrementCounter } = require('../utils/redis-counters');
+                        await incrementCounter(`download_count:dataset:${datasetId}`);
+                    }
+
+                } catch (trackingError) {
+                    console.error('Error tracking download:', trackingError.message);
+                    // Don't fail the download if tracking fails
+                }
+            });
+        }
+
+    } catch (error) {
+        console.error('Error in downloadDataset:', error);
+
+        if (!res.headersSent) {
+            res.status(500).json({
+                success: false,
+                error: 'Internal server error'
+            });
+        }
     }
 }
 
@@ -962,8 +1074,8 @@ async function getDownloadStats(req, res) {
             const result = await session.run(`
                 MATCH (u:User)-[d:DOWNLOADED]->(ds:Dataset {dataset_id: $datasetId})
                 RETURN u.user_id AS userId, 
-                       u.username AS username, 
-                       d.downloaded_at AS downloadedAt
+                    u.username AS username, 
+                    d.downloaded_at AS downloadedAt
                 ORDER BY d.downloaded_at DESC
                 LIMIT 100
             `, { datasetId: req.params.datasetId });
@@ -1012,5 +1124,6 @@ module.exports = {
     deleteDataset,        // HU7
     cloneDataset,         // HU18
     downloadFile,         // HU13
+    downloadDataset,      // HU13
     getDownloadStats      // HU13
 };
