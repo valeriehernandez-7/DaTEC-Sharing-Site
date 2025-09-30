@@ -955,37 +955,43 @@ async function getDownloadStats(req, res) {
 
         // Get download history from Neo4j
         const { getNeo4j } = require('../config/databases');
-        const neo4j = getNeo4j();
+        const driver = getNeo4j();
+        const session = driver.session({ database: 'datec' });
 
-        const result = await neo4j.run(`
-            MATCH (u:User)-[d:DOWNLOADED]->(ds:Dataset {dataset_id: $datasetId})
-            RETURN u.user_id AS userId, 
-                   u.username AS username, 
-                   d.downloaded_at AS downloadedAt
-            ORDER BY d.downloaded_at DESC
-            LIMIT 100
-        `, { datasetId: req.params.datasetId });
+        try {
+            const result = await session.run(`
+                MATCH (u:User)-[d:DOWNLOADED]->(ds:Dataset {dataset_id: $datasetId})
+                RETURN u.user_id AS userId, 
+                       u.username AS username, 
+                       d.downloaded_at AS downloadedAt
+                ORDER BY d.downloaded_at DESC
+                LIMIT 100
+            `, { datasetId: req.params.datasetId });
 
-        const downloadHistory = result.records.map(record => ({
-            userId: record.get('userId'),
-            username: record.get('username'),
-            downloadedAt: record.get('downloadedAt')
-        }));
+            const downloadHistory = result.records.map(record => ({
+                userId: record.get('userId'),
+                username: record.get('username'),
+                downloadedAt: record.get('downloadedAt')
+            }));
 
-        // Get total download count from Redis
-        const totalDownloads = await getCounter(`download_count:dataset:${req.params.datasetId}`);
+            // Get total download count from Redis
+            const totalDownloads = await getCounter(`download_count:dataset:${req.params.datasetId}`);
 
-        // Get unique users count
-        const uniqueUsers = new Set(downloadHistory.map(d => d.userId)).size;
+            // Get unique users count
+            const uniqueUsers = new Set(downloadHistory.map(d => d.userId)).size;
 
-        res.json({
-            success: true,
-            statistics: {
-                totalDownloads: totalDownloads || 0,
-                uniqueUsers: uniqueUsers,
-                recentDownloads: downloadHistory
-            }
-        });
+            res.json({
+                success: true,
+                statistics: {
+                    totalDownloads: totalDownloads || 0,
+                    uniqueUsers: uniqueUsers,
+                    recentDownloads: downloadHistory
+                }
+            });
+
+        } finally {
+            await session.close();
+        }
 
     } catch (error) {
         console.error('Error getting download stats:', error);
