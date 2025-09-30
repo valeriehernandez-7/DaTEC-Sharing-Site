@@ -18,7 +18,7 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/dataset.controller');
-const { verifyToken } = require('../middleware/auth');
+const { verifyToken, optionalAuth } = require('../middleware/auth');
 const { uploadDataset } = require('../middleware/upload');
 
 /**
@@ -56,7 +56,7 @@ router.get('/user/:username', verifyToken, controller.getUserDatasets);
  * 
  * Response: { success, dataset }
  */
-router.get('/:datasetId', controller.getDataset);
+router.get('/:datasetId', optionalAuth, controller.getDataset);
 
 /**
  * Protected Routes
@@ -173,6 +173,36 @@ router.post(
     '/:datasetId/clone',
     verifyToken,
     controller.cloneDataset
+);
+
+/**
+ * GET /api/datasets/:datasetId/files/:fileId
+ * Download a specific file from dataset
+ * Requires: Authentication
+ * 
+ * Response: File download (binary)
+ * 
+ * Side effects (HU13):
+ *   - Creates DOWNLOADED relationship in Neo4j
+ *   - Increments download_count in Redis
+ */
+router.get(
+    '/:datasetId/files/:fileId',
+    verifyToken,
+    controller.downloadFile
+);
+
+/**
+ * GET /api/datasets/:datasetId/downloads
+ * Get download statistics for dataset
+ * Requires: Dataset owner
+ * 
+ * Response: { success, statistics: { totalDownloads, uniqueUsers, recentDownloads[] } }
+ */
+router.get(
+    '/:datasetId/downloads',
+    verifyToken,
+    controller.getDownloadStats
 );
 
 module.exports = router;

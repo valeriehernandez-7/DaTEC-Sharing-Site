@@ -813,13 +813,198 @@ async function cloneDataset(req, res) {
     }
 }
 
+/**
+ * HU13 - Download dataset file
+ * GET /api/datasets/:datasetId/files/:fileId
+ * 
+ * Downloads a file and tracks the download in Neo4j + Redis
+ * Only approved and public datasets can be downloaded
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+async function downloadFile(req, res) {
+    try {
+        const db = getMongo();
+        const { datasetId, fileId } = req.params;
+
+        // Verify dataset exists and is accessible
+        const dataset = await db.collection('datasets').findOne({
+            dataset_id: datasetId
+        });
+
+        if (!dataset) {
+            return res.status(404).json({
+                success: false,
+                error: 'Dataset not found'
+            });
+        }
+
+        // Check access permissions
+        const isOwner = req.user && req.user.userId === dataset.owner_user_id;
+        const isAdmin = req.user && req.user.isAdmin;
+        const isPublic = dataset.status === 'approved' && dataset.is_public;
+
+        // Only approved and public datasets can be downloaded (unless owner or admin)
+        if (!isPublic && !isOwner && !isAdmin) {
+            return res.status(403).json({
+                success: false,
+                error: 'Dataset not available for download'
+            });
+        }
+
+        // Find the file reference
+        const fileRef = dataset.file_references.find(
+            f => f.couchdb_document_id === fileId
+        );
+
+        if (!fileRef) {
+            return res.status(404).json({
+                success: false,
+                error: 'File not found in dataset'
+            });
+        }
+
+        try {
+            // Get file from CouchDB
+            const { getFile } = require('../utils/couchdb-manager');
+            const fileBuffer = await getFile(fileRef.couchdb_document_id, fileRef.file_name);
+
+            // Set response headers for download
+            res.setHeader('Content-Type', fileRef.mime_type);
+            res.setHeader('Content-Disposition', `attachment; filename="${fileRef.file_name}"`);
+            res.setHeader('Content-Length', fileRef.file_size_bytes);
+
+            // Send file
+            res.send(fileBuffer);
+
+            // Track download asynchronously ONLY if NOT owner (don't wait for it)
+            if (!isOwner) {
+                setImmediate(async () => {
+                    try {
+                        // Create DOWNLOADED relationship in Neo4j
+                        const { createRelationship } = require('../utils/neo4j-relations');
+                        await createRelationship(
+                            req.user.userId,
+                            datasetId,
+                            'DOWNLOADED',
+                            { downloaded_at: new Date().toISOString() },
+                            'User',
+                            'Dataset'
+                        );
+
+                        // Increment download counter in Redis
+                        const { incrementCounter } = require('../utils/redis-counters');
+                        await incrementCounter(`download_count:dataset:${datasetId}`);
+
+                    } catch (trackingError) {
+                        console.error('Error tracking download:', trackingError.message);
+                        // Don't fail the download if tracking fails
+                    }
+                });
+            }
+
+        } catch (error) {
+            console.error('Error retrieving file:', error.message);
+            return res.status(500).json({
+                success: false,
+                error: 'Failed to download file'
+            });
+        }
+
+    } catch (error) {
+        console.error('Error in downloadFile:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
+/**
+ * HU13 - Get download statistics
+ * GET /api/datasets/:datasetId/downloads
+ * 
+ * Returns download history and statistics
+ * Only dataset owner can view this information
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+async function getDownloadStats(req, res) {
+    try {
+        const db = getMongo();
+        const dataset = await db.collection('datasets').findOne({
+            dataset_id: req.params.datasetId
+        });
+
+        if (!dataset) {
+            return res.status(404).json({
+                success: false,
+                error: 'Dataset not found'
+            });
+        }
+
+        // Only owner can view download statistics
+        if (dataset.owner_user_id !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                error: 'Forbidden: Only dataset owner can view download statistics'
+            });
+        }
+
+        // Get download history from Neo4j
+        const { getNeo4j } = require('../config/databases');
+        const neo4j = getNeo4j();
+
+        const result = await neo4j.run(`
+            MATCH (u:User)-[d:DOWNLOADED]->(ds:Dataset {dataset_id: $datasetId})
+            RETURN u.user_id AS userId, 
+                   u.username AS username, 
+                   d.downloaded_at AS downloadedAt
+            ORDER BY d.downloaded_at DESC
+            LIMIT 100
+        `, { datasetId: req.params.datasetId });
+
+        const downloadHistory = result.records.map(record => ({
+            userId: record.get('userId'),
+            username: record.get('username'),
+            downloadedAt: record.get('downloadedAt')
+        }));
+
+        // Get total download count from Redis
+        const totalDownloads = await getCounter(`download_count:dataset:${req.params.datasetId}`);
+
+        // Get unique users count
+        const uniqueUsers = new Set(downloadHistory.map(d => d.userId)).size;
+
+        res.json({
+            success: true,
+            statistics: {
+                totalDownloads: totalDownloads || 0,
+                uniqueUsers: uniqueUsers,
+                recentDownloads: downloadHistory
+            }
+        });
+
+    } catch (error) {
+        console.error('Error getting download stats:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
 module.exports = {
-    createDataset,      // HU5
-    searchDatasets,     // HU9
-    getDataset,         // HU10
-    getUserDatasets,    // HU12
-    requestApproval,    // HU6
-    toggleVisibility,   // HU7
-    deleteDataset,      // HU7
-    cloneDataset        // HU18
+    createDataset,        // HU5
+    searchDatasets,       // HU9
+    getDataset,           // HU10
+    getUserDatasets,      // HU12
+    requestApproval,      // HU6
+    toggleVisibility,     // HU7
+    deleteDataset,        // HU7
+    cloneDataset,         // HU18
+    downloadFile,         // HU13
+    getDownloadStats      // HU13
 };
