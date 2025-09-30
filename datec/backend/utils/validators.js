@@ -161,6 +161,22 @@ const datasetUpdateSchema = Joi.object({
 });
 
 /**
+ * Dataset clone validation schema
+ * Used by: HU18 (clone dataset)
+ */
+const datasetCloneSchema = Joi.object({
+    new_dataset_name: Joi.string()
+        .min(3)
+        .max(100)
+        .required()
+        .messages({
+            'string.min': 'New dataset name must be at least 3 characters',
+            'string.max': 'New dataset name must not exceed 100 characters',
+            'any.required': 'new_dataset_name is required for cloning'
+        })
+});
+
+/**
  * Comment creation validation schema
  * Used by: HU15 (add comment)
  */
@@ -338,6 +354,7 @@ module.exports = {
     userUpdateSchema,
     datasetCreateSchema,
     datasetUpdateSchema,
+    datasetCloneSchema,
     commentCreateSchema,
     messageCreateSchema,
     adminReviewSchema,

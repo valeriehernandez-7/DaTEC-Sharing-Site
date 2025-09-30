@@ -148,19 +148,26 @@ router.delete(
 /**
  * POST /api/datasets/:datasetId/clone
  * Clone an existing dataset
- * Requires: Authenticated user (not the original owner)
+ * Requires: Authenticated user
+ * 
+ * Body (JSON):
+ *   - new_dataset_name: string (required, 3-100 chars, must be different from original)
  * 
  * Response: { success, message, dataset }
  * 
- * Conditions:
- *   - Original dataset must be approved and public
- *   - Cannot clone your own dataset
+ * Conditions (HU18):
+ *   - Original dataset must be approved (status='approved')
+ *   - CAN clone your own dataset (you are the owner)
+ *   - Must provide a DIFFERENT name than the original
+ *   - If cloning someone else's dataset, it must be public (is_public=true)
+ *   - If cloning your own dataset, can be private or public
  * 
  * Side effects:
  *   - Creates complete copy in all 4 databases
  *   - Duplicates all files in CouchDB with new document IDs
  *   - Sets parent_dataset_id to reference original
  *   - New dataset starts with status='pending'
+ *   - New owner is the user who cloned it
  */
 router.post(
     '/:datasetId/clone',

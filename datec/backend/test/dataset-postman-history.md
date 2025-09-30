@@ -109,8 +109,8 @@ description: Testing without files
 
 ```json
 {
-    "success": false,
-    "error": "At least one data file is required"
+  "success": false,
+  "error": "At least one data file is required"
 }
 ```
 
@@ -387,7 +387,7 @@ Content-Type: application/json
 ### Request
 
 ```
-POST {{base_url}}/api/datasets/erickhernandez_20250101_001/clone
+POST {{base_url}}/api/datasets/dhodgkin_20251005_001/clone
 Authorization: Bearer {{user_token}}
 ```
 

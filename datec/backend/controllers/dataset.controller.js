@@ -114,7 +114,7 @@ async function createDataset(req, res) {
         // Parse video URL if provided (HU11)
         let tutorial_video_ref = null;
         if (tutorial_video_url) {
-            const platform = tutorial_video_url.includes('youtube') ? 'youtube' :
+            const platform = tutorial_video_url.includes('youtube') || tutorial_video_url.includes('youtu.be') ? 'youtube' :
                 tutorial_video_url.includes('vimeo') ? 'vimeo' : 'other';
 
             tutorial_video_ref = {
@@ -615,9 +615,16 @@ async function deleteDataset(req, res) {
  * HU18 - Clone dataset
  * POST /api/datasets/:datasetId/clone
  * 
- * Creates a complete copy of an approved public dataset
+ * Creates a complete copy of an approved dataset
+ * Can clone your OWN dataset as long as you give it a different name
+ * Can clone OTHER users' datasets only if they are public
  * Duplicates all files in CouchDB with new document IDs
  * Creates new entries in all 4 databases
+ * 
+ * Body: { new_dataset_name: "Different Name" }
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
  */
 async function cloneDataset(req, res) {
     try {
@@ -633,19 +640,51 @@ async function cloneDataset(req, res) {
             });
         }
 
-        // Can only clone approved and public datasets
-        if (originalDataset.status !== 'approved' || !originalDataset.is_public) {
+        // HU18: Only approved datasets can be cloned
+        if (originalDataset.status !== 'approved') {
             return res.status(403).json({
                 success: false,
-                error: 'Can only clone approved and public datasets'
+                error: 'Can only clone approved datasets'
             });
         }
 
-        // Cannot clone your own dataset
-        if (originalDataset.owner_user_id === req.user.userId) {
+        // HU18: Must provide new dataset name
+        if (!req.body.new_dataset_name || req.body.new_dataset_name.trim().length === 0) {
             return res.status(400).json({
                 success: false,
-                error: 'Cannot clone your own dataset'
+                error: 'New dataset name is required for cloning'
+            });
+        }
+
+        // Normalize the new dataset name (same as createDataset)
+        const newName = req.body.new_dataset_name.trim().replace(/\s+/g, '-').toLowerCase();
+
+        // Check if user already has a dataset with this name
+        const existingDataset = await db.collection('datasets').findOne({
+            owner_user_id: req.user.userId,
+            dataset_name: newName
+        });
+
+        if (existingDataset) {
+            // If it's the same dataset being cloned, name must be different
+            if (existingDataset.dataset_id === req.params.datasetId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'New dataset name must be different from original'
+                });
+            }
+            // If it's a different dataset with same name, conflict
+            return res.status(409).json({
+                success: false,
+                error: 'You already have a dataset with this name'
+            });
+        }
+
+        // If cloning someone else's dataset, it must be public
+        if (originalDataset.owner_user_id !== req.user.userId && !originalDataset.is_public) {
+            return res.status(403).json({
+                success: false,
+                error: 'Can only clone public datasets from other users'
             });
         }
 
@@ -658,57 +697,66 @@ async function cloneDataset(req, res) {
             const originalFile = originalDataset.file_references[i];
             const newDocId = generateDatasetFileDocId(clonedDatasetId, i + 1);
 
-            // Get original file from CouchDB
-            const { getFile } = require('../utils/couchdb-manager');
-            const fileBuffer = await getFile(
-                originalFile.couchdb_document_id,
-                originalFile.file_name
-            );
+            try {
+                // Get original file from CouchDB
+                const fileBuffer = await getFile(
+                    originalFile.couchdb_document_id,
+                    originalFile.file_name
+                );
 
-            // Upload as new file
-            const clonedFileRef = await uploadFile(newDocId, {
-                buffer: fileBuffer,
-                originalname: originalFile.file_name,
-                mimetype: originalFile.mime_type,
-                size: originalFile.file_size_bytes
-            }, {
-                type: 'dataset_file',
-                owner_user_id: req.user.userId,
-                dataset_id: clonedDatasetId,
-                file_index: i + 1,
-                cloned_from: originalFile.couchdb_document_id,
-                uploaded_at: new Date().toISOString()
-            });
+                // Upload as new file
+                const clonedFileRef = await uploadFile(newDocId, {
+                    buffer: fileBuffer,
+                    originalname: originalFile.file_name,
+                    mimetype: originalFile.mime_type,
+                    size: originalFile.file_size_bytes
+                }, {
+                    type: 'dataset_file',
+                    owner_user_id: req.user.userId,
+                    dataset_id: clonedDatasetId,
+                    file_index: i + 1,
+                    cloned_from: originalFile.couchdb_document_id,
+                    uploaded_at: new Date().toISOString()
+                });
 
-            clonedFileReferences.push({
-                ...clonedFileRef,
-                uploaded_at: new Date()
-            });
+                clonedFileReferences.push({
+                    ...clonedFileRef,
+                    uploaded_at: new Date()
+                });
+            } catch (error) {
+                console.error(`Failed to clone file ${originalFile.file_name}:`, error.message);
+                throw new Error(`Failed to clone file: ${originalFile.file_name}`);
+            }
         }
 
         // Clone header photo if exists
         let clonedHeaderPhotoRef = null;
         if (originalDataset.header_photo_ref) {
-            const { getFile } = require('../utils/couchdb-manager');
             const newDocId = generateHeaderPhotoDocId(clonedDatasetId);
 
-            const photoBuffer = await getFile(
-                originalDataset.header_photo_ref.couchdb_document_id,
-                originalDataset.header_photo_ref.file_name
-            );
+            try {
+                const photoBuffer = await getFile(
+                    originalDataset.header_photo_ref.couchdb_document_id,
+                    originalDataset.header_photo_ref.file_name
+                );
 
-            clonedHeaderPhotoRef = await uploadFile(newDocId, {
-                buffer: photoBuffer,
-                originalname: originalDataset.header_photo_ref.file_name,
-                mimetype: originalDataset.header_photo_ref.mime_type,
-                size: originalDataset.header_photo_ref.file_size_bytes
-            }, {
-                type: 'header_photo',
-                owner_user_id: req.user.userId,
-                dataset_id: clonedDatasetId,
-                cloned_from: originalDataset.header_photo_ref.couchdb_document_id,
-                uploaded_at: new Date().toISOString()
-            });
+                clonedHeaderPhotoRef = await uploadFile(newDocId, {
+                    buffer: photoBuffer,
+                    originalname: originalDataset.header_photo_ref.file_name,
+                    mimetype: originalDataset.header_photo_ref.mime_type,
+                    size: originalDataset.header_photo_ref.file_size_bytes
+                }, {
+                    type: 'header_photo',
+                    owner_user_id: req.user.userId,
+                    dataset_id: clonedDatasetId,
+                    cloned_from: originalDataset.header_photo_ref.couchdb_document_id,
+                    uploaded_at: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error('Failed to clone header photo:', error.message);
+                // Header photo is optional, continue without it
+                clonedHeaderPhotoRef = null;
+            }
         }
 
         // Create cloned dataset in MongoDB
@@ -716,7 +764,7 @@ async function cloneDataset(req, res) {
             dataset_id: clonedDatasetId,
             owner_user_id: req.user.userId,
             parent_dataset_id: req.params.datasetId,
-            dataset_name: `${originalDataset.dataset_name} (Clone)`,
+            dataset_name: newName,
             description: originalDataset.description,
             tags: [...originalDataset.tags],
             status: 'pending',
@@ -738,7 +786,7 @@ async function cloneDataset(req, res) {
         await db.collection('datasets').insertOne(clonedDataset);
 
         // Create dataset node in Neo4j
-        await createDatasetNode(clonedDatasetId, clonedDataset.dataset_name);
+        await createDatasetNode(clonedDatasetId, newName);
 
         // Initialize counters in Redis
         await initCounter(`download_count:dataset:${clonedDatasetId}`, 0);
@@ -749,7 +797,7 @@ async function cloneDataset(req, res) {
             message: 'Dataset cloned successfully',
             dataset: {
                 dataset_id: clonedDatasetId,
-                dataset_name: clonedDataset.dataset_name,
+                dataset_name: newName,
                 parent_dataset_id: req.params.datasetId,
                 status: 'pending',
                 file_count: clonedFileReferences.length
