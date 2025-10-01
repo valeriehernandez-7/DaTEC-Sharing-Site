@@ -130,7 +130,7 @@ async function setupNeo4j() {
         `, {
             followerUsername: 'armandogarcia',
             followeeUsername: 'erickhernandez',
-            timestamp: new Date('2025-10-01T10:00:00Z').toISOString()
+            timestamp: new Date('2025-05-01T10:00:00Z').toISOString()
         });
         console.log('armandogarcia -> FOLLOWS -> erickhernandez');
 
@@ -143,7 +143,7 @@ async function setupNeo4j() {
         `, {
             followerUsername: 'erickhernandez',
             followeeUsername: 'armandogarcia',
-            timestamp: new Date('2025-10-01T11:00:00Z').toISOString()
+            timestamp: new Date('2025-05-02T11:00:00Z').toISOString()
         });
         console.log('erickhernandez -> FOLLOWS -> armandogarcia');
 
@@ -156,7 +156,7 @@ async function setupNeo4j() {
         `, {
             followerUsername: 'armandogarcia',
             followeeUsername: 'valeriehernandez',
-            timestamp: new Date('2025-10-03T14:20:00Z').toISOString()
+            timestamp: new Date('2025-05-03T14:20:00Z').toISOString()
         });
         console.log('armandogarcia -> FOLLOWS -> valeriehernandez');
 
@@ -169,7 +169,7 @@ async function setupNeo4j() {
         `, {
             followerUsername: 'erickhernandez',
             followeeUsername: 'valeriehernandez',
-            timestamp: new Date('2025-10-04T14:20:00Z').toISOString()
+            timestamp: new Date('2025-05-04T14:20:00Z').toISOString()
         });
         console.log('erickhernandez -> FOLLOWS -> valeriehernandez');
 

@@ -258,12 +258,19 @@ try {
             validator: {
                 $jsonSchema: {
                     bsonType: "object",
-                    required: ["vote_id", "target_dataset_id", "user_id", "created_at"],
+                    required: ["vote_id", "target_dataset_id", "voter_user_id", "rating", "created_at", "updated_at"],
                     properties: {
                         vote_id: { bsonType: "string" },
                         target_dataset_id: { bsonType: "string" },
-                        user_id: { bsonType: "string" },
-                        created_at: { bsonType: "date" }
+                        voter_user_id: { bsonType: "string" },
+                        rating: {
+                            bsonType: "int",
+                            minimum: 1,
+                            maximum: 5,
+                            description: "Rating must be integer between 1 and 5"
+                        },
+                        created_at: { bsonType: "date" },
+                        updated_at: { bsonType: "date" }
                     }
                 }
             }
@@ -332,11 +339,11 @@ try {
     // Votes indexes
     db.votes.createIndex({ "vote_id": 1 }, { unique: true, name: "vote_id_unique" });
     db.votes.createIndex(
-        { "target_dataset_id": 1, "user_id": 1 },
+        { "target_dataset_id": 1, "voter_user_id": 1 },
         { unique: true, name: "vote_unique_index" }
     );
     db.votes.createIndex({ "target_dataset_id": 1 }, { name: "dataset_votes_index" });
-    db.votes.createIndex({ "user_id": 1 }, { name: "user_votes_index" });
+    db.votes.createIndex({ "voter_user_id": 1 }, { name: "user_votes_index" });
     print('✓ Created votes indexes');
 
     // Private Messages indexes
@@ -361,8 +368,20 @@ try {
             birth_date: new Date("1999-09-09"),
             avatar_ref: null,
             is_admin: true,
-            created_at: new Date(),
-            updated_at: new Date()
+            created_at: new Date('2020-01-01'),
+            updated_at: new Date('2020-01-01')
+        },
+        {
+            user_id: "00000000-0000-5000-8000-000004637677",
+            username: "valeriehernandez",
+            email_address: "valeriehernandez@estudiantec.cr",
+            password_hash: "$2y$12$FG91QJcTF7eWXQu1PinWH.A0kBYaF2w9Hpuch3Ko1xPV/Y6IX.MLK",
+            full_name: "Valerie Hernandez Fernandez",
+            birth_date: new Date("2005-05-07"),
+            avatar_ref: null,
+            is_admin: true,
+            created_at: new Date('2025-05-01'),
+            updated_at: new Date('2025-05-01')
         },
         {
             user_id: "00000000-0000-5000-8000-00002a10550c",
@@ -373,8 +392,8 @@ try {
             birth_date: new Date("1985-01-01"),
             avatar_ref: null,
             is_admin: false,
-            created_at: new Date(),
-            updated_at: new Date()
+            created_at: new Date('2025-02-01'),
+            updated_at: new Date('2025-02-01')
         },
         {
             user_id: "00000000-0000-5000-8000-000050c163e7",
@@ -385,20 +404,32 @@ try {
             birth_date: new Date("2005-07-01"),
             avatar_ref: null,
             is_admin: false,
-            created_at: new Date(),
-            updated_at: new Date()
+            created_at: new Date('2025-03-01'),
+            updated_at: new Date('2025-03-01')
         },
         {
-            user_id: "00000000-0000-5000-8000-000004637677",
-            username: "valeriehernandez",
-            email_address: "valeriehernandez@estudiantec.cr",
-            password_hash: "$2y$12$FG91QJcTF7eWXQu1PinWH.A0kBYaF2w9Hpuch3Ko1xPV/Y6IX.MLK",
-            full_name: "Valerie Hernandez Fernandez",
-            birth_date: new Date("2005-05-07"),
+            user_id: "00000000-0000-5000-8000-0000087b63e3",
+            username: "dhodgkin",
+            email_address: "dhodgkin@datec.cr",
+            password_hash: "$2y$12$vLEAzK3sDi59O5LTFKVJtuxt/Q1TbUf7dwcKozmqKoT5lnebz.EQi",
+            full_name: "Dorothy Crowfoot Hodgkin",
+            birth_date: new Date("2010-05-12"),
             avatar_ref: null,
             is_admin: false,
-            created_at: new Date(),
-            updated_at: new Date()
+            created_at: new Date('2025-07-01'),
+            updated_at: new Date('2025-07-01')
+        },
+        {
+            user_id: "00000000-0000-5000-8000-0000160ecd67",
+            username: "einst3in",
+            email_address: "einst3in@datec.cr",
+            password_hash: "$2y$12$zfJTy5c3KvkAs5u9tsRXBumJpTIvYxaZZ9umhr/3gcu/sNK6mc/m2",
+            full_name: "Albert Einstein",
+            birth_date: new Date("1979-03-14"),
+            avatar_ref: null,
+            is_admin: false,
+            created_at: new Date('2025-07-02'),
+            updated_at: new Date('2025-07-02')
         }
     ];
 
@@ -409,88 +440,6 @@ try {
         } catch (e) {
             if (e.code === 11000) {
                 print(`✓ User already exists: ${user.username}`);
-            } else {
-                throw e;
-            }
-        }
-    }
-
-    // Insert sample datasets for testing
-    print('\nCreating sample datasets...');
-    const sampleDatasets = [
-        {
-            dataset_id: "erickhernandez_20250101_001",
-            owner_user_id: "00000000-0000-5000-8000-00002a10550c",
-            parent_dataset_id: null,
-            dataset_name: "Global Sales Analysis 2024",
-            description: "Comprehensive analysis of global sales patterns and trends for 2024 with detailed regional breakdowns and performance metrics.",
-            tags: ["sales", "analytics", "business", "2024"],
-            status: "approved",
-            reviewed_at: new Date(),
-            admin_review: "Dataset approved for public sharing",
-            is_public: true,
-            file_references: [
-                {
-                    couchdb_document_id: "file_erickhernandez_20250101_001_001",
-                    file_name: "sales_q1.csv",
-                    file_size_bytes: 15728640,
-                    mime_type: "text/csv",
-                    uploaded_at: new Date()
-                }
-            ],
-            header_photo_ref: {
-                couchdb_document_id: "photo_erickhernandez_20250101_001_header",
-                file_name: "header.jpg",
-                file_size_bytes: 2048000,
-                mime_type: "image/jpeg"
-            },
-            tutorial_video_ref: {
-                url: "https://youtube.com/watch?v=abc123",
-                platform: "youtube"
-            },
-            download_count: 156,
-            vote_count: 42,
-            comment_count: 8,
-            created_at: new Date(),
-            updated_at: new Date()
-        },
-        {
-            dataset_id: "armandogarcia_20250201_001",
-            owner_user_id: "00000000-0000-5000-8000-000050c163e7",
-            parent_dataset_id: null,
-            dataset_name: "Climate Change Indicators",
-            description: "Long-term climate data showing temperature changes, precipitation patterns, and extreme weather events from 2000-2024.",
-            tags: ["climate", "environment", "science", "temperature"],
-            status: "approved",
-            reviewed_at: new Date(),
-            admin_review: "Approved for research purposes",
-            is_public: true,
-            file_references: [
-                {
-                    couchdb_document_id: "file_armandogarcia_20250201_001_001",
-                    file_name: "climate_data.csv",
-                    file_size_bytes: 25600000,
-                    mime_type: "text/csv",
-                    uploaded_at: new Date()
-                }
-            ],
-            header_photo_ref: null,
-            tutorial_video_ref: null,
-            download_count: 89,
-            vote_count: 23,
-            comment_count: 5,
-            created_at: new Date(),
-            updated_at: new Date()
-        }
-    ];
-
-    for (const dataset of sampleDatasets) {
-        try {
-            db.datasets.insertOne(dataset);
-            print(`✓ Created sample dataset: ${dataset.dataset_name}`);
-        } catch (e) {
-            if (e.code === 11000) {
-                print(`✓ Dataset already exists: ${dataset.dataset_name}`);
             } else {
                 throw e;
             }

@@ -82,7 +82,7 @@ async function setupRedis() {
                 type: 'new_follower',
                 from_user_id: users.armandogarcia,
                 from_username: 'armandogarcia',
-                timestamp: new Date('2025-10-01T10:00:00Z').toISOString()
+                timestamp: new Date('2025-08-01T10:00:00Z').toISOString()
             })
         );
         console.log('  - erickhernandez: new_follower from armandogarcia');
@@ -95,7 +95,7 @@ async function setupRedis() {
                 type: 'new_follower',
                 from_user_id: users.erickhernandez,
                 from_username: 'erickhernandez',
-                timestamp: new Date('2025-10-01T11:00:00Z').toISOString()
+                timestamp: new Date('2025-08-02T11:00:00Z').toISOString()
             })
         );
         console.log('  - armandogarcia: new_follower from erickhernandez');
@@ -108,7 +108,7 @@ async function setupRedis() {
                 type: 'new_follower',
                 from_user_id: users.armandogarcia,
                 from_username: 'armandogarcia',
-                timestamp: new Date('2025-10-03T14:20:00Z').toISOString()
+                timestamp: new Date('2025-08-03T14:20:00Z').toISOString()
             })
         );
         console.log('  - valeriehernandez: new_follower from armandogarcia');
@@ -121,36 +121,10 @@ async function setupRedis() {
                 type: 'new_follower',
                 from_user_id: users.erickhernandez,
                 from_username: 'erickhernandez',
-                timestamp: new Date('2025-10-03T14:20:00Z').toISOString()
+                timestamp: new Date('2025-08-04T14:20:00Z').toISOString()
             })
         );
         console.log('  - valeriehernandez: new_follower from erickhernandez');
-
-        // Notification 5: erickhernandez receives dataset approval notification
-        await primaryClient.lPush(
-            `notifications:user:${users.erickhernandez}`,
-            JSON.stringify({
-                type: 'dataset_approved',
-                dataset_id: 'erickhernandez_20250101_001',
-                dataset_name: 'Global Sales Analysis 2024',
-                admin_review: 'Excellent dataset with comprehensive data',
-                timestamp: new Date('2025-10-01T15:00:00Z').toISOString()
-            })
-        );
-        console.log('  - erickhernandez: dataset_approved notification');
-
-        // Notification 6: armandogarcia receives dataset approval notification
-        await primaryClient.lPush(
-            `notifications:user:${users.armandogarcia}`,
-            JSON.stringify({
-                type: 'dataset_approved',
-                dataset_id: 'armandogarcia_20250201_001',
-                dataset_name: 'Climate Change Indicators',
-                admin_review: 'Well-documented climate data',
-                timestamp: new Date('2025-10-02T16:30:00Z').toISOString()
-            })
-        );
-        console.log('  - armandogarcia: dataset_approved notification');
 
         // Verify notification queues
         console.log('\nVerifying notification queues...');
@@ -186,9 +160,6 @@ async function setupRedis() {
         console.log('  - Replication: verified');
         console.log(`  - Sample datasets: ${sampleDatasets.length}`);
         console.log(`  - Total notifications: ${Object.values(notificationCounts).reduce((a, b) => a + b, 0)}`);
-        console.log('\nNotification breakdown:');
-        console.log('  - new_follower: 4');
-        console.log('  - dataset_approved: 2');
 
         await primaryClient.quit();
         await replicaClient.quit();

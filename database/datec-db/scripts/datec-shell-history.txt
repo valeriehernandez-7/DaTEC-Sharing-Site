@@ -1,16 +1,16 @@
 ﻿PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker-compose up -d
 [+] Running 11/11
  ✔ Network datec-db_datec-network        Created                                                            0.1s
- ✔ Volume datec-db_redis_replica_data    Created                                                            0.0s
- ✔ Volume datec-db_mongo_primary_data    Created                                                            0.0s
  ✔ Volume datec-db_mongo_secondary_data  Created                                                            0.0s
  ✔ Volume datec-db_redis_primary_data    Created                                                            0.0s
- ✔ Container datec-redis-primary         Healthy                                                           11.5s
+ ✔ Volume datec-db_redis_replica_data    Created                                                            0.0s
+ ✔ Volume datec-db_mongo_primary_data    Created                                                            0.0s
  ✔ Container datec-mongo-primary         Healthy                                                            7.0s
- ✔ Container datec-mongo-secondary       Healthy                                                           17.4s
+ ✔ Container datec-redis-primary         Healthy                                                           11.6s
  ✔ Container datec-redis-replica         Healthy                                                           11.9s
- ✔ Container datec-mongo-setup           Started                                                           17.5s
- ✔ Container datec-redis-setup           Started                                                           12.2s
+ ✔ Container datec-mongo-secondary       Healthy                                                           19.4s
+ ✔ Container datec-redis-setup           Started                                                           12.0s
+ ✔ Container datec-mongo-setup           Started                                                           20.3s
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker-compose ps
 NAME                    IMAGE            COMMAND                  SERVICE           CREATED              STATUS                        PORTS
 datec-mongo-primary     mongo:8.0        "docker-entrypoint.s…"   mongo-primary     About a minute ago   Up About a minute (healthy)   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
@@ -50,19 +50,17 @@ Creating indexes...
 
 Creating sample users...
 ✓ Sample user created: sudod4t3c
+✓ Sample user created: valeriehernandez
 ✓ Sample user created: erickhernandez
 ✓ Sample user created: armandogarcia
-✓ Sample user created: valeriehernandez
-
-Creating sample datasets...
-✓ Created sample dataset: Global Sales Analysis 2024
-✓ Created sample dataset: Climate Change Indicators
+✓ Sample user created: dhodgkin
+✓ Sample user created: einst3in
 
 Verifying setup...
-  - datasets: 7 indexes
   - votes: 5 indexes
-  - private_messages: 5 indexes
+  - datasets: 7 indexes
   - users: 5 indexes
+  - private_messages: 5 indexes
   - comments: 6 indexes
 
 ============================================================
@@ -74,8 +72,8 @@ Summary:
   - Database: datec
   - Collections: 5
   - Indexes: 28
-  - Users: 4
-  - Datasets: 2
+  - Users: 6
+  - Datasets: 0
   - Validation: Enabled for all collections
 
 Ready for DaTEC application development!
@@ -83,7 +81,7 @@ MongoDB setup complete!
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker logs -f datec-redis-setup
 Installing Redis client...
 
-up to date, audited 19 packages in 2s
+added 18 packages, and audited 19 packages in 24s
 
 4 packages are looking for funding
   run `npm fund` for details
@@ -122,14 +120,12 @@ Creating sample notifications...
   - armandogarcia: new_follower from erickhernandez
   - valeriehernandez: new_follower from armandogarcia
   - valeriehernandez: new_follower from erickhernandez
-  - erickhernandez: dataset_approved notification
-  - armandogarcia: dataset_approved notification
 
 Verifying notification queues...
 Notification counts by user:
   - sudod4t3c: 0 notifications
-  - erickhernandez: 2 notifications
-  - armandogarcia: 2 notifications
+  - erickhernandez: 1 notifications
+  - armandogarcia: 1 notifications
   - valeriehernandez: 2 notifications
 
 Verifying data replication...
@@ -146,15 +142,17 @@ Summary:
   - Notification queues: ready
   - Replication: verified
   - Sample datasets: 2
-  - Total notifications: 6
-
-Notification breakdown:
-  - new_follower: 4
-  - dataset_approved: 2
+  - Total notifications: 4
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker-compose ps
+NAME                    IMAGE            COMMAND                  SERVICE           CREATED         STATUS                   PORTS
+datec-mongo-primary     mongo:8.0        "docker-entrypoint.s…"   mongo-primary     2 minutes ago   Up 2 minutes (healthy)   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
+datec-mongo-secondary   mongo:8.0        "docker-entrypoint.s…"   mongo-secondary   2 minutes ago   Up 2 minutes (healthy)   0.0.0.0:27018->27017/tcp, [::]:27018->27017/tcp
+datec-redis-primary     redis:8-alpine   "docker-entrypoint.s…"   redis-primary     2 minutes ago   Up 2 minutes (healthy)   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+datec-redis-replica     redis:8-alpine   "docker-entrypoint.s…"   redis-replica     2 minutes ago   Up 2 minutes (healthy)   0.0.0.0:6380->6379/tcp, [::]:6380->6379/tcp
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> cd scripts
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db\scripts> npm install
 
-added 18 packages, and audited 19 packages in 7s
+changed 6 packages, and audited 19 packages in 4s
 
 4 packages are looking for funding
   run `npm fund` for details
@@ -241,138 +239,12 @@ FOLLOWS relationships: 4
 ============================================================
 
 Setup script completed successfully
-PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db\scripts> cd ..
-PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker-compose ps
-NAME                    IMAGE            COMMAND                  SERVICE           CREATED         STATUS                   PORTS
-datec-mongo-primary     mongo:8.0        "docker-entrypoint.s…"   mongo-primary     9 minutes ago   Up 9 minutes (healthy)   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
-datec-mongo-secondary   mongo:8.0        "docker-entrypoint.s…"   mongo-secondary   9 minutes ago   Up 9 minutes (healthy)   0.0.0.0:27018->27017/tcp, [::]:27018->27017/tcp
-datec-redis-primary     redis:8-alpine   "docker-entrypoint.s…"   redis-primary     9 minutes ago   Up 9 minutes (healthy)   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
-datec-redis-replica     redis:8-alpine   "docker-entrypoint.s…"   redis-replica     9 minutes ago   Up 9 minutes (healthy)   0.0.0.0:6380->6379/tcp, [::]:6380->6379/tcp
-PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker exec -it datec-mongo-primary mongosh --eval "rs.status()"
-{
-  set: 'datecRS',
-  date: ISODate('2025-10-05T01:04:03.226Z'),
-  myState: 1,
-  term: Long('1'),
-  syncSourceHost: '',
-  syncSourceId: -1,
-  heartbeatIntervalMillis: Long('2000'),
-  majorityVoteCount: 2,
-  writeMajorityCount: 2,
-  votingMembersCount: 2,
-  writableVotingMembersCount: 2,
-  optimes: {
-    lastCommittedOpTime: { ts: Timestamp({ t: 1759626237, i: 1 }), t: Long('1') },
-    lastCommittedWallTime: ISODate('2025-10-05T01:03:57.276Z'),
-    readConcernMajorityOpTime: { ts: Timestamp({ t: 1759626237, i: 1 }), t: Long('1') },
-    appliedOpTime: { ts: Timestamp({ t: 1759626237, i: 1 }), t: Long('1') },
-    durableOpTime: { ts: Timestamp({ t: 1759626237, i: 1 }), t: Long('1') },
-    writtenOpTime: { ts: Timestamp({ t: 1759626237, i: 1 }), t: Long('1') },
-    lastAppliedWallTime: ISODate('2025-10-05T01:03:57.276Z'),
-    lastDurableWallTime: ISODate('2025-10-05T01:03:57.276Z'),
-    lastWrittenWallTime: ISODate('2025-10-05T01:03:57.276Z')
-  },
-  lastStableRecoveryTimestamp: Timestamp({ t: 1759626227, i: 1 }),
-  electionCandidateMetrics: {
-    lastElectionReason: 'electionTimeout',
-    lastElectionDate: ISODate('2025-10-05T00:56:07.211Z'),
-    electionTerm: Long('1'),
-    lastCommittedOpTimeAtElection: { ts: Timestamp({ t: 1759625756, i: 1 }), t: Long('-1') },
-    lastSeenWrittenOpTimeAtElection: { ts: Timestamp({ t: 1759625756, i: 1 }), t: Long('-1') },
-    lastSeenOpTimeAtElection: { ts: Timestamp({ t: 1759625756, i: 1 }), t: Long('-1') },
-    numVotesNeeded: 2,
-    priorityAtElection: 2,
-    electionTimeoutMillis: Long('10000'),
-    numCatchUpOps: Long('0'),
-    newTermStartDate: ISODate('2025-10-05T00:56:07.285Z'),
-    wMajorityWriteAvailabilityDate: ISODate('2025-10-05T00:56:07.752Z')
-  },
-  members: [
-    {
-      _id: 0,
-      name: 'mongo-primary:27017',
-      health: 1,
-      state: 1,
-      stateStr: 'PRIMARY',
-      uptime: 564,
-      optime: { ts: Timestamp({ t: 1759626237, i: 1 }), t: Long('1') },
-      optimeDate: ISODate('2025-10-05T01:03:57.000Z'),
-      optimeWritten: { ts: Timestamp({ t: 1759626237, i: 1 }), t: Long('1') },
-      optimeWrittenDate: ISODate('2025-10-05T01:03:57.000Z'),
-      lastAppliedWallTime: ISODate('2025-10-05T01:03:57.276Z'),
-      lastDurableWallTime: ISODate('2025-10-05T01:03:57.276Z'),
-      lastWrittenWallTime: ISODate('2025-10-05T01:03:57.276Z'),
-      syncSourceHost: '',
-      syncSourceId: -1,
-      infoMessage: '',
-      electionTime: Timestamp({ t: 1759625767, i: 1 }),
-      electionDate: ISODate('2025-10-05T00:56:07.000Z'),
-      configVersion: 1,
-      configTerm: 1,
-      self: true,
-      lastHeartbeatMessage: ''
-    },
-    {
-      _id: 1,
-      name: 'mongo-secondary:27017',
-      health: 1,
-      state: 2,
-      stateStr: 'SECONDARY',
-      uptime: 486,
-      optime: { ts: Timestamp({ t: 1759626237, i: 1 }), t: Long('1') },
-      optimeDurable: { ts: Timestamp({ t: 1759626237, i: 1 }), t: Long('1') },
-      optimeWritten: { ts: Timestamp({ t: 1759626237, i: 1 }), t: Long('1') },
-      optimeDate: ISODate('2025-10-05T01:03:57.000Z'),
-      optimeDurableDate: ISODate('2025-10-05T01:03:57.000Z'),
-      optimeWrittenDate: ISODate('2025-10-05T01:03:57.000Z'),
-      lastAppliedWallTime: ISODate('2025-10-05T01:03:57.276Z'),
-      lastDurableWallTime: ISODate('2025-10-05T01:03:57.276Z'),
-      lastWrittenWallTime: ISODate('2025-10-05T01:03:57.276Z'),
-      lastHeartbeat: ISODate('2025-10-05T01:04:01.422Z'),
-      lastHeartbeatRecv: ISODate('2025-10-05T01:04:02.465Z'),
-      pingMs: Long('0'),
-      lastHeartbeatMessage: '',
-      syncSourceHost: 'mongo-primary:27017',
-      syncSourceId: 0,
-      infoMessage: '',
-      configVersion: 1,
-      configTerm: 1
-    }
-  ],
-  ok: 1,
-  '$clusterTime': {
-    clusterTime: Timestamp({ t: 1759626237, i: 1 }),
-    signature: {
-      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),
-      keyId: Long('0')
-    }
-  },
-  operationTime: Timestamp({ t: 1759626237, i: 1 })
-}
-PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker exec -it datec-mongo-primary mongosh datec --eval "db.users.countDocuments()"
-4
-PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker exec -it datec-redis-primary redis-cli ping
-PONG
-PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> docker exec -it datec-redis-primary redis-cli INFO replication
-# Replication
-role:master
-connected_slaves:1
-slave0:ip=172.18.0.5,port=6379,state=online,offset=3594,lag=1
-master_failover_state:no-failover
-master_replid:a96a61ec1b373ed1d26d662356088186ab45efd0
-master_replid2:0000000000000000000000000000000000000000
-master_repl_offset:3594
-second_repl_offset:-1
-repl_backlog_active:1
-repl_backlog_size:1048576
-repl_backlog_first_byte_offset:1
-repl_backlog_histlen:3594
-PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db> cd C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\backend
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db\scripts> cd C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\backend
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\backend> npm install
 
-up to date, audited 167 packages in 2s
+added 243 packages, and audited 244 packages in 9s
 
-26 packages are looking for funding
+40 packages are looking for funding
   run `npm fund` for details
 
 found 0 vulnerabilities
@@ -386,7 +258,7 @@ PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\backend> npm run 
 [nodemon] watching path(s): *.*
 [nodemon] watching extensions: js,mjs,cjs,json
 [nodemon] starting `node server.js`
-[dotenv@17.2.3] injecting env (10) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.3] injecting env (10) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
 Connecting to databases...
 
 Connected to MongoDB replica set: datecRS
@@ -399,3 +271,4 @@ All databases connected successfully
 Server running on http://localhost:3000
 Health check: http://localhost:3000/api/health
 Environment: development
+
