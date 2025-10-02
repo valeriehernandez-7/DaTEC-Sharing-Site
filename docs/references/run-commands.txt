@@ -1,7 +1,7 @@
 RUNNING https://github.com/valeriehernandez-7/DaTEC-Sharing-Site 
 
 Docker conts. path
-C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db
+C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\database\datec-db
 
 Server path
 C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\backend
@@ -11,7 +11,7 @@ C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\backend
 1. Start Docker Desktop
 
 2. Start Powershell
-cd C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\database\datec-db
+cd C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\database\datec-db
 
 3. 
 docker-compose up -d
