@@ -40,9 +40,9 @@ app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/datasets', require('./routes/dataset.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/notifications', require('./routes/notification.routes'));
-app.use('/api', require('./routes/vote.routes'));
 app.use('/api/messages', require('./routes/message.routes'));
-// app.use('/api/comments', require('./routes/comment.routes'));
+app.use('/api', require('./routes/vote.routes'));
+app.use('/api', require('./routes/comment.routes'));
 
 
 // 404 handler
