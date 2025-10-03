@@ -471,6 +471,7 @@ async function requestApproval(req, res) {
  * Body: { is_public: true/false }
  * Only owner can change visibility
  * Only approved datasets can be made public
+ * HU19 - Notifies followers when dataset becomes public
  */
 async function toggleVisibility(req, res) {
     try {
@@ -503,6 +504,7 @@ async function toggleVisibility(req, res) {
         }
 
         const newVisibility = req.body.is_public === true;
+        const wasPrivate = dataset.is_public === false;
 
         await db.collection('datasets').updateOne(
             { dataset_id: req.params.datasetId },
@@ -513,6 +515,34 @@ async function toggleVisibility(req, res) {
                 }
             }
         );
+
+        // HU19: If changing from private to public, notify all followers
+        if (wasPrivate && newVisibility === true) {
+            try {
+                const { broadcastNotification } = require('../utils/notifications');
+                const { getFollowersIds } = require('../utils/neo4j-relations');
+
+                // Get all followers of the dataset owner
+                const followerIds = await getFollowersIds(dataset.owner_user_id);
+
+                if (followerIds && followerIds.length > 0) {
+                    // Broadcast notification to all followers
+                    const notifiedCount = await broadcastNotification(followerIds, {
+                        type: 'new_dataset',
+                        from_user_id: dataset.owner_user_id,
+                        from_username: req.user.username,
+                        dataset_id: dataset.dataset_id,
+                        dataset_name: dataset.dataset_name,
+                        timestamp: new Date().toISOString()
+                    });
+
+                    // console.log(`Notified ${notifiedCount} followers about new public dataset`);
+                }
+            } catch (notifError) {
+                console.error('Failed to notify followers:', notifError.message);
+                // Don't fail the request if notifications fail
+            }
+        }
 
         res.json({
             success: true,
