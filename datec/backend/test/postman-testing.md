@@ -36,7 +36,7 @@ Complete testing suite for all 21 User Stories. Tests are ordered by dependency.
 ```json
 {
   "username": "erickhernandez",
-  "password": "password123"
+  "password": "erickhernandez"
 }
 ```
 
@@ -57,7 +57,7 @@ Complete testing suite for all 21 User Stories. Tests are ordered by dependency.
 ```json
 {
   "username": "armandogarcia",
-  "password": "password123"
+  "password": "armandogarcia"
 }
 ```
 
@@ -75,11 +75,11 @@ Complete testing suite for all 21 User Stories. Tests are ordered by dependency.
 **BODY** (form-data):
 
 ```
-username: testuser
-email_address: testuser@datec.com
-password: testpass123
-full_name: Test User
-birth_date: 2000-01-01
+username: hedylamarr
+email_address: hedylamarr@datec.com
+password: hedylamarr
+full_name: Hedy Lamarr
+birth_date: 1990-11-09
 ```
 
 **EXPECTED**: `201 Created`  
@@ -126,7 +126,7 @@ birth_date: 2000-01-01
 
 ```json
 {
-  "full_name": "Erick Hernandez Updated"
+  "full_name": "Erick Hernandez"
 }
 ```
 
@@ -137,7 +137,7 @@ birth_date: 2000-01-01
 
 ---
 
-### TEST 8: Promote User to Admin (HU3)
+### TEST 8: Promote|Demote User to Admin (HU3)
 
 **HTTP METHOD**: `PATCH`  
 **URL**: `http://localhost:3000/api/users/armandogarcia/promote`  
@@ -162,9 +162,8 @@ birth_date: 2000-01-01
 ```
 dataset_name: Sales Analytics Q1 2025
 description: Comprehensive sales analysis for Q1 2025 including regional breakdowns and trend analysis
-tags: sales, analytics, 2025
-tutorial_video_url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
-data_files: [upload CSV file]
+tutorial_video_url: https://www.youtube.com/watch?v=uBBDMqZKagY
+data_files: [upload CSV file, JSON file]
 header_photo: [upload JPG file]
 ```
 
@@ -187,8 +186,7 @@ header_photo: [upload JPG file]
 ```
 dataset_name: Climate Data 2024
 description: Global climate change indicators and temperature measurements from weather stations worldwide
-tags: climate, weather, environment
-data_files: [upload CSV file]
+data_files: [upload JSON file]
 ```
 
 **EXPECTED**: `201 Created`  
@@ -280,7 +278,7 @@ data_files: [upload CSV file]
 
 ---
 
-### TEST 17: Approve Dataset (HU8)
+### TEST 17: Approve Dataset - Admin (HU8)
 
 **HTTP METHOD**: `PATCH`  
 **URL**: `http://localhost:3000/api/admin/datasets/{DATASET_1_ID}`  
@@ -303,7 +301,7 @@ data_files: [upload CSV file]
 
 ---
 
-### TEST 18: Reject Dataset (HU8)
+### TEST 18: Reject Dataset - Admin (HU8)
 
 **HTTP METHOD**: `PATCH`  
 **URL**: `http://localhost:3000/api/admin/datasets/{DATASET_2_ID}`  
@@ -497,7 +495,7 @@ data_files: [upload CSV file]
 
 ```json
 {
-  "new_dataset_name": "Sales Analytics Q1 2025 - Modified"
+  "new_dataset_name": "Sales Analytics Q1 2025 armandoversion"
 }
 ```
 
@@ -516,7 +514,7 @@ data_files: [upload CSV file]
 ### TEST 30: Follow User (HU19)
 
 **HTTP METHOD**: `POST`  
-**URL**: `http://localhost:3000/api/users/erickhernandez/follow`  
+**URL**: `http://localhost:3000/api/users/hedylamarr/follow`  
 **HEADERS**: `Authorization: Bearer {ARMANDO_TOKEN}`  
 **EXPECTED**: `200 OK`  
 **NOTES**:
@@ -529,7 +527,7 @@ data_files: [upload CSV file]
 ### TEST 31: Get Followers (HU20)
 
 **HTTP METHOD**: `GET`  
-**URL**: `http://localhost:3000/api/users/erickhernandez/followers`  
+**URL**: `http://localhost:3000/api/users/valeriehernandez/followers`  
 **EXPECTED**: `200 OK`  
 **NOTES**:
 
@@ -552,7 +550,7 @@ data_files: [upload CSV file]
 ### TEST 33: Unfollow User
 
 **HTTP METHOD**: `DELETE`  
-**URL**: `http://localhost:3000/api/users/erickhernandez/follow`  
+**URL**: `http://localhost:3000/api/users/hedylamarr/follow`  
 **HEADERS**: `Authorization: Bearer {ARMANDO_TOKEN}`  
 **EXPECTED**: `200 OK`  
 **NOTES**:
@@ -618,7 +616,7 @@ data_files: [upload CSV file]
 
 ---
 
-### TEST 37: Admin Disable Comment (HU16)
+### TEST 37: Disable Comment - Admin (HU16)
 
 **HTTP METHOD**: `PATCH`  
 **URL**: `http://localhost:3000/api/admin/comments/{COMMENT_1_ID}/disable`  

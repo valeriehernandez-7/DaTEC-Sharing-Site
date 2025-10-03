@@ -13,7 +13,7 @@
  */
 
 const { getMongo } = require('../config/databases');
-const { uploadFile, deleteFile, getFileUrl } = require('../utils/couchdb-manager');
+const { uploadFile, deleteFile, getFileUrl, getFile } = require('../utils/couchdb-manager');
 const {
     generateDatasetId,
     generateDatasetFileDocId,
@@ -699,17 +699,29 @@ async function cloneDataset(req, res) {
 
             try {
                 // Get original file from CouchDB
-                const fileBuffer = await getFile(
+                let fileData = await getFile(
                     originalFile.couchdb_document_id,
                     originalFile.file_name
                 );
+
+                // Ensure we have a Buffer (getFile might return Buffer or other types)
+                let fileBuffer;
+                if (Buffer.isBuffer(fileData)) {
+                    fileBuffer = fileData;
+                } else if (typeof fileData === 'string') {
+                    fileBuffer = Buffer.from(fileData, 'utf8');
+                } else if (typeof fileData === 'object') {
+                    fileBuffer = Buffer.from(JSON.stringify(fileData), 'utf8');
+                } else {
+                    fileBuffer = Buffer.from(fileData);
+                }
 
                 // Upload as new file
                 const clonedFileRef = await uploadFile(newDocId, {
                     buffer: fileBuffer,
                     originalname: originalFile.file_name,
                     mimetype: originalFile.mime_type,
-                    size: originalFile.file_size_bytes
+                    size: fileBuffer.length  // Use actual buffer length
                 }, {
                     type: 'dataset_file',
                     owner_user_id: req.user.userId,
@@ -735,16 +747,29 @@ async function cloneDataset(req, res) {
             const newDocId = generateHeaderPhotoDocId(clonedDatasetId);
 
             try {
-                const photoBuffer = await getFile(
+                // Get original header photo
+                let photoData = await getFile(
                     originalDataset.header_photo_ref.couchdb_document_id,
                     originalDataset.header_photo_ref.file_name
                 );
+
+                // Ensure we have a Buffer (getFile might return Buffer or other types)
+                let photoBuffer;
+                if (Buffer.isBuffer(photoData)) {
+                    photoBuffer = photoData;
+                } else if (typeof photoData === 'string') {
+                    photoBuffer = Buffer.from(photoData, 'utf8');
+                } else if (typeof photoData === 'object') {
+                    photoBuffer = Buffer.from(JSON.stringify(photoData), 'utf8');
+                } else {
+                    photoBuffer = Buffer.from(photoData);
+                }
 
                 clonedHeaderPhotoRef = await uploadFile(newDocId, {
                     buffer: photoBuffer,
                     originalname: originalDataset.header_photo_ref.file_name,
                     mimetype: originalDataset.header_photo_ref.mime_type,
-                    size: originalDataset.header_photo_ref.file_size_bytes
+                    size: photoBuffer.length  // Use actual buffer length
                 }, {
                     type: 'header_photo',
                     owner_user_id: req.user.userId,
@@ -969,7 +994,7 @@ async function downloadDataset(req, res) {
         // Add all files to archive
         for (const fileRef of dataset.file_references) {
             try {
-                console.log(`Adding file: ${fileRef.file_name}`);
+                // console.log(`Adding file: ${fileRef.file_name}`);
                 const fileData = await getFile(fileRef.couchdb_document_id, fileRef.file_name);
 
                 let fileBuffer;
@@ -991,7 +1016,7 @@ async function downloadDataset(req, res) {
                 }
 
                 archive.append(fileBuffer, { name: fileRef.file_name });
-                console.log(`Added ${fileRef.file_name} (${fileBuffer.length} bytes)`);
+                // console.log(`Added ${fileRef.file_name} (${fileBuffer.length} bytes)`);
 
             } catch (fileError) {
                 console.error(`Error adding file ${fileRef.file_name}:`, fileError.message);

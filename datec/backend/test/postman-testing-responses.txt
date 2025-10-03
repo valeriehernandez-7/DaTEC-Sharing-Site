@@ -1,0 +1,727 @@
+{
+    "success": true,
+    "message": "Login successful",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMDAwMDAwMC0wMDAwLTUwMDAtODAwMC0wMDAwNWEzMTczNDciLCJ1c2VybmFtZSI6InN1ZG9kNHQzYyIsImlzQWRtaW4iOnRydWUsImlhdCI6MTc1OTcwNzc3NywiZXhwIjoxNzYwMzEyNTc3fQ.jKVqZIX6VZC7i0iPDzOD7GXutJ2a2K1FZcEMK20kUZY",
+    "user": {
+        "userId": "00000000-0000-5000-8000-00005a317347",
+        "username": "sudod4t3c",
+        "fullName": "DaTEC System Administrator",
+        "isAdmin": true,
+        "avatarUrl": null
+    }
+}
+
+
+{
+    "success": true,
+    "message": "Login successful",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMDAwMDAwMC0wMDAwLTUwMDAtODAwMC0wMDAwMmExMDU1MGMiLCJ1c2VybmFtZSI6ImVyaWNraGVybmFuZGV6IiwiaXNBZG1pbiI6ZmFsc2UsImlhdCI6MTc1OTcwNzgyNCwiZXhwIjoxNzYwMzEyNjI0fQ.Pj5irjReXnm0jdRac7mOB79wQwTM3WDSWQRooCGN3Ic",
+    "user": {
+        "userId": "00000000-0000-5000-8000-00002a10550c",
+        "username": "erickhernandez",
+        "fullName": "Erick Hernandez Bonilla",
+        "isAdmin": false,
+        "avatarUrl": null
+    }
+}
+
+
+{
+    "success": true,
+    "message": "Login successful",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMDAwMDAwMC0wMDAwLTUwMDAtODAwMC0wMDAwNTBjMTYzZTciLCJ1c2VybmFtZSI6ImFybWFuZG9nYXJjaWEiLCJpc0FkbWluIjpmYWxzZSwiaWF0IjoxNzU5NzA3OTk4LCJleHAiOjE3NjAzMTI3OTh9.JTVI47VDCJ07Yfsf68ISWObLnwB0Z7YzGBVBXSEBs-I",
+    "user": {
+        "userId": "00000000-0000-5000-8000-000050c163e7",
+        "username": "armandogarcia",
+        "fullName": "Armando Garcia Paniagua",
+        "isAdmin": false,
+        "avatarUrl": null
+    }
+}
+
+
+{
+    "success": true,
+    "message": "User registered successfully",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMTcyZmZlMC05ZDE5LTU1YTktODdjNS0xOTNkYmUwNmJiNmQiLCJ1c2VybmFtZSI6ImhlZHlsYW1hcnIiLCJpc0FkbWluIjpmYWxzZSwiaWF0IjoxNzU5NzA4NDAxLCJleHAiOjE3NjAzMTMyMDF9.G3ZCkXgyrMjwnIkkYzdisq_6RpbK_E8hMt_vUawdvvQ",
+    "user": {
+        "userId": "0172ffe0-9d19-55a9-87c5-193dbe06bb6d",
+        "username": "hedylamarr",
+        "fullName": "Hedy Lamarr",
+        "isAdmin": false
+    }
+}
+
+
+{
+    "success": true,
+    "user": {
+        "userId": "00000000-0000-5000-8000-00002a10550c",
+        "username": "erickhernandez",
+        "fullName": "Erick Hernandez Bonilla",
+        "birthDate": "1985-01-01T00:00:00.000Z",
+        "emailAddress": "erick.hernandez@itcr.ac.cr",
+        "avatarUrl": null,
+        "isAdmin": false,
+        "createdAt": "2025-02-01T00:00:00.000Z",
+        "updatedAt": "2025-02-01T00:00:00.000Z"
+    }
+}
+
+
+{
+    "success": true,
+    "count": 2,
+    "users": [
+        {
+            "userId": "00000000-0000-5000-8000-000004637677",
+            "username": "valeriehernandez",
+            "fullName": "Valerie Hernandez Fernandez",
+            "avatarUrl": null,
+            "isAdmin": true,
+            "createdAt": "2025-05-01T00:00:00.000Z"
+        },
+        {
+            "userId": "00000000-0000-5000-8000-00002a10550c",
+            "username": "erickhernandez",
+            "fullName": "Erick Hernandez Bonilla",
+            "avatarUrl": null,
+            "isAdmin": false,
+            "createdAt": "2025-02-01T00:00:00.000Z"
+        }
+    ]
+}
+
+
+{
+    "success": true,
+    "message": "Profile updated successfully"
+}
+
+
+{
+    "success": true,
+    "isAdmin": true,
+    "message": "User promoted to admin"
+}
+
+
+{
+    "success": true,
+    "message": "Dataset created successfully",
+    "dataset": {
+        "dataset_id": "erickhernandez_20251006_001",
+        "dataset_name": "sales-analytics-q1-2025",
+        "status": "pending",
+        "file_count": 2
+    }
+}
+
+
+{
+    "success": true,
+    "message": "Dataset created successfully",
+    "dataset": {
+        "dataset_id": "armandogarcia_20251006_001",
+        "dataset_name": "climate-data-2024",
+        "status": "pending",
+        "file_count": 1
+    }
+}
+
+
+{
+    "success": true,
+    "count": 0,
+    "datasets": []
+}
+
+
+{
+    "success": true,
+    "count": 1,
+    "username": "erickhernandez",
+    "datasets": [
+        {
+            "dataset_id": "erickhernandez_20251006_001",
+            "dataset_name": "sales-analytics-q1-2025",
+            "description": "Comprehensive sales analysis for Q1 2025 including regional breakdowns and trend analysis.",
+            "tags": [],
+            "status": "pending",
+            "is_public": false,
+            "header_photo_url": "http://localhost:5984/datec/photo_erickhernandez_20251006_001_header/erickhernandez_dataset_sales_header.jpg",
+            "file_count": 2,
+            "download_count": 0,
+            "vote_count": 0,
+            "created_at": "2025-10-06T00:56:23.177Z"
+        }
+    ]
+}
+
+
+{
+    "success": true,
+    "dataset": {
+        "dataset_id": "erickhernandez_20251006_001",
+        "dataset_name": "sales-analytics-q1-2025",
+        "description": "Comprehensive sales analysis for Q1 2025 including regional breakdowns and trend analysis.",
+        "tags": [],
+        "status": "pending",
+        "is_public": false,
+        "parent_dataset_id": null,
+        "owner": {
+            "username": "erickhernandez",
+            "fullName": "Erick Hernandez Bonilla",
+            "avatarUrl": null
+        },
+        "files": [
+            {
+                "file_name": "erickhernandez_dataset_sales_overview.json",
+                "file_size_bytes": 5737,
+                "mime_type": "application/json",
+                "download_url": "http://localhost:5984/datec/file_erickhernandez_20251006_001_001/erickhernandez_dataset_sales_overview.json"
+            },
+            {
+                "file_name": "erickhernandez_dataset_sales_q1.csv",
+                "file_size_bytes": 1476,
+                "mime_type": "text/csv",
+                "download_url": "http://localhost:5984/datec/file_erickhernandez_20251006_001_002/erickhernandez_dataset_sales_q1.csv"
+            }
+        ],
+        "header_photo_url": "http://localhost:5984/datec/photo_erickhernandez_20251006_001_header/erickhernandez_dataset_sales_header.jpg",
+        "tutorial_video": {
+            "url": "https://www.youtube.com/watch?v=uBBDMqZKagY",
+            "platform": "youtube"
+        },
+        "download_count": 0,
+        "vote_count": 0,
+        "comment_count": 0,
+        "created_at": "2025-10-06T00:56:23.177Z",
+        "updated_at": "2025-10-06T00:56:23.177Z",
+        "reviewed_at": null,
+        "admin_review": null
+    }
+}
+
+
+{
+    "success": false,
+    "error": "Access denied: Dataset is not public"
+}
+
+
+{
+    "success": true,
+    "message": "Dataset is pending approval. An administrator will review it soon.",
+    "status": "pending"
+}
+
+
+{
+    "success": true,
+    "count": 2,
+    "datasets": [
+        {
+            "dataset_id": "erickhernandez_20251006_001",
+            "dataset_name": "sales-analytics-q1-2025",
+            "description": "Comprehensive sales analysis for Q1 2025 including regional breakdowns and trend analysis.",
+            "owner": {
+                "username": "erickhernandez",
+                "fullName": "Erick Hernandez Bonilla"
+            },
+            "file_count": 2,
+            "created_at": "2025-10-06T00:56:23.177Z",
+            "tags": []
+        },
+        {
+            "dataset_id": "armandogarcia_20251006_001",
+            "dataset_name": "climate-data-2024",
+            "description": "Global climate change indicators and temperature measurements from weather stations worldwide.",
+            "owner": {
+                "username": "armandogarcia",
+                "fullName": "Armando Garcia Paniagua"
+            },
+            "file_count": 1,
+            "created_at": "2025-10-06T01:13:45.152Z",
+            "tags": []
+        }
+    ]
+}
+
+
+{
+    "success": true,
+    "message": "Dataset approved successfully",
+    "dataset": {
+        "dataset_id": "erickhernandez_20251006_001",
+        "status": "approved",
+        "reviewed_at": "2025-10-06T01:29:17.518Z",
+        "admin_review": "Excellent dataset, well documented"
+    }
+}
+
+
+{
+    "success": true,
+    "message": "Dataset rejected successfully",
+    "dataset": {
+        "dataset_id": "armandogarcia_20251006_001",
+        "status": "rejected",
+        "reviewed_at": "2025-10-06T01:31:35.846Z",
+        "admin_review": "Incomplete data, please add more sources"
+    }
+}
+
+
+{
+    "success": true,
+    "message": "Dataset is now private",
+    "is_public": false
+}
+
+
+{
+    "success": true,
+    "message": "Dataset is now public",
+    "is_public": true
+}
+
+
+{
+    "success": true,
+    "count": 1,
+    "datasets": [
+        {
+            "dataset_id": "erickhernandez_20251006_001",
+            "dataset_name": "sales-analytics-q1-2025",
+            "description": "Comprehensive sales analysis for Q1 2025 including regional breakdowns and trend analysis.",
+            "tags": [],
+            "owner": {
+                "username": "erickhernandez",
+                "fullName": "Erick Hernandez Bonilla"
+            },
+            "header_photo_url": "http://localhost:5984/datec/photo_erickhernandez_20251006_001_header/erickhernandez_dataset_sales_header.jpg",
+            "file_count": 2,
+            "download_count": 0,
+            "vote_count": 0,
+            "created_at": "2025-10-06T00:56:23.177Z"
+        }
+    ]
+}
+
+
+{
+    "success": true,
+    "message": "Vote added successfully",
+    "vote": {
+        "vote_id": "vote_erickhernandez_20251006_001_user_00000000-0000-5000-8000-000050c163e7",
+        "rating": 5
+    }
+}
+
+
+{
+    "success": true,
+    "count": 1,
+    "totalVotes": 1,
+    "averageRating": 5,
+    "votes": [
+        {
+            "vote_id": "vote_erickhernandez_20251006_001_user_00000000-0000-5000-8000-000050c163e7",
+            "rating": 5,
+            "voter": {
+                "username": "armandogarcia",
+                "fullName": "Armando Garcia Paniagua"
+            },
+            "created_at": "2025-10-06T01:37:45.181Z"
+        }
+    ]
+}
+
+
+{
+    "success": true,
+    "hasVoted": true,
+    "vote": {
+        "vote_id": "vote_erickhernandez_20251006_001_user_00000000-0000-5000-8000-000050c163e7",
+        "rating": 5,
+        "created_at": "2025-10-06T01:37:45.181Z"
+    }
+}
+
+
+{
+    "success": true,
+    "message": "Vote updated successfully",
+    "vote": {
+        "vote_id": "vote_erickhernandez_20251006_001_user_00000000-0000-5000-8000-000050c163e7",
+        "rating": 4,
+        "previous_rating": 5
+    }
+}
+
+
+{
+    "success": true,
+    "message": "Vote removed successfully"
+}
+
+
+ZIP Download success -> 200 OK
+
+{
+    "success": true,
+    "statistics": {
+        "totalDownloads": 1,
+        "uniqueUsers": 1,
+        "recentDownloads": [
+            {
+                "userId": "00000000-0000-5000-8000-000050c163e7",
+                "username": "armandogarcia",
+                "downloadedAt": "2025-10-06T01:51:23.759Z"
+            }
+        ]
+    }
+}
+
+
+{
+    "success": true,
+    "message": "Dataset cloned successfully",
+    "dataset": {
+        "dataset_id": "armandogarcia_20251006_002",
+        "dataset_name": "sales-analytics-q1-2025-armandoversion",
+        "parent_dataset_id": "erickhernandez_20251006_001",
+        "status": "pending",
+        "file_count": 2
+    }
+}
+
+
+{
+    "success": true,
+    "message": "Now following hedylamarr"
+}
+
+
+{
+    "success": true,
+    "count": 2,
+    "followers": [
+        {
+            "userId": "00000000-0000-5000-8000-00002a10550c",
+            "username": "erickhernandez",
+            "fullName": "Erick Hernandez Bonilla",
+            "avatarUrl": null
+        },
+        {
+            "userId": "00000000-0000-5000-8000-000050c163e7",
+            "username": "armandogarcia",
+            "fullName": "Armando Garcia Paniagua",
+            "avatarUrl": null
+        }
+    ]
+}
+
+
+{
+    "success": true,
+    "count": 3,
+    "following": [
+        {
+            "userId": "00000000-0000-5000-8000-000004637677",
+            "username": "valeriehernandez",
+            "fullName": "Valerie Hernandez Fernandez",
+            "avatarUrl": null
+        },
+        {
+            "userId": "00000000-0000-5000-8000-00002a10550c",
+            "username": "erickhernandez",
+            "fullName": "Erick Hernandez Bonilla",
+            "avatarUrl": null
+        },
+        {
+            "userId": "0172ffe0-9d19-55a9-87c5-193dbe06bb6d",
+            "username": "hedylamarr",
+            "fullName": "Hedy Lamarr",
+            "avatarUrl": null
+        }
+    ]
+}
+
+
+{
+    "success": true,
+    "message": "Unfollowed hedylamarr"
+}
+
+
+{
+    "success": true,
+    "message": "Comment added successfully",
+    "comment": {
+        "comment_id": "cmt_erickhernandez_20251006_001_1759717607544_m0ne",
+        "content": "Great dataset! Very useful for my research.",
+        "author": {
+            "username": "armandogarcia",
+            "full_name": "Armando Garcia Paniagua",
+            "avatar_url": null
+        },
+        "parent_comment_id": null,
+        "created_at": "2025-10-06T02:26:47.544Z",
+        "is_active": true
+    }
+}
+
+
+{
+    "success": true,
+    "message": "Reply added successfully",
+    "comment": {
+        "comment_id": "cmt_erickhernandez_20251006_001_1759717754022_8avq",
+        "content": "Thank you! Glad it's helpful.",
+        "author": {
+            "username": "erickhernandez",
+            "full_name": "Erick Hernandez Bonilla",
+            "avatar_url": null
+        },
+        "parent_comment_id": "cmt_erickhernandez_20251006_001_1759717607544_m0ne",
+        "created_at": "2025-10-06T02:29:14.022Z",
+        "is_active": true
+    }
+}
+
+
+{
+    "success": true,
+    "dataset_id": "erickhernandez_20251006_001",
+    "comment_count": 2,
+    "comments": [
+        {
+            "comment_id": "cmt_erickhernandez_20251006_001_1759717607544_m0ne",
+            "content": "Great dataset! Very useful for my research.",
+            "author": {
+                "user_id": "00000000-0000-5000-8000-000050c163e7",
+                "username": "armandogarcia",
+                "full_name": "Armando Garcia Paniagua",
+                "avatar_url": null
+            },
+            "parent_comment_id": null,
+            "is_active": true,
+            "created_at": "2025-10-06T02:26:47.544Z",
+            "replies": [
+                {
+                    "comment_id": "cmt_erickhernandez_20251006_001_1759717754022_8avq",
+                    "content": "Thank you! Glad it's helpful.",
+                    "author": {
+                        "user_id": "00000000-0000-5000-8000-00002a10550c",
+                        "username": "erickhernandez",
+                        "full_name": "Erick Hernandez Bonilla",
+                        "avatar_url": null
+                    },
+                    "parent_comment_id": "cmt_erickhernandez_20251006_001_1759717607544_m0ne",
+                    "is_active": true,
+                    "created_at": "2025-10-06T02:29:14.022Z",
+                    "replies": []
+                }
+            ]
+        }
+    ]
+}
+
+
+{
+    "success": true,
+    "message": "Comment disabled successfully",
+    "comment_id": "cmt_erickhernandez_20251006_001_1759717607544_m0ne"
+}
+
+
+{
+    "success": true,
+    "dataset_id": "erickhernandez_20251006_001",
+    "comment_count": 1,
+    "comments": [
+        {
+            "comment_id": "cmt_erickhernandez_20251006_001_1759717754022_8avq",
+            "content": "Thank you! Glad it's helpful.",
+            "author": {
+                "user_id": "00000000-0000-5000-8000-00002a10550c",
+                "username": "erickhernandez",
+                "full_name": "Erick Hernandez Bonilla",
+                "avatar_url": null
+            },
+            "parent_comment_id": "cmt_erickhernandez_20251006_001_1759717607544_m0ne",
+            "is_active": true,
+            "created_at": "2025-10-06T02:29:14.022Z",
+            "is_own_comment": false,
+            "replies": []
+        }
+    ]
+}
+
+
+{
+    "success": true,
+    "dataset_id": "erickhernandez_20251006_001",
+    "comment_count": 2,
+    "comments": [
+        {
+            "comment_id": "cmt_erickhernandez_20251006_001_1759717607544_m0ne",
+            "content": "Great dataset! Very useful for my research.",
+            "author": {
+                "user_id": "00000000-0000-5000-8000-000050c163e7",
+                "username": "armandogarcia",
+                "full_name": "Armando Garcia Paniagua",
+                "avatar_url": null
+            },
+            "parent_comment_id": null,
+            "is_active": false,
+            "created_at": "2025-10-06T02:26:47.544Z",
+            "is_own_comment": false,
+            "replies": [
+                {
+                    "comment_id": "cmt_erickhernandez_20251006_001_1759717754022_8avq",
+                    "content": "Thank you! Glad it's helpful.",
+                    "author": {
+                        "user_id": "00000000-0000-5000-8000-00002a10550c",
+                        "username": "erickhernandez",
+                        "full_name": "Erick Hernandez Bonilla",
+                        "avatar_url": null
+                    },
+                    "parent_comment_id": "cmt_erickhernandez_20251006_001_1759717607544_m0ne",
+                    "is_active": true,
+                    "created_at": "2025-10-06T02:29:14.022Z",
+                    "is_own_comment": false,
+                    "replies": []
+                }
+            ]
+        }
+    ]
+}
+
+
+{
+    "success": true,
+    "message": "Message sent successfully",
+    "data": {
+        "message_id": "msg_from_00000000-0000-5000-8000-000050c163e7_to_00000000-0000-5000-8000-00002a10550c_1759718373862",
+        "from": "armandogarcia",
+        "to": "erickhernandez",
+        "content": "Hi Erick! I have some questions about your dataset methodology.",
+        "created_at": "2025-10-06T02:39:33.862Z"
+    }
+}
+
+
+{
+    "success": true,
+    "message": "Message sent successfully",
+    "data": {
+        "message_id": "msg_from_00000000-0000-5000-8000-00002a10550c_to_00000000-0000-5000-8000-000050c163e7_1759718513921",
+        "from": "erickhernandez",
+        "to": "armandogarcia",
+        "content": "Hi Armando! Sure, what would you like to know?",
+        "created_at": "2025-10-06T02:41:53.921Z"
+    }
+}
+
+
+{
+    "success": true,
+    "conversation": {
+        "participant_1": "armandogarcia",
+        "participant_2": "erickhernandez",
+        "message_count": 2
+    },
+    "messages": [
+        {
+            "message_id": "msg_from_00000000-0000-5000-8000-000050c163e7_to_00000000-0000-5000-8000-00002a10550c_1759718373862",
+            "from": {
+                "user_id": "00000000-0000-5000-8000-000050c163e7",
+                "username": "armandogarcia",
+                "full_name": "Armando Garcia Paniagua"
+            },
+            "to_user_id": "00000000-0000-5000-8000-00002a10550c",
+            "content": "Hi Erick! I have some questions about your dataset methodology.",
+            "created_at": "2025-10-06T02:39:33.862Z",
+            "is_own_message": true
+        },
+        {
+            "message_id": "msg_from_00000000-0000-5000-8000-00002a10550c_to_00000000-0000-5000-8000-000050c163e7_1759718513921",
+            "from": {
+                "user_id": "00000000-0000-5000-8000-00002a10550c",
+                "username": "erickhernandez",
+                "full_name": "Erick Hernandez Bonilla"
+            },
+            "to_user_id": "00000000-0000-5000-8000-000050c163e7",
+            "content": "Hi Armando! Sure, what would you like to know?",
+            "created_at": "2025-10-06T02:41:53.921Z",
+            "is_own_message": false
+        }
+    ]
+}
+
+
+{
+    "success": false,
+    "error": "You can only view conversations you are part of"
+}
+
+
+{
+    "success": true,
+    "count": 2,
+    "notifications": [
+        {
+            "type": "dataset_approved",
+            "dataset_id": "erickhernandez_20251006_001",
+            "dataset_name": "sales-analytics-q1-2025",
+            "admin_review": "Excellent dataset, well documented",
+            "reviewed_by": "sudod4t3c",
+            "timestamp": "2025-10-06T01:29:17.509Z"
+        },
+        {
+            "type": "new_follower",
+            "from_user_id": "00000000-0000-5000-8000-000050c163e7",
+            "from_username": "armandogarcia",
+            "timestamp": "2025-08-01T10:00:00.000Z"
+        }
+    ]
+}
+
+
+{
+    "success": true,
+    "count": 2
+}
+
+
+{
+    "success": true,
+    "message": "All notifications cleared"
+}
+
+
+{
+    "success": true,
+    "message": "Dataset deleted successfully"
+}
+
+
+{
+    "success": false,
+    "error": "Invalid username or password"
+}
+
+
+{
+    "success": false,
+    "error": "Cannot vote on your own dataset"
+}
+
+
+{
+    "success": false,
+    "error": "Comment content must be between 1 and 2000 characters"
+}

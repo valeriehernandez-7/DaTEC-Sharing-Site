@@ -1,0 +1,112 @@
+{
+    "salesAnalysisQ1_2025": {
+        "executiveSynthesis": {
+            "quarterOverview": "Q1 2025 presented a global sales environment defined by acute market bifurcation with strong resilience in Asia-Pacific contrasting sharply with macroeconomic deceleration in Western economies.",
+            "keyHeadwinds": [
+                "U.S. GDP contraction of -0.5% quarter-over-quarter (annualized)",
+                "Sharp consumer spending pullback in Western markets",
+                "Policy uncertainty and trade risks",
+                "Manufacturing sector pressure with near-zero export growth expectations"
+            ],
+            "strategicImperatives": [
+                "Re-orient services strategy toward Asia-Pacific",
+                "Focus on corporate resilience sales rather than M&A",
+                "Implement regional retail selectivity in U.S. markets"
+            ]
+        },
+        "macroeconomicEnvironment": {
+            "gdpPerformance": {
+                "us": "-0.5% QoQ (annualized) contraction",
+                "global": "4.1% 2025 GDP forecast (revised down)",
+                "asiaPacific": "4.2% 2025 GDP forecast"
+            },
+            "inflationOutlook": {
+                "globalHeadline": "4.2% projected for 2025",
+                "manufacturingInputCosts": "5.5% expected increase over next 12 months",
+                "marginPressure": "Manufacturers expect to pass on only 3.6% price increases to consumers"
+            },
+            "consumerSentiment": {
+                "spending": "Sharp broad-based pullback in personal spending",
+                "unemployment": "U.S. rate expected to rise above 4.5% by Q3 2025",
+                "demandPattern": "Significant front-loading of demand into Q4 2024"
+            }
+        },
+        "regionalPerformance": {
+            "americas": {
+                "usRetailInvestment": {
+                    "totalVolume": "$9.8 billion",
+                    "yoyGrowth": "13%",
+                    "regionalBreakdown": {
+                        "midAtlantic": "38% growth",
+                        "west": "32% growth",
+                        "southeast": "17% growth",
+                        "southwest": "32% decline"
+                    },
+                    "dominantSegment": "Grocery-Anchored Centers (31% of acquisition volume)"
+                },
+                "servicesExports": {
+                    "northAmerica": "3% YoY growth (down from 11% in Q1 2024)",
+                    "analysis": "Sharp deceleration indicating corporate belt-tightening"
+                }
+            },
+            "asiaPacific": {
+                "servicesExports": "9% YoY growth",
+                "keyDrivers": [
+                    "Computer services (AI, digital transformation, cybersecurity)",
+                    "Transport services (10% global growth, China leading with 31%)"
+                ],
+                "regionalLeaders": {
+                    "india": "13% export growth",
+                    "ireland": "9% export growth"
+                }
+            },
+            "europe": {
+                "servicesExports": "3% YoY growth (down from 8% in Q1 2024)",
+                "outlook": "Significant deceleration mirroring North American trends"
+            }
+        },
+        "sectoralPerformance": {
+            "technology": {
+                "mnaActivity": "Cooling valuations and instability",
+                "strategicShift": "Focus on digital transformation CapEx (supply chain resilience, CX)",
+                "growthNiche": "Computer services maintaining high velocity globally"
+            },
+            "manufacturing": {
+                "exportOutlook": "0.1% expected growth over next 12 months (lowest since Q2 2020)",
+                "costPressure": "5.5% expected input cost increase",
+                "challenge": "Zero export growth trap with margin compression"
+            },
+            "automotive": {
+                "usSales": "0.6% YoY growth (>10% QoQ decline)",
+                "globalOEM": "Stellantis reported 14% net revenue decrease",
+                "brightSpot": "Emerging markets showing positive growth"
+            },
+            "healthcareNiche": {
+                "immunityBio": {
+                    "revenueGrowth": "129% QoQ increase to $16.5 million",
+                    "volumeGrowth": "150% QoQ unit sales increase",
+                    "catalyst": "Permanent J-code regulatory approval in January 2025"
+                }
+            }
+        },
+        "strategicTrends": {
+            "geographicDivide": "Resilient Asia vs. Decelerating West",
+            "investmentPriority": "Value over volume - operational resilience over growth-by-acquisition",
+            "consumerBehavior": "Necessity over discretion - essential spending prioritized"
+        },
+        "recommendations": {
+            "regionalAllocation": {
+                "asiaPacific": "Increase sales capacity for digital services (AI, cybersecurity, cloud)",
+                "usMarkets": "Focus on high-momentum regions (Mid-Atlantic, West, Southeast)"
+            },
+            "salesStrategy": {
+                "technology": "Restructure offerings around quantifiable CX and supply chain improvements",
+                "regulatoryOpportunities": "Proactively track policy shifts for niche market opportunities"
+            },
+            "riskMitigation": {
+                "manufacturing": "Implement commodity hedging strategies for input costs",
+                "policyUncertainty": "Develop multi-tiered contingency plans for U.S. trade policy shifts"
+            }
+        }
+    }
+}
