@@ -10,7 +10,8 @@
  */
 
 const { getMongo } = require('../config/databases');
-const { sendNotification } = require('../utils/notifications');
+const { sendNotification, broadcastNotification } = require('../utils/notifications');
+const { getFollowersIds } = require('../utils/neo4j-relations');
 
 /**
  * HU8 - Approve or reject a dataset
@@ -84,6 +85,28 @@ async function reviewDataset(req, res) {
         } catch (notifError) {
             console.error('Failed to send notification:', notifError.message);
             // Don't fail the request if notification fails
+        }
+
+        // HU19: If approved, notify all followers of new dataset
+        if (action === 'approve') {
+            try {
+                const followerIds = await getFollowersIds(dataset.owner_user_id);
+
+                if (followerIds.length > 0) {
+                    const notifiedCount = await broadcastNotification(followerIds, {
+                        type: 'new_dataset',
+                        from_user_id: dataset.owner_user_id,
+                        dataset_id: dataset.dataset_id,
+                        dataset_name: dataset.dataset_name,
+                        timestamp: new Date().toISOString()
+                    });
+
+                    // console.log(`Notified ${notifiedCount} followers about new dataset: ${dataset.dataset_name}`);
+                }
+            } catch (notifError) {
+                console.error('Failed to notify followers:', notifError.message);
+                // Don't fail the approval if notification fails
+            }
         }
 
         res.json({

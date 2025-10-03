@@ -390,6 +390,33 @@ async function deleteNode(nodeId, nodeType) {
     }
 }
 
+/**
+ * Get all follower user IDs for a given user
+ * Used by: HU19 (notify followers of new dataset)
+ * 
+ * @param {string} userId - User ID
+ * @returns {Promise<string[]>} Array of follower user IDs
+ */
+async function getFollowersIds(userId) {
+    try {
+        const neo4j = getNeo4j();
+        const session = neo4j.session({ database: 'datec' });
+
+        const result = await session.run(`
+            MATCH (follower:User)-[:FOLLOWS]->(user:User {user_id: $userId})
+            RETURN follower.user_id AS follower_id
+        `, { userId });
+
+        await session.close();
+
+        return result.records.map(record => record.get('follower_id'));
+
+    } catch (error) {
+        console.error('Error getting followers:', error.message);
+        return [];
+    }
+}
+
 module.exports = {
     createRelationship,
     deleteRelationship,
@@ -399,5 +426,6 @@ module.exports = {
     countRelationships,
     createUserNode,
     createDatasetNode,
-    deleteNode
+    deleteNode,
+    getFollowersIds
 };
