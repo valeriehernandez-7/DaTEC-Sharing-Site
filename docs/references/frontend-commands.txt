@@ -1,41 +1,56 @@
 PS C:\Users\velysian> cd C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec
-PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec> npm create vite@latest frontend -- --template vue       Need to install the following packages:
-create-vite@8.0.2
-Ok to proceed? (y) Y
-
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec> npm config set strict-ssl false
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec> npm create vue@latest
 
 > npx
-> create-vite frontend --template vue
+> create-vue
 
+T  Vue.js - The Progressive JavaScript Framework
 |
-o  Use rolldown-vite (Experimental)?:
-|  No
+o  Project name (target directory):
+|  frontend
 |
-o  Install with npm and start now?
+o  Select features to include in your project: (↑/↓ to navigate, space to select,a to toggle all, enter to confirm)
+|  Router (SPA development), Pinia (state management), ESLint (error prevention),Prettier (code formatting)
+|
+o  Select experimental features to include in your project: (↑/↓ to navigate,
+space to select, a to toggle all, enter to confirm)
+|  none
+|
+o  Skip all example code and start with a blank Vue project?
 |  Yes
-|
-o  Scaffolding project in C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend...
-|
-o  Installing dependencies with npm...
 
-added 81 packages, and audited 82 packages in 25s
-
-6 packages are looking for funding
-  run `npm fund` for details
-
-found 0 vulnerabilities
+Scaffolding project in C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend...
 |
-o  Starting dev server...
+—  Done. Now run:
+
+   cd frontend
+   npm install
+   npm run format
+   npm run dev
+
+| Optional: Initialize Git in your project directory with:
+
+   git init && git add -A && git commit -m "initial commit"
+
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec> cd frontend
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm config set strict-ssl false
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm install
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm run format
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm install primevue primeicons @primevue/themes
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm install axios dayjs 
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm install -D tailwindcss @tailwindcss/vite
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm install
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm run dev
 
 > frontend@0.0.0 dev
 > vite
 
 
-  VITE v7.1.9  ready in 815 ms
+  VITE v7.1.9  ready in 1220 ms
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: use --host to expose
+  ➜  Vue DevTools: Open http://localhost:5173/__devtools__/ as a separate window
+  ➜  Vue DevTools: Press Alt(⌥)+Shift(⇧)+D in App to toggle the Vue DevTools
   ➜  press h + enter to show help
-
----
-
