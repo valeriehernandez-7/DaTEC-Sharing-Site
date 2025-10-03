@@ -1,0 +1,89 @@
+/* Tailwind directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* PrimeVue Aura theme */
+@import "primevue/resources/themes/aura-light-blue/theme.css";
+@import "primevue/resources/primevue.min.css";
+@import "primeicons/primeicons.css";
+
+/* Global styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+    background-color: #f1faee;
+    color: #1d3557;
+    line-height: 1.6;
+}
+
+#app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Customización de PrimeVue con la paleta del proyecto */
+:root {
+    --primary-color: #e63946;
+    --primary-color-text: #f1faee;
+    --surface-0: #f1faee;
+    --surface-50: #ffffff;
+    --surface-100: #f8f9fa;
+    --surface-200: #e9ecef;
+    --text-color: #1d3557;
+    --text-color-secondary: #457b9d;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1faee;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #a8dadc;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #457b9d;
+}
+
+/* Utilidades custom */
+.container-custom {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.text-truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}

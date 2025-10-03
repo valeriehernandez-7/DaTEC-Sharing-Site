@@ -1,0 +1,41 @@
+PS C:\Users\velysian> cd C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec> npm create vite@latest frontend -- --template vue       Need to install the following packages:
+create-vite@8.0.2
+Ok to proceed? (y) Y
+
+
+> npx
+> create-vite frontend --template vue
+
+|
+o  Use rolldown-vite (Experimental)?:
+|  No
+|
+o  Install with npm and start now?
+|  Yes
+|
+o  Scaffolding project in C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend...
+|
+o  Installing dependencies with npm...
+
+added 81 packages, and audited 82 packages in 25s
+
+6 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+|
+o  Starting dev server...
+
+> frontend@0.0.0 dev
+> vite
+
+
+  VITE v7.1.9  ready in 815 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+
+---
+
