@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "d7b56cfd-726a-405c-a973-16f86891bc9e",
+		"_postman_id": "6c6396e8-21e7-470e-80a3-126254b2abd6",
 		"name": "testing_datec",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "12795120"
@@ -1694,6 +1694,69 @@
 						"datasets",
 						"{{erick_dataset_id}}",
 						"comments"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TEST 51: List Disabled Comments",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{admin_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/admin/comments/disabled",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"admin",
+						"comments",
+						"disabled"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TEST 52: Get Admin Stats",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{admin_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/admin/stats",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"admin",
+						"stats"
 					]
 				}
 			},

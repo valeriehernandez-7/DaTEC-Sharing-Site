@@ -54,6 +54,21 @@ router.get('/datasets/pending', controller.listPendingDatasets);
 router.patch('/datasets/:datasetId', controller.reviewDataset);
 
 /**
+ * PATCH /api/admin/comments/:commentId/enable
+ * Re-enable a disabled comment
+ * Requires: Admin privileges
+ * 
+ * Response: { success, message, comment_id }
+ * 
+ * Side effects:
+ *   - Sets is_active to true
+ *   - Removes disabled_at and disabled_by fields
+ * 
+ * Note: Comment becomes visible again to all users
+ */
+router.patch('/comments/:commentId/enable', controller.enableComment);
+
+/**
  * PATCH /api/admin/comments/:commentId/disable
  * Disable an inappropriate comment
  * Requires: Admin privileges
@@ -68,5 +83,47 @@ router.patch('/datasets/:datasetId', controller.reviewDataset);
  * Note: Disabled comments are hidden but not deleted
  */
 router.patch('/comments/:commentId/disable', controller.disableComment);
+
+/**
+ * GET /api/admin/comments/disabled
+ * List all disabled comments from all datasets
+ * Requires: Admin privileges
+ * 
+ * Response: {
+ *   success: true,
+ *   count: number,
+ *   comments: [
+ *     {
+ *       comment_id: string,
+ *       content: string,
+ *       dataset: { dataset_id, dataset_name },
+ *       author: { user_id, username, full_name },
+ *       created_at: date,
+ *       disabled_at: date,
+ *       disabled_by: string (admin username)
+ *     }
+ *   ]
+ * }
+ * 
+ * Note: Comments sorted by disabled_at (most recent first)
+ */
+router.get('/comments/disabled', controller.listDisabledComments);
+
+/**
+ * GET /api/admin/stats
+ * Get admin dashboard statistics
+ * Requires: Admin privileges
+ * 
+ * Response: {
+ *   success: true,
+ *   stats: {
+ *     total_admins: number,
+ *     total_users: number,
+ *     total_datasets: number,
+ *     pending_datasets: number
+ *   }
+ * }
+ */
+router.get('/stats', controller.getStats);
 
 module.exports = router;

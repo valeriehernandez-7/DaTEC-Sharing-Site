@@ -170,6 +170,70 @@ async function listPendingDatasets(req, res) {
 }
 
 /**
+ * PATCH /api/admin/comments/:commentId/enable
+ * Re-enable a previously disabled comment
+ * 
+ * Admin can restore hidden comments
+ * Sets is_active to true
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+async function enableComment(req, res) {
+    try {
+        const db = getMongo();
+        const { commentId } = req.params;
+
+        // Check if comment exists
+        const comment = await db.collection('comments').findOne({
+            comment_id: commentId
+        });
+
+        if (!comment) {
+            return res.status(404).json({
+                success: false,
+                error: 'Comment not found'
+            });
+        }
+
+        // Check if comment is already active
+        if (comment.is_active) {
+            return res.status(400).json({
+                success: false,
+                error: 'Comment is already active'
+            });
+        }
+
+        // Re-enable: set is_active to true and clear disabled fields
+        await db.collection('comments').updateOne(
+            { comment_id: commentId },
+            {
+                $set: {
+                    is_active: true
+                },
+                $unset: {
+                    disabled_at: "",
+                    disabled_by: ""
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Comment enabled successfully',
+            comment_id: commentId
+        });
+
+    } catch (error) {
+        console.error('Error enabling comment:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
+/**
  * HU16 - Disable a comment (soft delete)
  * PATCH /api/admin/comments/:commentId/disable
  * 
@@ -231,8 +295,135 @@ async function disableComment(req, res) {
     }
 }
 
+/**
+ * GET /api/admin/comments/disabled
+ * List all disabled comments across all datasets
+ * 
+ * Returns centralized list of hidden comments with dataset and author info
+ * Sorted by disabled_at (most recent first)
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+async function listDisabledComments(req, res) {
+    try {
+        const db = getMongo();
+
+        // Get all disabled comments
+        const disabledComments = await db.collection('comments').find({
+            is_active: false
+        })
+            .sort({ disabled_at: -1 })  // Most recently disabled first
+            .toArray();
+
+        // Enrich with dataset and author information
+        const enrichedComments = await Promise.all(
+            disabledComments.map(async (comment) => {
+                // Get dataset info
+                const dataset = await db.collection('datasets').findOne(
+                    { dataset_id: comment.target_dataset_id },
+                    { projection: { dataset_id: 1, dataset_name: 1 } }
+                );
+
+                // Get author info
+                const author = await db.collection('users').findOne(
+                    { user_id: comment.author_user_id },
+                    { projection: { username: 1, full_name: 1 } }
+                );
+
+                // Get admin who disabled it
+                const disabledBy = await db.collection('users').findOne(
+                    { user_id: comment.disabled_by },
+                    { projection: { username: 1 } }
+                );
+
+                return {
+                    comment_id: comment.comment_id,
+                    content: comment.content,
+                    dataset: dataset ? {
+                        dataset_id: dataset.dataset_id,
+                        dataset_name: dataset.dataset_name
+                    } : null,
+                    author: author ? {
+                        user_id: author.user_id,
+                        username: author.username,
+                        full_name: author.full_name
+                    } : null,
+                    created_at: comment.created_at,
+                    disabled_at: comment.disabled_at,
+                    disabled_by: disabledBy ? disabledBy.username : null
+                };
+            })
+        );
+
+        res.json({
+            success: true,
+            count: enrichedComments.length,
+            comments: enrichedComments
+        });
+
+    } catch (error) {
+        console.error('Error listing disabled comments:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
+/**
+ * GET /api/admin/stats
+ * Get dashboard statistics for admin panel
+ * 
+ * Returns counts of users, admins, datasets, and pending approvals
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+async function getStats(req, res) {
+    try {
+        const db = getMongo();
+
+        // Count total admins
+        const totalAdmins = await db.collection('users').countDocuments({
+            is_admin: true
+        });
+
+        // Count total users
+        const totalUsers = await db.collection('users').countDocuments();
+
+        // Count total datasets
+        const totalDatasets = await db.collection('datasets').countDocuments();
+
+        // Count pending datasets
+        const pendingDatasets = await db.collection('datasets').countDocuments({
+            status: 'pending'
+        });
+
+        res.json({
+            success: true,
+            stats: {
+                total_admins: totalAdmins,
+                total_users: totalUsers,
+                total_datasets: totalDatasets,
+                pending_datasets: pendingDatasets
+            }
+        });
+
+    } catch (error) {
+        console.error('Error getting admin stats:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
 module.exports = {
     reviewDataset,          // HU8
     listPendingDatasets,    // HU8
-    disableComment          // HU16
+    enableComment,          // HU16
+    disableComment,         // HU16
+    listDisabledComments,
+    getStats
 };
