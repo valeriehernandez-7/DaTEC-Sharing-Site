@@ -9,7 +9,6 @@ import Aura from '@primevue/themes/aura'
 import ToastService from 'primevue/toastservice'
 import ConfirmationService from 'primevue/confirmationservice'
 
-// import './assets/main.css';
 import 'primeicons/primeicons.css'
 
 const app = createApp(App)
@@ -21,7 +20,10 @@ app.use(PrimeVue, {
         options: {
             prefix: 'p',
             darkModeSelector: 'light', // system | light | dark
-            cssLayer: false,
+            cssLayer: {
+                name: 'primevue',
+                order: 'theme, base, primevue'
+            }
         },
     },
 })
