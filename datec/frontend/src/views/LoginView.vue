@@ -11,20 +11,17 @@
         </template>
 
         <template #content>
-          <div class="flex flex-col gap-4">
+          <form @submit.prevent="handleLoginSubmission" class="flex flex-col gap-4">
             <div class="w-full">
-              <InputText v-model="loginForm.username" placeholder="Username" class="w-full"
-                @keypress.enter="handleLoginSubmission" </InputText>
+              <InputText v-model="loginForm.username" placeholder="Username" class="w-full" />
             </div>
 
             <div class="w-full">
-              <InputText v-model="loginForm.password" type="password" placeholder="Password" class="w-full">
-                @keypress.enter="handleLoginSubmission"
-              </InputText>
+              <InputText v-model="loginForm.password" type="password" placeholder="Password" class="w-full" />
             </div>
 
-            <Button label="Login" class="w-full" :loading="isLoading" @click="handleLoginSubmission"></Button>
-          </div>
+            <Button type="submit" label="Login" class="w-full" :loading="isLoading" />
+          </form>
 
           <div class="mt-6 text-center">
             <p class="text-sm text-gray-600">
@@ -52,20 +49,25 @@ const toast = useToast()
 
 const isLoading = ref(false)
 
+/**
+ * Login form data structure
+ * @type {import('vue').Reactive<{username: string, password: string}>}
+ */
 const loginForm = reactive({
   username: '',
   password: ''
 })
 
 /**
- * Handle user login submission
+ * Handles user authentication form submission
+ * Validates input and processes login request
+ * @returns {Promise<void>}
  */
 const handleLoginSubmission = async () => {
-
   if (!loginForm.username.trim() || !loginForm.password.trim()) {
     toast.add({
       severity: 'error',
-      summary: 'Error',
+      summary: 'Validation Error',
       detail: 'Please fill in all fields',
       life: 5000
     })
@@ -87,16 +89,13 @@ const handleLoginSubmission = async () => {
       life: 3000
     })
 
-    setTimeout(() => {
-      router.push('/')
-    }, 1000)
+    router.push('/')
 
   } catch (error) {
     const errorMessage = error.response?.data?.error || 'Authentication failed'
-
     toast.add({
       severity: 'error',
-      summary: 'Error',
+      summary: 'Login Error',
       detail: errorMessage,
       life: 5000
     })

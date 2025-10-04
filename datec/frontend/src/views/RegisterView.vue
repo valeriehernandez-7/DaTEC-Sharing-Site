@@ -61,7 +61,17 @@ const toast = useToast()
 
 const isLoading = ref(false)
 
-// Usar reactive en lugar de Form de PrimeVue
+/**
+ * Registration form data structure
+ * Contains all required fields for user registration
+ * @type {import('vue').Reactive<{
+ *   username: string,
+ *   email: string, 
+ *   fullName: string,
+ *   birthDate: string,
+ *   password: string
+ * }>}
+ */
 const registrationForm = reactive({
   username: '',
   email: '',
@@ -71,36 +81,57 @@ const registrationForm = reactive({
 })
 
 /**
- * Handle user registration form submission
- * @returns {Promise<void>}
+ * Validates email format using regular expression
+ * @param {string} email - Email address to validate
+ * @returns {boolean} Validation result
  */
-const handleRegistrationSubmission = async () => {
+const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+/**
+ * Validates all registration form fields
+ * @returns {boolean} Form validation status
+ */
+const validateForm = () => {
   if (!registrationForm.username.trim() ||
     !registrationForm.email.trim() ||
     !registrationForm.fullName.trim() ||
     !registrationForm.birthDate ||
     !registrationForm.password.trim()) {
-    toast.add({
-      severity: 'error',
-      summary: 'Validation Error',
-      detail: 'Please fill in all fields',
-      life: 5000
-    })
-    return
+    return false
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(registrationForm.email)) {
+  if (!isValidEmail(registrationForm.email)) {
+    return false
+  }
+
+  if (registrationForm.password.length < 8) {
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Handles user registration form submission
+ * Processes registration request and manages response
+ * @returns {Promise<void>}
+ */
+const handleRegistrationSubmission = async () => {
+  if (!validateForm()) {
     toast.add({
       severity: 'error',
       summary: 'Validation Error',
-      detail: 'Please enter a valid email address',
+      detail: 'Please check all fields and ensure password is at least 8 characters',
       life: 5000
     })
     return
   }
 
   isLoading.value = true
+
   try {
     const userData = {
       username: registrationForm.username,
@@ -120,11 +151,12 @@ const handleRegistrationSubmission = async () => {
     })
 
     router.push('/login')
+
   } catch (error) {
     const errorMessage = error.response?.data?.error || 'Registration failed'
     toast.add({
       severity: 'error',
-      summary: 'Error',
+      summary: 'Registration Error',
       detail: errorMessage,
       life: 5000
     })
