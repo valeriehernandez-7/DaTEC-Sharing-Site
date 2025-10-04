@@ -19,6 +19,10 @@ import Toast from 'primevue/toast'
 import ProgressSpinner from 'primevue/progressspinner'
 import Avatar from 'primevue/avatar'
 import Message from 'primevue/message'
+import Menubar from 'primevue/menubar'
+import OverlayPanel from 'primevue/overlaypanel'
+import MenuItem from 'primevue/menuitem'
+import Badge from 'primevue/badge'
 
 import './assets/main.css'
 
@@ -54,6 +58,10 @@ app.component('Avatar', Avatar)
 app.component('Message', Message)
 app.component('Form', Form)
 app.component('FormField', FormField)
+app.component('Menubar', Menubar)
+app.component('OverlayPanel', OverlayPanel)
+app.component('MenuItem', MenuItem)
+app.component('Badge', Badge)
 
 /**
  * Services and state management

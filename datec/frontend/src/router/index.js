@@ -39,6 +39,18 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
     {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('@/views/SettingsView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/datasets/create',
+      name: 'dataset-create',
+      component: () => import('@/views/DatasetCreateView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/'
     }

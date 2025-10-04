@@ -1,17 +1,26 @@
 <template>
     <Card class="h-full cursor-pointer hover:shadow-lg transition-shadow" @click="handleCardClick">
         <template #header>
-            <div class="relative h-32 bg-gradient-to-r from-blue-500 to-gray-300 rounded-t-lg">
-                <!-- Thumbnail or default background -->
-                <img v-if="item.thumbnail" :src="item.thumbnail" :alt="item.name"
-                    class="w-full h-full object-cover rounded-t-lg" @error="handleImageError" />
+            <div class="relative h-32 bg-gradient-to-r from-blue-500 to-gray-300 rounded-t-lg overflow-hidden">
+                <!-- Dynamic background based on type -->
+                <div :class="headerBackgroundClasses" class="absolute inset-0"></div>
+
+                <!-- Thumbnail image with error handling -->
+                <img v-if="showImage && item.thumbnail" :src="item.thumbnail" :alt="item.name"
+                    class="w-full h-full object-cover" @error="handleImageError" @load="handleImageLoad" />
+
+                <!-- Fallback content -->
                 <div v-else class="w-full h-full flex items-center justify-center text-white">
-                    <i :class="defaultIcon" class="text-3xl"></i>
+                    <div class="text-center">
+                        <i :class="defaultIcon" class="text-3xl mb-2"></i>
+                        <p class="text-sm font-medium">{{ fallbackText }}</p>
+                    </div>
                 </div>
 
                 <!-- Type badge -->
                 <div class="absolute top-2 right-2">
-                    <span :class="typeBadgeClasses" class="px-2 py-1 text-xs font-semibold rounded-full text-white">
+                    <span :class="typeBadgeClasses"
+                        class="px-2 py-1 text-xs font-semibold rounded-full text-white shadow-sm">
                         {{ item.type === 'dataset' ? 'Dataset' : 'User' }}
                     </span>
                 </div>
@@ -28,9 +37,12 @@
 
         <template #subtitle>
             <div class="flex items-center gap-2 mt-1">
-                <Avatar v-if="item.thumbnail && item.type === 'user'" :image="item.thumbnail" size="small"
-                    @error="handleAvatarError" />
-                <Avatar v-else :label="item.username.charAt(0).toUpperCase()" size="small" :class="avatarClasses" />
+                <!-- Avatar with better fallback -->
+                <div class="relative">
+                    <Avatar v-if="showAvatar && item.thumbnail && item.type === 'user'" :image="item.thumbnail"
+                        size="small" @error="handleAvatarError" @load="handleAvatarLoad" />
+                    <Avatar v-else :label="avatarLabel" size="small" :class="avatarClasses" />
+                </div>
                 <span class="text-sm text-gray-600">@{{ item.username }}</span>
                 <i v-if="item.isAdmin" class="pi pi-verified text-blue-500 ml-1" title="Admin"></i>
             </div>
@@ -45,7 +57,7 @@
             <!-- Tags for datasets -->
             <div v-if="item.type === 'dataset' && item.tags && item.tags.length" class="flex flex-wrap gap-1 mb-3">
                 <span v-for="tag in item.tags.slice(0, 3)" :key="tag"
-                    class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                    class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full border">
                     {{ tag }}
                 </span>
                 <span v-if="item.tags.length > 3" class="px-2 py-1 text-gray-500 text-xs">
@@ -58,16 +70,18 @@
                 <!-- For Datasets: Multiple metrics -->
                 <div v-if="item.type === 'dataset'" class="flex justify-between text-xs text-gray-600">
                     <div class="flex items-center gap-4">
-                        <div class="flex items-center gap-1">
+                        <div class="flex items-center gap-1" :title="`${item.counter} votes`">
                             <i class="pi pi-star text-yellow-500"></i>
                             <span>{{ item.counter }}</span>
                         </div>
-                        <div class="flex items-center gap-1" v-if="item.download_count > 0">
-                            <i class="pi pi-download text-red-800"></i>
+                        <div class="flex items-center gap-1" v-if="item.download_count > 0"
+                            :title="`${item.download_count} downloads`">
+                            <i class="pi pi-download text-blue-500"></i>
                             <span>{{ item.download_count }}</span>
                         </div>
-                        <div class="flex items-center gap-1" v-if="item.comment_count > 0">
-                            <i class="pi pi-comments text-green-700"></i>
+                        <div class="flex items-center gap-1" v-if="item.comment_count > 0"
+                            :title="`${item.comment_count} comments`">
+                            <i class="pi pi-comments text-green-500"></i>
                             <span>{{ item.comment_count }}</span>
                         </div>
                     </div>
@@ -75,11 +89,11 @@
 
                 <!-- For Users: Followers only -->
                 <div v-else class="flex justify-between items-center text-xs text-gray-600">
-                    <div class="flex items-center gap-1">
+                    <div class="flex items-center gap-1" :title="`${item.counter} followers`">
                         <i class="pi pi-users text-orange-500"></i>
                         <span>{{ item.counter }}</span>
                     </div>
-                    <div class="text-xs text-gray-500">
+                    <div class="text-xs text-gray-500" :title="`Joined ${formattedDate}`">
                         {{ formattedDate }}
                     </div>
                 </div>
@@ -96,23 +110,34 @@ const router = useRouter()
 const props = defineProps({
     item: {
         type: Object,
-        required: true,
-        validator: (value) => {
-            return ['id', 'type', 'name', 'username', 'updated_at', 'counter'].every(prop => prop in value)
-        }
+        required: true
     }
 })
 
-const avatarError = ref(false)
-const imageError = ref(false)
+// State for image loading
+const showImage = ref(true)
+const showAvatar = ref(true)
+const imageLoaded = ref(false)
+const avatarLoaded = ref(false)
+
+/**
+ * Computed property for header background gradient
+ */
+const headerBackgroundClasses = computed(() => {
+    if (props.item.type === 'dataset') {
+        return 'bg-gradient-to-tr from-emerald-400 to-gray-200'
+    } else {
+        return 'bg-gradient-to-tr from-sky-400 to-gray-200'
+    }
+})
 
 /**
  * Computed property for type-specific badge styling
  */
 const typeBadgeClasses = computed(() => {
     return props.item.type === 'dataset'
-        ? 'bg-blue-500'
-        : 'bg-sky-500'
+        ? 'bg-emerald-600'
+        : 'bg-sky-600'
 })
 
 /**
@@ -125,10 +150,28 @@ const defaultIcon = computed(() => {
 })
 
 /**
+ * Computed property for fallback text
+ */
+const fallbackText = computed(() => {
+    return props.item.type === 'dataset'
+        ? 'Dataset'
+        : 'User'
+})
+
+/**
+ * Computed property for avatar label
+ */
+const avatarLabel = computed(() => {
+    return props.item.username.charAt(0).toUpperCase()
+})
+
+/**
  * Computed property for avatar background color
  */
 const avatarClasses = computed(() => {
-    const colors = ['bg-blue-500', 'bg-cyan-600', 'bg-cyan-800', 'bg-cyan-950', 'bg-cyan-500']
+    const colors = [
+        'bg-emerald-200', 'bg-emerald-300', 'bg-emerald-400', 'bg-emerald-500', 'bg-emerald-600', 'bg-emerald-800'
+    ]
     const index = props.item.username.charCodeAt(0) % colors.length
     return `${colors[index]} text-white`
 })
@@ -138,7 +181,7 @@ const avatarClasses = computed(() => {
  */
 const formattedCounter = computed(() => {
     if (props.item.type === 'dataset') {
-        return `${props.item.counter} ${props.item.counter === 1 ? 'vote' : 'votes'}`
+        return `${item.counter} ${props.item.counter === 1 ? 'vote' : 'votes'}`
     } else {
         return `${props.item.counter} ${props.item.counter === 1 ? 'follower' : 'followers'}`
     }
@@ -153,24 +196,44 @@ const formattedDate = computed(() => {
     const diffTime = Math.abs(now - date)
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
+    if (diffDays === 0) return 'Today'
     if (diffDays === 1) return '1 day ago'
     if (diffDays < 7) return `${diffDays} days ago`
     if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`
+    if (diffDays < 365) return `${Math.ceil(diffDays / 30)} months ago`
     return date.toLocaleDateString()
 })
-
-/**
- * Handles avatar image loading errors
- */
-const handleAvatarError = () => {
-    avatarError.value = true
-}
 
 /**
  * Handles header image loading errors
  */
 const handleImageError = () => {
-    imageError.value = true
+    console.warn(`Failed to load image: ${props.item.thumbnail}`)
+    showImage.value = false
+    imageLoaded.value = false
+}
+
+/**
+ * Handles header image successful load
+ */
+const handleImageLoad = () => {
+    imageLoaded.value = true
+}
+
+/**
+ * Handles avatar image loading errors
+ */
+const handleAvatarError = () => {
+    console.warn(`Failed to load avatar: ${props.item.thumbnail}`)
+    showAvatar.value = false
+    avatarLoaded.value = false
+}
+
+/**
+ * Handles avatar image successful load
+ */
+const handleAvatarLoad = () => {
+    avatarLoaded.value = true
 }
 
 /**
@@ -198,5 +261,10 @@ const handleCardClick = () => {
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+/* Smooth transitions for images */
+img {
+    transition: opacity 0.3s ease;
 }
 </style>
