@@ -100,7 +100,9 @@
 
                 <div class="flex items-center gap-4">
                     <label for="birthDate" class="font-semibold w-32">Birth Date</label>
-                    <InputText id="birthDate" v-model="userData.birthDate" type="date" class="flex-auto" />
+                    <DatePicker id="birthDate" v-model="userData.birthDate" class="flex-auto" dateFormat="yy-mm-dd"
+                        :maxDate="maxDate" :minDate="minDate" showIcon iconDisplay="input"
+                        placeholder="Select your birth date" />
                 </div>
 
                 <!-- Read-only Information -->
@@ -138,7 +140,7 @@
                     class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-2 border-gray-300" />
                 <p class="text-sm text-gray-600 mb-4">{{ selectedAvatarFile.name }} ({{
                     formatFileSize(selectedAvatarFile.size)
-                    }})</p>
+                }})</p>
 
                 <div class="flex gap-2 justify-center">
                     <Button label="Cancel" icon="pi pi-times" text @click="cancelAvatarUpload" />
@@ -176,6 +178,7 @@ const originalUserData = ref({})
 const notifications = ref([])
 const selectedAvatarFile = ref(null)
 const avatarPreviewUrl = ref('')
+const saveError = ref('')
 
 // Computed properties
 const userAvatar = computed(() => authStore.user?.avatarUrl || null)
@@ -200,9 +203,30 @@ const isValidUsername = computed(() => {
     return contactUsername.value.trim().length >= 2
 })
 
+// Update hasChanges computed to ignore empty password
 const hasChanges = computed(() => {
     if (!userData.value || !originalUserData.value) return false
-    return JSON.stringify(userData.value) !== JSON.stringify(originalUserData.value)
+
+    const currentData = { ...userData.value }
+    const originalData = { ...originalUserData.value }
+
+    // Remove password from comparison if it's empty
+    if (!currentData.password || currentData.password.trim() === '') {
+        delete currentData.password
+    }
+    delete originalData.password // Always remove from original for comparison
+
+    return JSON.stringify(currentData) !== JSON.stringify(originalData)
+})
+
+const maxDate = computed(() => {
+    const today = new Date()
+    return new Date(today.getFullYear() - 15, today.getMonth(), today.getDate())
+})
+
+const minDate = computed(() => {
+    const today = new Date()
+    return new Date(today.getFullYear() - 100, today.getMonth(), today.getDate()) // 100 years max
 })
 
 // Notification items
@@ -423,15 +447,6 @@ const handleNotificationClick = (notification) => {
 }
 
 /**
- * Close settings dialog
- */
-const closeSettingsDialog = () => {
-    showSettingsDialog.value = false
-    userData.value = null
-    originalUserData.value = null
-}
-
-/**
  * Handle avatar file selection
  */
 const onAvatarSelect = (event) => {
@@ -546,15 +561,19 @@ const loadUserData = async () => {
 
         if (response.ok) {
             const data = await response.json()
-            userData.value = { ...data.user }
-            originalUserData.value = { ...data.user }
+            userData.value = {
+                ...data.user,
+                password: '' // Initialize password as empty
+            }
+            originalUserData.value = { ...userData.value }
 
             // Format date for input
             if (userData.value.birthDate) {
                 userData.value.birthDate = userData.value.birthDate.split('T')[0]
             }
         } else {
-            throw new Error('Failed to load user data')
+            const errorData = await response.json()
+            throw new Error(errorData.error || 'Failed to load user data')
         }
     } catch (error) {
         console.error('Failed to load user data:', error)
@@ -589,44 +608,80 @@ const saveSettings = async () => {
     if (!userData.value || !hasChanges.value) return
 
     isSaving.value = true
+    saveError.value = ''
 
     try {
+        // Prepare update data - only include fields that changed and password if provided
+        const updateData = {}
+
+        if (userData.value.fullName !== originalUserData.value.fullName) {
+            updateData.full_name = userData.value.fullName
+        }
+
+        if (userData.value.emailAddress !== originalUserData.value.emailAddress) {
+            updateData.email_address = userData.value.emailAddress
+        }
+
+        if (userData.value.birthDate !== originalUserData.value.birthDate) {
+            updateData.birth_date = userData.value.birthDate
+        }
+
+        // Only include password if provided
+        if (userData.value.password && userData.value.password.trim() !== '') {
+            updateData.password = userData.value.password
+        }
+
+        // If no fields to update, return early
+        if (Object.keys(updateData).length === 0) {
+            toast.add({
+                severity: 'warn',
+                summary: 'No Changes',
+                detail: 'No changes detected to save',
+                life: 3000
+            })
+            return
+        }
+
         const response = await fetch(`http://localhost:3000/api/users/${authStore.user.username}`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                full_name: userData.value.fullName,
-                email_address: userData.value.emailAddress,
-                birth_date: userData.value.birthDate
-                // avatar will be handled separately with file upload
-            })
+            body: JSON.stringify(updateData)
         })
 
+        const responseData = await response.json()
+
         if (response.ok) {
-            const data = await response.json()
             toast.add({
                 severity: 'success',
                 summary: 'Success',
-                detail: data.message || 'Profile updated successfully',
+                detail: responseData.message || 'Profile updated successfully',
                 life: 3000
             })
 
             // Update auth store with new data
             await authStore.fetchCurrentUser()
-            closeSettingsDialog()
+
+            // Clear password field
+            userData.value.password = ''
+
+            // Reload original data to reset change detection
+            originalUserData.value = { ...userData.value }
+
         } else {
-            const errorData = await response.json()
-            throw new Error(errorData.error || 'Failed to update profile')
+            // Handle server validation errors
+            throw new Error(responseData.error || `Failed to update profile: ${response.status}`)
         }
     } catch (error) {
         console.error('Failed to save settings:', error)
+        saveError.value = error.message || 'Failed to update profile. Please try again.'
+
         toast.add({
             severity: 'error',
             summary: 'Error',
-            detail: error.message || 'Failed to update profile',
+            detail: 'Failed to save changes. Please check the error message below.',
             life: 5000
         })
     } finally {
@@ -636,7 +691,17 @@ const saveSettings = async () => {
 
 
 /**
- * Closes contact dialog and resets state
+ * Close settings dialog and reset state
+ */
+const closeSettingsDialog = () => {
+    showSettingsDialog.value = false
+    userData.value = {}
+    originalUserData.value = {}
+    saveError.value = null
+}
+
+/**
+ * Close contact dialog and reset state
  */
 const closeContactDialog = () => {
     showContactDialog.value = false
@@ -663,7 +728,6 @@ const findUser = async () => {
     }
 
     isCheckingUser.value = true
-    usernameError.value = ''
 
     try {
         // Check if user exists by calling the API
@@ -692,6 +756,7 @@ const findUser = async () => {
             usernameError.value = 'Error checking user'
         }
 
+        isCheckingUser.value = false
     } catch (error) {
         console.error('Error finding user:', error)
         usernameError.value = 'Failed to check user. Please try again.'

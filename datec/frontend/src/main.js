@@ -22,6 +22,7 @@ import Dialog from 'primevue/dialog'
 import Badge from 'primevue/badge'
 import Tag from 'primevue/tag'
 import FileUpload from 'primevue/fileupload'
+import DatePicker from 'primevue/datepicker'
 
 import App from './App.vue'
 import router from './router'
@@ -65,6 +66,7 @@ app.component('Dialog', Dialog)
 app.component('Badge', Badge)
 app.component('Tag', Tag)
 app.component('FileUpload', FileUpload)
+app.component('DatePicker', DatePicker)
 
 /**
  * Services and state management
