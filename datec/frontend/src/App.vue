@@ -9,12 +9,10 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 import Navbar from '@/components/Navbar.vue'
 import Toast from 'primevue/toast'
 
 const route = useRoute()
-const authStore = useAuthStore()
 
 /**
  * Computed property to determine if navbar should be shown

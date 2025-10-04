@@ -5,7 +5,7 @@
             <div class="container mx-auto px-4 py-6">
                 <div class="text-center mb-8">
                     <i class="pi pi-bullseye text-6xl text-sky-600 mb-4"></i>
-                    <h1 class="text-4xl font-bold text-sky-600 mb-4">DaTEC</h1>
+                    <!-- <h1 class="text-4xl font-bold text-sky-600 mb-4">DaTEC</h1> -->
                     <p class="text-xl text-gray-600 max-w-2xl mx-auto">
                         <i>Data Sharing Platform for collaborative research and analysis </i><i
                             class="pi pi-bolt text"></i>

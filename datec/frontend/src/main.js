@@ -8,9 +8,6 @@ import ToastService from 'primevue/toastservice'
 import Form from '@primevue/forms/form'
 import FormField from '@primevue/forms/formfield'
 
-import App from './App.vue'
-import router from './router'
-
 // Import PrimeVue components
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -20,10 +17,12 @@ import ProgressSpinner from 'primevue/progressspinner'
 import Avatar from 'primevue/avatar'
 import Message from 'primevue/message'
 import Menubar from 'primevue/menubar'
-import OverlayPanel from 'primevue/overlaypanel'
-import MenuItem from 'primevue/menuitem'
+import Menu from 'primevue/menu'
+import Dialog from 'primevue/dialog'
 import Badge from 'primevue/badge'
 
+import App from './App.vue'
+import router from './router'
 import './assets/main.css'
 
 const app = createApp(App)
@@ -59,8 +58,8 @@ app.component('Message', Message)
 app.component('Form', Form)
 app.component('FormField', FormField)
 app.component('Menubar', Menubar)
-app.component('OverlayPanel', OverlayPanel)
-app.component('MenuItem', MenuItem)
+app.component('Menu', Menu)
+app.component('Dialog', Dialog)
 app.component('Badge', Badge)
 
 /**
