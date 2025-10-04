@@ -12,14 +12,19 @@
                 <div class="flex items-center gap-2">
                     <!-- Notifications (only when logged in) -->
                     <Button v-if="authStore.isLoggedIn" icon="pi pi-bell" text rounded severity="secondary"
-                        @click="showNotifications" :badge="notificationCount > 0 ? notificationCount.toString() : null"
+                        @click="toggleNotifications"
+                        :badge="notificationCount > 0 ? notificationCount.toString() : null"
                         badge-class="notification-badge" />
 
-                    <!-- User Avatar (only when logged in) -->
-                    <Avatar v-if="authStore.isLoggedIn" :image="userAvatar" :label="userInitials" size="medium"
-                        shape="circle" :class="avatarClasses" />
+                    <!-- Notifications Menu -->
+                    <Menu v-if="authStore.isLoggedIn" ref="notificationsMenu" :model="notificationItems" :popup="true"
+                        class="notifications-overlay" />
 
-                    <!-- User Menu Button (only when logged in) -->
+                    <!-- User Avatar (clickable to profile) -->
+                    <Avatar v-if="authStore.isLoggedIn" :image="userAvatar" :label="userInitials" size="medium"
+                        shape="circle" :class="avatarClasses" class="cursor-pointer" @click="goToProfile" />
+
+                    <!-- User Menu Button -->
                     <Button v-if="authStore.isLoggedIn" icon="pi pi-ellipsis-v" text rounded severity="secondary"
                         @click="toggleUserMenu" />
 
@@ -52,11 +57,61 @@
                     :disabled="!isValidUsername" />
             </template>
         </Dialog>
+
+        <!-- Settings Dialog -->
+        <Dialog v-model:visible="showSettingsDialog" header="Settings" :style="{ width: '600px' }" :modal="true"
+            :closable="false">
+            <div class="p-fluid" v-if="userData">
+                <div class="field grid">
+                    <label for="avatar" class="col-12 mb-2">Profile Picture</label>
+                    <div class="col-12 flex items-center gap-4">
+                        <Avatar :image="userData.avatarUrl" :label="userData.fullName?.charAt(0) || 'U'" size="xlarge"
+                            shape="circle" class="bg-blue-500 text-white" />
+                        <FileUpload mode="basic" name="avatar" accept="image/*" :maxFileSize="5000000"
+                            chooseLabel="Change Avatar" @select="onAvatarSelect" />
+                    </div>
+                </div>
+
+                <div class="field grid">
+                    <label for="fullName" class="col-12 mb-1">Full Name</label>
+                    <div class="col-12">
+                        <InputText id="fullName" v-model="userData.fullName" class="w-full" />
+                    </div>
+                </div>
+
+                <div class="field grid">
+                    <label for="email" class="col-12 mb-1">Email Address</label>
+                    <div class="col-12">
+                        <InputText id="email" v-model="userData.emailAddress" type="email" class="w-full" />
+                    </div>
+                </div>
+
+                <div class="field grid">
+                    <label for="birthDate" class="col-12 mb-1">Birth Date</label>
+                    <div class="col-12">
+                        <InputText id="birthDate" v-model="userData.birthDate" type="date" class="w-full" />
+                    </div>
+                </div>
+
+                <div class="field grid">
+                    <label class="col-12 mb-1">Account Information</label>
+                    <div class="col-12">
+                        <InputText v-model="userData.username" class="w-full" disabled placeholder="Username" />
+                        <small class="text-gray-500">Username cannot be changed</small>
+                    </div>
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Cancel" icon="pi pi-times" text @click="closeSettingsDialog" :disabled="isSaving" />
+                <Button label="Save Changes" icon="pi pi-check" @click="saveSettings" :loading="isSaving"
+                    :disabled="!hasChanges" />
+            </template>
+        </Dialog>
     </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'primevue/usetoast'
@@ -67,11 +122,17 @@ const toast = useToast()
 
 // Refs
 const userMenu = ref()
+const notificationsMenu = ref()
 const showContactDialog = ref(false)
+const showSettingsDialog = ref(false)
 const contactUsername = ref('')
 const notificationCount = ref(0)
 const isCheckingUser = ref(false)
 const usernameError = ref('')
+const isSaving = ref(false)
+const userData = ref(null)
+const originalUserData = ref(null)
+const notifications = ref([])
 
 // Computed properties
 const userAvatar = computed(() => authStore.user?.avatarUrl || null)
@@ -96,10 +157,43 @@ const isValidUsername = computed(() => {
     return contactUsername.value.trim().length >= 2
 })
 
+const hasChanges = computed(() => {
+    if (!userData.value || !originalUserData.value) return false
+    return JSON.stringify(userData.value) !== JSON.stringify(originalUserData.value)
+})
+
+// Notification items
+const notificationItems = computed(() => {
+    if (notifications.value.length === 0) {
+        return [
+            {
+                label: 'No notifications',
+                icon: 'pi pi-inbox',
+                disabled: true
+            }
+        ]
+    }
+
+    const items = notifications.value.map(notification => ({
+        label: formatNotification(notification),
+        icon: getNotificationIcon(notification.type),
+        command: () => handleNotificationClick(notification)
+    }))
+
+    items.push({ separator: true })
+    items.push({
+        label: 'Clear All',
+        icon: 'pi pi-trash',
+        command: clearAllNotifications
+    })
+
+    return items
+})
+
 // Main menu items for Menubar
 const menuItems = ref([])
 
-// User menu items (only shown when logged in)
+// User menu items
 const userMenuItems = computed(() => [
     {
         label: 'Search',
@@ -126,7 +220,7 @@ const userMenuItems = computed(() => [
         label: 'Settings',
         icon: 'pi pi-cog',
         command: () => {
-            router.push('/settings')
+            openSettingsDialog()
         }
     },
     { separator: true },
@@ -146,31 +240,257 @@ const userMenuItems = computed(() => [
     }
 ])
 
-/**
- * Toggles user menu overlay
- */
+// Lifecycle
+onMounted(() => {
+    if (authStore.isLoggedIn) {
+        loadNotificationCount()
+        loadNotifications()
+    }
+})
+
+// Methods
 const toggleUserMenu = (event) => {
     userMenu.value.toggle(event)
 }
 
-/**
- * Navigates to login page
- */
+const toggleNotifications = (event) => {
+    notificationsMenu.value.toggle(event)
+}
+
 const goToLogin = () => {
     router.push('/login')
 }
 
+const goToProfile = () => {
+    if (authStore.isLoggedIn) {
+        router.push(`/profile/${authStore.user.username}`)
+    }
+}
+
 /**
- * Shows notifications (placeholder)
+ * Load notification count
  */
-const showNotifications = () => {
+const loadNotificationCount = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/api/notifications/count', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        })
+
+        if (response.ok) {
+            const data = await response.json()
+            notificationCount.value = data.count || 0
+        }
+    } catch (error) {
+        console.error('Failed to load notification count:', error)
+    }
+}
+
+/**
+ * Load notifications
+ */
+const loadNotifications = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/api/notifications', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        })
+
+        if (response.ok) {
+            const data = await response.json()
+            notifications.value = data.notifications || []
+        }
+    } catch (error) {
+        console.error('Failed to load notifications:', error)
+    }
+}
+
+/**
+ * Clear all notifications
+ */
+const clearAllNotifications = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/api/notifications', {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        })
+
+        if (response.ok) {
+            notifications.value = []
+            notificationCount.value = 0
+            toast.add({
+                severity: 'success',
+                summary: 'Cleared',
+                detail: 'All notifications cleared',
+                life: 3000
+            })
+        }
+    } catch (error) {
+        console.error('Failed to clear notifications:', error)
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to clear notifications',
+            life: 5000
+        })
+    }
+}
+
+/**
+ * Format notification message
+ */
+const formatNotification = (notification) => {
+    const messages = {
+        'new_follower': `${notification.from_username} started following you`,
+        'new_dataset': `${notification.from_username} published a new dataset`,
+        'dataset_approved': `Your dataset "${notification.dataset_name}" was approved`,
+        'dataset_rejected': `Your dataset "${notification.dataset_name}" was rejected`
+    }
+
+    return messages[notification.type] || notification.message || 'New notification'
+}
+
+/**
+ * Get notification icon
+ */
+const getNotificationIcon = (type) => {
+    const icons = {
+        'new_follower': 'pi pi-user-plus',
+        'new_dataset': 'pi pi-database',
+        'dataset_approved': 'pi pi-check',
+        'dataset_rejected': 'pi pi-times'
+    }
+
+    return icons[type] || 'pi pi-bell'
+}
+
+/**
+ * Handle notification click
+ */
+const handleNotificationClick = (notification) => {
+    if (notification.dataset_id) {
+        router.push(`/datasets/${notification.dataset_id}`)
+    } else if (notification.from_username) {
+        router.push(`/profile/${notification.from_username}`)
+    }
+}
+
+/**
+ * Open settings dialog and load user data
+ */
+const openSettingsDialog = async () => {
+    showSettingsDialog.value = true
+    isSaving.value = false
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/users/${authStore.user.username}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        })
+
+        if (response.ok) {
+            const data = await response.json()
+            userData.value = { ...data.user }
+            originalUserData.value = { ...data.user }
+
+            // Format date for input
+            if (userData.value.birthDate) {
+                userData.value.birthDate = userData.value.birthDate.split('T')[0]
+            }
+        } else {
+            throw new Error('Failed to load user data')
+        }
+    } catch (error) {
+        console.error('Failed to load user data:', error)
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to load user data',
+            life: 5000
+        })
+        showSettingsDialog.value = false
+    }
+}
+
+/**
+ * Close settings dialog
+ */
+const closeSettingsDialog = () => {
+    showSettingsDialog.value = false
+    userData.value = null
+    originalUserData.value = null
+}
+
+/**
+ * Handle avatar file selection
+ */
+const onAvatarSelect = (event) => {
+    // TODO: Implement avatar upload
     toast.add({
         severity: 'info',
-        summary: 'Notifications',
-        detail: 'Notification system coming soon!',
+        summary: 'Avatar Upload',
+        detail: 'Avatar upload functionality coming soon',
         life: 3000
     })
 }
+
+/**
+ * Save user settings
+ */
+const saveSettings = async () => {
+    if (!userData.value || !hasChanges.value) return
+
+    isSaving.value = true
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/users/${authStore.user.username}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                full_name: userData.value.fullName,
+                email_address: userData.value.emailAddress,
+                birth_date: userData.value.birthDate
+                // avatar will be handled separately with file upload
+            })
+        })
+
+        if (response.ok) {
+            const data = await response.json()
+            toast.add({
+                severity: 'success',
+                summary: 'Success',
+                detail: data.message || 'Profile updated successfully',
+                life: 3000
+            })
+
+            // Update auth store with new data
+            await authStore.fetchCurrentUser()
+            closeSettingsDialog()
+        } else {
+            const errorData = await response.json()
+            throw new Error(errorData.error || 'Failed to update profile')
+        }
+    } catch (error) {
+        console.error('Failed to save settings:', error)
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: error.message || 'Failed to update profile',
+            life: 5000
+        })
+    } finally {
+        isSaving.value = false
+    }
+}
+
 
 /**
  * Closes contact dialog and resets state
@@ -268,7 +588,8 @@ const goHome = () => {
     height: 1.2rem;
 }
 
-.user-menu-overlay {
+.user-menu-overlay,
+.notifications-overlay {
     margin-top: 0.5rem;
 }
 </style>
