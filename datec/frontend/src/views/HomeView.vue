@@ -191,29 +191,49 @@ const performSearch = async () => {
 
         if (searchType.value === 'datasets') {
             const datasets = await searchService.searchDatasets(query)
-            searchResults.value = datasets.map(dataset => ({
-                id: dataset.dataset_id,
-                type: 'dataset',
-                name: dataset.dataset_name,
-                username: dataset.owner?.username || 'Unknown',
-                updated_at: dataset.created_at,
-                counter: dataset.vote_count || 0,
-                thumbnail: dataset.header_photo_url,
-                description: dataset.description,
-                tags: dataset.tags
-            }))
+
+            // Enrich dataset data with additional details
+            searchResults.value = await Promise.all(
+                datasets.map(async (dataset) => {
+                    // Get detailed dataset info for vote count and other metrics
+                    const details = await searchService.getDatasetDetails(dataset.dataset_id)
+
+                    return {
+                        id: dataset.dataset_id,
+                        type: 'dataset',
+                        name: dataset.dataset_name,
+                        username: dataset.owner?.username || 'Unknown',
+                        updated_at: dataset.created_at,
+                        counter: details?.vote_count || dataset.vote_count || 0,
+                        thumbnail: dataset.header_photo_url,
+                        description: dataset.description,
+                        tags: dataset.tags,
+                        // Additional metrics for the card
+                        download_count: details?.download_count || 0,
+                        comment_count: details?.comment_count || 0
+                    }
+                })
+            )
         } else {
             const users = await searchService.searchUsers(query)
-            searchResults.value = users.map(user => ({
-                id: user.userId,
-                type: 'user',
-                name: user.fullName,
-                username: user.username,
-                updated_at: user.createdAt,
-                counter: 0, // Followers count would come from separate endpoint
-                thumbnail: user.avatarUrl,
-                isAdmin: user.isAdmin
-            }))
+
+            // Enrich user data with follower counts
+            searchResults.value = await Promise.all(
+                users.map(async (user) => {
+                    const followerCount = await searchService.getUserFollowerCount(user.username)
+
+                    return {
+                        id: user.userId,
+                        type: 'user',
+                        name: user.fullName,
+                        username: user.username,
+                        updated_at: user.createdAt,
+                        counter: followerCount,
+                        thumbnail: user.avatarUrl,
+                        isAdmin: user.isAdmin
+                    }
+                })
+            )
         }
 
         currentPage.value = 1

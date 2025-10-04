@@ -4,9 +4,9 @@
             <div class="relative h-32 bg-gradient-to-r from-blue-500 to-gray-300 rounded-t-lg">
                 <!-- Thumbnail or default background -->
                 <img v-if="item.thumbnail" :src="item.thumbnail" :alt="item.name"
-                    class="w-full h-full object-cover rounded-t-lg" />
+                    class="w-full h-full object-cover rounded-t-lg" @error="handleImageError" />
                 <div v-else class="w-full h-full flex items-center justify-center text-white">
-                    <i :class="item.type === 'dataset' ? 'pi pi-database' : 'pi pi-user'" class="text-2xl"></i>
+                    <i :class="defaultIcon" class="text-3xl"></i>
                 </div>
 
                 <!-- Type badge -->
@@ -28,11 +28,11 @@
 
         <template #subtitle>
             <div class="flex items-center gap-2 mt-1">
-                <Avatar v-if="item.type === 'user' && item.thumbnail" :image="item.thumbnail" size="small" />
-                <Avatar v-else :label="item.username.charAt(0).toUpperCase()" size="small"
-                    class="bg-blue-500 text-white" />
+                <Avatar v-if="item.thumbnail && item.type === 'user'" :image="item.thumbnail" size="small"
+                    @error="handleAvatarError" />
+                <Avatar v-else :label="item.username.charAt(0).toUpperCase()" size="small" :class="avatarClasses" />
                 <span class="text-sm text-gray-600">@{{ item.username }}</span>
-                <i v-if="item.isAdmin" class="pi pi-verified text-blue-500 ml-1"></i>
+                <i v-if="item.isAdmin" class="pi pi-verified text-blue-500 ml-1" title="Admin"></i>
             </div>
         </template>
 
@@ -53,14 +53,35 @@
                 </span>
             </div>
 
-            <!-- Stats -->
-            <div class="flex justify-between items-center text-sm text-gray-500 mt-4">
-                <div class="flex items-center gap-1">
-                    <i :class="counterIcon"></i>
-                    <span>{{ formattedCounter }}</span>
+            <!-- Stats Section -->
+            <div class="border-t pt-3 mt-3">
+                <!-- For Datasets: Multiple metrics -->
+                <div v-if="item.type === 'dataset'" class="flex justify-between text-xs text-gray-600">
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-1">
+                            <i class="pi pi-star text-yellow-500"></i>
+                            <span>{{ item.counter }}</span>
+                        </div>
+                        <div class="flex items-center gap-1" v-if="item.download_count > 0">
+                            <i class="pi pi-download text-red-800"></i>
+                            <span>{{ item.download_count }}</span>
+                        </div>
+                        <div class="flex items-center gap-1" v-if="item.comment_count > 0">
+                            <i class="pi pi-comments text-green-700"></i>
+                            <span>{{ item.comment_count }}</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="text-xs">
-                    {{ formattedDate }}
+
+                <!-- For Users: Followers only -->
+                <div v-else class="flex justify-between items-center text-xs text-gray-600">
+                    <div class="flex items-center gap-1">
+                        <i class="pi pi-users text-orange-500"></i>
+                        <span>{{ item.counter }}</span>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        {{ formattedDate }}
+                    </div>
                 </div>
             </div>
         </template>
@@ -68,7 +89,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -82,22 +103,34 @@ const props = defineProps({
     }
 })
 
+const avatarError = ref(false)
+const imageError = ref(false)
+
 /**
  * Computed property for type-specific badge styling
  */
 const typeBadgeClasses = computed(() => {
     return props.item.type === 'dataset'
         ? 'bg-blue-500'
-        : 'bg-green-500'
+        : 'bg-sky-500'
 })
 
 /**
- * Computed property for counter display icon
+ * Computed property for default icon
  */
-const counterIcon = computed(() => {
+const defaultIcon = computed(() => {
     return props.item.type === 'dataset'
-        ? 'pi pi-star text-yellow-500'
-        : 'pi pi-users text-orange-500'
+        ? 'pi pi-database'
+        : 'pi pi-user'
+})
+
+/**
+ * Computed property for avatar background color
+ */
+const avatarClasses = computed(() => {
+    const colors = ['bg-blue-500', 'bg-cyan-600', 'bg-cyan-800', 'bg-cyan-950', 'bg-cyan-500']
+    const index = props.item.username.charCodeAt(0) % colors.length
+    return `${colors[index]} text-white`
 })
 
 /**
@@ -125,6 +158,20 @@ const formattedDate = computed(() => {
     if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`
     return date.toLocaleDateString()
 })
+
+/**
+ * Handles avatar image loading errors
+ */
+const handleAvatarError = () => {
+    avatarError.value = true
+}
+
+/**
+ * Handles header image loading errors
+ */
+const handleImageError = () => {
+    imageError.value = true
+}
 
 /**
  * Handles card click navigation
