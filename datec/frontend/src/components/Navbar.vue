@@ -194,7 +194,7 @@ const userInitials = computed(() => {
 })
 
 const avatarClasses = computed(() => {
-    const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500']
+    const colors = ['bg-emerald-200', 'bg-emerald-300', 'bg-emerald-400', 'bg-emerald-500', 'bg-emerald-600', 'bg-emerald-800']
     const index = (authStore.user?.username?.charCodeAt(0) || 0) % colors.length
     return `${colors[index]} text-white`
 })

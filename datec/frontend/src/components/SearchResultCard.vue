@@ -169,9 +169,7 @@ const avatarLabel = computed(() => {
  * Computed property for avatar background color
  */
 const avatarClasses = computed(() => {
-    const colors = [
-        'bg-emerald-200', 'bg-emerald-300', 'bg-emerald-400', 'bg-emerald-500', 'bg-emerald-600', 'bg-emerald-800'
-    ]
+    const colors = ['bg-emerald-200', 'bg-emerald-300', 'bg-emerald-400', 'bg-emerald-500', 'bg-emerald-600', 'bg-emerald-800']
     const index = props.item.username.charCodeAt(0) % colors.length
     return `${colors[index]} text-white`
 })

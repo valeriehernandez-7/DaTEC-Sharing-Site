@@ -23,6 +23,13 @@ import Badge from 'primevue/badge'
 import Tag from 'primevue/tag'
 import FileUpload from 'primevue/fileupload'
 import DatePicker from 'primevue/datepicker'
+import Tabs from 'primevue/tabs';
+import TabList from 'primevue/tablist';
+import Tab from 'primevue/tab';
+import TabPanels from 'primevue/tabpanels';
+import TabPanel from 'primevue/tabpanel';
+import DataView from 'primevue/dataview'
+import Drawer from 'primevue/drawer'
 
 import App from './App.vue'
 import router from './router'
@@ -67,6 +74,13 @@ app.component('Badge', Badge)
 app.component('Tag', Tag)
 app.component('FileUpload', FileUpload)
 app.component('DatePicker', DatePicker)
+app.component('Tabs', Tabs)
+app.component('TabList', TabList)
+app.component('Tab', Tab)
+app.component('TabPanels', TabPanels)
+app.component('TabPanel', TabPanel)
+app.component('DataView', DataView)
+app.component('Drawer', Drawer)
 
 /**
  * Services and state management
