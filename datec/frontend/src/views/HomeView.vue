@@ -242,8 +242,8 @@ const performSearch = async () => {
         console.error('Search failed:', error)
         toast.add({
             severity: 'error',
-            summary: 'Search Error',
-            detail: 'Failed to perform search. Please try again.',
+            summary: 'Failed to perform search. Please try again.',
+            detail: error.message,
             life: 5000
         })
         searchResults.value = []

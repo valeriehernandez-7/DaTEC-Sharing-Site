@@ -400,8 +400,8 @@ const clearAllNotifications = async () => {
         console.error('Failed to clear notifications:', error)
         toast.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to clear notifications',
+            summary: 'Failed to clear notifications',
+            detail: error.message,
             life: 5000
         })
     }
@@ -516,8 +516,8 @@ const uploadAvatar = async () => {
         console.error('Failed to upload avatar:', error)
         toast.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to upload avatar',
+            summary: 'Failed to upload avatar',
+            detail: error.message,
             life: 5000
         })
     } finally {
@@ -593,8 +593,8 @@ const openSettingsDialog = async () => {
     } catch (error) {
         toast.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to load user data',
+            summary: 'Failed to load user data',
+            detail: error.message,
             life: 5000
         })
         showSettingsDialog.value = false
@@ -602,7 +602,7 @@ const openSettingsDialog = async () => {
 }
 
 /**
- * Save user settings
+ * Save user settings - simplified without age validation
  */
 const saveSettings = async () => {
     if (!userData.value || !hasChanges.value) return
@@ -656,8 +656,8 @@ const saveSettings = async () => {
         if (response.ok) {
             toast.add({
                 severity: 'success',
-                summary: 'Success',
-                detail: responseData.message || 'Profile updated successfully',
+                summary: 'Profile updated successfully',
+                detail: responseData.message,
                 life: 3000
             })
 
@@ -680,8 +680,8 @@ const saveSettings = async () => {
 
         toast.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to save changes. Please check the error message below.',
+            summary: 'Failed to save changes.',
+            detail: error.message,
             life: 5000
         })
     } finally {
