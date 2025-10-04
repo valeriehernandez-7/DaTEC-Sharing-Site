@@ -59,59 +59,98 @@
         </Dialog>
 
         <!-- Settings Dialog -->
-        <Dialog v-model:visible="showSettingsDialog" header="Settings" :style="{ width: '600px' }" :modal="true"
+        <Dialog v-model:visible="showSettingsDialog" modal header="Edit Profile" :style="{ width: '500px' }"
             :closable="false">
-            <div class="p-fluid" v-if="userData">
-                <div class="field grid">
-                    <label for="avatar" class="col-12 mb-2">Profile Picture</label>
-                    <div class="col-12 flex items-center gap-4">
-                        <Avatar :image="userData.avatarUrl" :label="userData.fullName?.charAt(0) || 'U'" size="xlarge"
-                            shape="circle" class="bg-blue-500 text-white" />
-                        <FileUpload mode="basic" name="avatar" accept="image/*" :maxFileSize="5000000"
-                            chooseLabel="Change Avatar" @select="onAvatarSelect" />
-                    </div>
+            <template #header>
+                <div class="inline-flex items-center justify-center gap-3">
+                    <Avatar :image="userData?.avatarUrl" :label="userData?.fullName?.charAt(0) || 'U'" size="large"
+                        shape="circle" class="bg-blue-500 text-white" />
+                    <span class="font-bold text-lg">{{ userData?.fullName || 'User' }}</span>
+                </div>
+            </template>
+
+            <div class="space-y-4">
+                <!-- Avatar Upload Section -->
+                <div class="text-center mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Profile Picture</label>
+                    <FileUpload mode="basic" name="avatar" accept="image/*" :maxFileSize="5000000"
+                        chooseLabel="Choose New Avatar" :auto="true" @select="onAvatarSelect" class="w-full" />
+                    <small class="text-gray-500 block mt-2">Max file size: 5MB. Supported formats: JPG, PNG, GIF</small>
                 </div>
 
-                <div class="field grid">
-                    <label for="fullName" class="col-12 mb-1">Full Name</label>
-                    <div class="col-12">
-                        <InputText id="fullName" v-model="userData.fullName" class="w-full" />
-                    </div>
+                <!-- Form Fields -->
+
+                <div class="flex items-center gap-4">
+                    <label for="username" class="font-semibold w-32">Username</label>
+                    <InputText id="username" v-model="userData.username" class="flex-auto" disabled
+                        placeholder="Username" />
                 </div>
 
-                <div class="field grid">
-                    <label for="email" class="col-12 mb-1">Email Address</label>
-                    <div class="col-12">
-                        <InputText id="email" v-model="userData.emailAddress" type="email" class="w-full" />
-                    </div>
+                <div class="flex items-center gap-4">
+                    <label for="fullName" class="font-semibold w-32">Full Name</label>
+                    <InputText id="fullName" v-model="userData.fullName" class="flex-auto"
+                        placeholder="Enter your full name" />
                 </div>
 
-                <div class="field grid">
-                    <label for="birthDate" class="col-12 mb-1">Birth Date</label>
-                    <div class="col-12">
-                        <InputText id="birthDate" v-model="userData.birthDate" type="date" class="w-full" />
-                    </div>
+                <div class="flex items-center gap-4">
+                    <label for="email" class="font-semibold w-32">Email</label>
+                    <InputText id="email" v-model="userData.emailAddress" type="email" class="flex-auto"
+                        placeholder="Enter your email address" />
                 </div>
 
-                <div class="field grid">
-                    <label class="col-12 mb-1">Account Information</label>
-                    <div class="col-12">
-                        <InputText v-model="userData.username" class="w-full" disabled placeholder="Username" />
-                        <small class="text-gray-500">Username cannot be changed</small>
+                <div class="flex items-center gap-4">
+                    <label for="birthDate" class="font-semibold w-32">Birth Date</label>
+                    <InputText id="birthDate" v-model="userData.birthDate" type="date" class="flex-auto" />
+                </div>
+
+                <!-- Read-only Information -->
+                <div class="bg-gray-50 p-4 rounded-lg mt-6">
+                    <h4 class="font-semibold text-gray-700 mb-2">Account Information</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Member Since:</span>
+                            <span class="font-medium">{{ formatDate(userData?.createdAt) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Role:</span>
+                            <span class="font-medium">
+                                <Tag :value="userData?.isAdmin ? 'Administrator' : 'User'"
+                                    :severity="userData?.isAdmin ? 'danger' : 'info'" />
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
+
             <template #footer>
-                <Button label="Cancel" icon="pi pi-times" text @click="closeSettingsDialog" :disabled="isSaving" />
+                <Button label="Cancel" icon="pi pi-times" text severity="secondary" @click="closeSettingsDialog"
+                    :disabled="isSaving" />
                 <Button label="Save Changes" icon="pi pi-check" @click="saveSettings" :loading="isSaving"
                     :disabled="!hasChanges" />
             </template>
+        </Dialog>
+
+        <!-- Avatar Upload Dialog -->
+        <Dialog v-model:visible="showAvatarUploadDialog" header="Upload Avatar" :style="{ width: '400px' }"
+            :modal="true">
+            <div class="text-center" v-if="selectedAvatarFile">
+                <img :src="avatarPreviewUrl" alt="Avatar Preview"
+                    class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-2 border-gray-300" />
+                <p class="text-sm text-gray-600 mb-4">{{ selectedAvatarFile.name }} ({{
+                    formatFileSize(selectedAvatarFile.size)
+                    }})</p>
+
+                <div class="flex gap-2 justify-center">
+                    <Button label="Cancel" icon="pi pi-times" text @click="cancelAvatarUpload" />
+                    <Button label="Upload" icon="pi pi-upload" @click="uploadAvatar" :loading="isUploadingAvatar" />
+                </div>
+            </div>
         </Dialog>
     </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'primevue/usetoast'
@@ -125,14 +164,18 @@ const userMenu = ref()
 const notificationsMenu = ref()
 const showContactDialog = ref(false)
 const showSettingsDialog = ref(false)
+const showAvatarUploadDialog = ref(false)
 const contactUsername = ref('')
 const notificationCount = ref(0)
 const isCheckingUser = ref(false)
 const usernameError = ref('')
 const isSaving = ref(false)
-const userData = ref(null)
-const originalUserData = ref(null)
+const isUploadingAvatar = ref(false)
+const userData = ref({})
+const originalUserData = ref({})
 const notifications = ref([])
+const selectedAvatarFile = ref(null)
+const avatarPreviewUrl = ref('')
 
 // Computed properties
 const userAvatar = computed(() => authStore.user?.avatarUrl || null)
@@ -380,12 +423,120 @@ const handleNotificationClick = (notification) => {
 }
 
 /**
- * Open settings dialog and load user data
+ * Close settings dialog
  */
-const openSettingsDialog = async () => {
-    showSettingsDialog.value = true
-    isSaving.value = false
+const closeSettingsDialog = () => {
+    showSettingsDialog.value = false
+    userData.value = null
+    originalUserData.value = null
+}
 
+/**
+ * Handle avatar file selection
+ */
+const onAvatarSelect = (event) => {
+    const file = event.files[0]
+    if (file) {
+        selectedAvatarFile.value = file
+        // Create preview URL
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            avatarPreviewUrl.value = e.target.result
+        }
+        reader.readAsDataURL(file)
+        showAvatarUploadDialog.value = true
+    }
+}
+
+/**
+ * Cancel avatar upload
+ */
+const cancelAvatarUpload = () => {
+    selectedAvatarFile.value = null
+    avatarPreviewUrl.value = ''
+    showAvatarUploadDialog.value = false
+}
+
+/**
+ * Upload avatar to server
+ */
+const uploadAvatar = async () => {
+    if (!selectedAvatarFile.value) return
+
+    isUploadingAvatar.value = true
+
+    try {
+        const formData = new FormData()
+        formData.append('avatar', selectedAvatarFile.value)
+
+        const response = await fetch(`http://localhost:3000/api/users/${authStore.user.username}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: formData
+        })
+
+        if (response.ok) {
+            const data = await response.json()
+            toast.add({
+                severity: 'success',
+                summary: 'Success',
+                detail: 'Avatar updated successfully',
+                life: 3000
+            })
+
+            // Update auth store and close dialogs
+            await authStore.fetchCurrentUser()
+            cancelAvatarUpload()
+
+            // Reload user data for settings dialog
+            if (showSettingsDialog.value) {
+                await loadUserData()
+            }
+        } else {
+            throw new Error('Failed to upload avatar')
+        }
+    } catch (error) {
+        console.error('Failed to upload avatar:', error)
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to upload avatar',
+            life: 5000
+        })
+    } finally {
+        isUploadingAvatar.value = false
+    }
+}
+
+/**
+ * Format file size for display
+ */
+const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+/**
+ * Format date for display
+ */
+const formatDate = (dateString) => {
+    if (!dateString) return 'N/A'
+    return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    })
+}
+
+/**
+ * Load user data for settings
+ */
+const loadUserData = async () => {
     try {
         const response = await fetch(`http://localhost:3000/api/users/${authStore.user.username}`, {
             headers: {
@@ -407,6 +558,20 @@ const openSettingsDialog = async () => {
         }
     } catch (error) {
         console.error('Failed to load user data:', error)
+        throw error
+    }
+}
+
+/**
+ * Open settings dialog
+ */
+const openSettingsDialog = async () => {
+    showSettingsDialog.value = true
+    isSaving.value = false
+
+    try {
+        await loadUserData()
+    } catch (error) {
         toast.add({
             severity: 'error',
             summary: 'Error',
@@ -415,28 +580,6 @@ const openSettingsDialog = async () => {
         })
         showSettingsDialog.value = false
     }
-}
-
-/**
- * Close settings dialog
- */
-const closeSettingsDialog = () => {
-    showSettingsDialog.value = false
-    userData.value = null
-    originalUserData.value = null
-}
-
-/**
- * Handle avatar file selection
- */
-const onAvatarSelect = (event) => {
-    // TODO: Implement avatar upload
-    toast.add({
-        severity: 'info',
-        summary: 'Avatar Upload',
-        detail: 'Avatar upload functionality coming soon',
-        life: 3000
-    })
 }
 
 /**

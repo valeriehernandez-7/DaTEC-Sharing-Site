@@ -20,6 +20,8 @@ import Menubar from 'primevue/menubar'
 import Menu from 'primevue/menu'
 import Dialog from 'primevue/dialog'
 import Badge from 'primevue/badge'
+import Tag from 'primevue/tag'
+import FileUpload from 'primevue/fileupload'
 
 import App from './App.vue'
 import router from './router'
@@ -61,6 +63,8 @@ app.component('Menubar', Menubar)
 app.component('Menu', Menu)
 app.component('Dialog', Dialog)
 app.component('Badge', Badge)
+app.component('Tag', Tag)
+app.component('FileUpload', FileUpload)
 
 /**
  * Services and state management
