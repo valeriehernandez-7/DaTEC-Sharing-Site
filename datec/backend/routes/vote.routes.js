@@ -5,10 +5,10 @@
  * @module routes/vote.routes
  * 
  * Routes:
- * - GET    /api/datasets/:datasetId/votes     - Get all votes
- * - POST   /api/datasets/:datasetId/votes     - Add/update vote
- * - DELETE /api/datasets/:datasetId/votes     - Remove vote
- * - GET    /api/datasets/:datasetId/votes/me  - Get current user's vote
+ * - GET    /api/datasets/:datasetId/votes     - Get all votes (HU17)
+ * - POST   /api/datasets/:datasetId/votes     - Add/update vote (HU17)
+ * - DELETE /api/datasets/:datasetId/votes     - Remove vote (HU17)
+ * - GET    /api/datasets/:datasetId/votes/me  - Get current user's vote (HU17)
  */
 
 const express = require('express');

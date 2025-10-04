@@ -8,7 +8,10 @@
  * Routes:
  * - GET    /api/admin/datasets/pending      - List pending datasets (HU8)
  * - PATCH  /api/admin/datasets/:datasetId   - Approve/reject dataset (HU8)
+ * - PATCH  /api/admin/comments/:commentId/enable - Enable comment (HU16)
  * - PATCH  /api/admin/comments/:commentId/disable - Disable comment (HU16)
+ * - GET /api/admin//comments/disabled - Enable comment (HU16)
+ * - GET /api/admin//stats
  */
 
 const express = require('express');

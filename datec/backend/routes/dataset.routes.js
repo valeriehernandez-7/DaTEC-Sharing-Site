@@ -13,6 +13,9 @@
  * - PATCH  /api/datasets/:datasetId/visibility    - Toggle visibility (HU7)
  * - DELETE /api/datasets/:datasetId               - Delete dataset (HU7)
  * - POST   /api/datasets/:datasetId/clone         - Clone dataset (HU18)
+ * - GET /api/datasets/:datasetId/download         - Download dataset (H13)
+ * - GET /api/datasets/:datasetId/downloads        - Download dataset (H13)
+ * - GET /api/datasets/:datasetId/files/:fileId    - Download dataset (H13)
  */
 
 const express = require('express');

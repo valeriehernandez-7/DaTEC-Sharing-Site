@@ -3,6 +3,11 @@
  * Handles user registration and login endpoints
  * 
  * @module routes/auth.routes
+ * 
+ * Routes:
+ * - POST /api/auth/register - Register new user (HU1)
+ * - POST /api/auth/login - User login (HU1)
+ * - GET /api/auth/me - User login (HU1)
  */
 
 const express = require('express');
