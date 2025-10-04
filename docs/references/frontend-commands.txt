@@ -37,9 +37,9 @@ PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec> cd frontend
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm config set strict-ssl false
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm install
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm run format
-PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm install primevue primeicons @primevue/themes
-PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm install axios dayjs 
-PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm install -D tailwindcss @tailwindcss/vite
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm install primevue primeicons @primevue/themes @primevue/forms
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm install axios dayjs pinia pinia-plugin-persistedstate
+PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm install -D tailwindcss @tailwindcss/vite @tailwindcss/forms
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm install
 PS C:\Users\velysian\Documents\GitHub\DaTEC-Sharing-Site\datec\frontend> npm run dev
 

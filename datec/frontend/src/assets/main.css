@@ -1,0 +1,220 @@
+/**
+ * DaTEC - Main CSS with PrimeVue Aura Theme
+ * Complete styling
+ */
+
+/* Tailwind CSS */
+@import "tailwindcss";
+
+/* PrimeVue Aura Theme */
+@import "primeicons/primeicons.css";
+
+/**
+ * System Font Stack for optimal performance
+ */
+:root {
+  --font-system: 
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Roboto',
+    'Oxygen',
+    'Ubuntu',
+    'Cantarell',
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+}
+
+/**
+ * Base styles with system fonts
+ */
+body {
+  font-family: var(--font-system);
+  font-weight: 400;
+  line-height: 1.6;
+  color: #1f2937;
+  background-color: #f9fafb;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
+
+/**
+ * Heading styles
+ */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-system);
+  font-weight: 600;
+  line-height: 1.3;
+  color: #111827;
+}
+
+h1 { 
+  font-size: 2rem; 
+  font-weight: 700; 
+  margin-bottom: 1rem;
+}
+
+h2 { 
+  font-size: 1.5rem; 
+  margin-bottom: 0.75rem;
+}
+
+h3 { 
+  font-size: 1.25rem; 
+  margin-bottom: 0.5rem;
+}
+
+/**
+ * Ensure all PrimeVue components use system fonts
+ */
+.p-component,
+.p-button,
+.p-inputtext,
+.p-card .p-card-title,
+.p-card .p-card-content,
+.p-toast .p-toast-message,
+.p-message,
+.p-datatable,
+.p-dropdown,
+.p-menu {
+  font-family: var(--font-system) !important;
+}
+
+/* Button enhancements */
+.p-button {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  transition: all 0.2s ease-in-out;
+}
+
+.p-button:hover {
+  transform: translateY(-1px);
+}
+
+/* Input enhancements */
+.p-inputtext {
+  font-weight: 400;
+  transition: all 0.2s ease-in-out;
+}
+
+.p-inputtext:focus {
+  box-shadow: 0 0 0 2px #3b82f6, 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Card enhancements */
+.p-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease-in-out;
+}
+
+.p-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.p-card .p-card-title {
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: #1f2937;
+}
+
+/**
+ * DaTEC brand colors
+ */
+.daTEC-primary { color: #1D3557; }
+.daTEC-secondary { color: #457B9D; }
+.daTEC-accent { color: #E63946; }
+
+.bg-daTEC-primary { background-color: #1D3557; }
+.bg-daTEC-secondary { background-color: #457B9D; }
+.bg-daTEC-accent { background-color: #E63946; }
+
+.text-daTEC-primary { color: #1D3557; }
+.text-daTEC-secondary { color: #457B9D; }
+.text-daTEC-accent { color: #E63946; }
+
+/**
+ * Custom utility classes
+ */
+.center-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/**
+ * Scrollbar styling
+ */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/**
+ * Responsive design
+ */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.375rem; }
+  h3 { font-size: 1.125rem; }
+  
+  .p-card {
+    margin: 1rem;
+    border-radius: 8px;
+  }
+}
+
+/**
+ * Animation utilities
+ */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/**
+ * Focus management for accessibility
+ */
+.p-focus,
+.p-inputtext:focus,
+.p-button:focus {
+  outline: none;
+}
+
+.p-button:focus {
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #3b82f6;
+}

@@ -1,19 +1,32 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import PrimeVue from 'primevue/config'
+import Aura from '@primevue/themes/aura'
+import ToastService from 'primevue/toastservice'
+
+// Import PrimeVue Forms components
+import Form from '@primevue/forms/form'
+import FormField from '@primevue/forms/formfield'
 
 import App from './App.vue'
 import router from './router'
 
-import PrimeVue from 'primevue/config'
-import Aura from '@primevue/themes/aura'
-import ToastService from 'primevue/toastservice'
-import ConfirmationService from 'primevue/confirmationservice'
+// Import PrimeVue components
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Card from 'primevue/card'
+import Toast from 'primevue/toast'
+import ProgressSpinner from 'primevue/progressspinner'
+import Avatar from 'primevue/avatar'
+import Message from 'primevue/message'
 
-import 'primeicons/primeicons.css'
+import './assets/main.css'
 
 const app = createApp(App)
 
-// PrimeVue configuration
+/**
+ * PrimeVue configuration with Aura theme
+ */
 app.use(PrimeVue, {
     theme: {
         preset: Aura,
@@ -26,12 +39,29 @@ app.use(PrimeVue, {
             }
         },
     },
+    ripple: true // Enable ripple effects if desired
 })
 
-// Register global services
+/**
+ * Global component registration
+ */
+app.component('Button', Button)
+app.component('InputText', InputText)
+app.component('Card', Card)
+app.component('Toast', Toast)
+app.component('ProgressSpinner', ProgressSpinner)
+app.component('Avatar', Avatar)
+app.component('Message', Message)
+app.component('Form', Form)
+app.component('FormField', FormField)
+
+/**
+ * Services and state management
+ */
 app.use(ToastService)
-app.use(ConfirmationService)
-app.use(createPinia())
+
+const pinia = createPinia()
+app.use(pinia)
 app.use(router)
 
 app.mount('#app')
