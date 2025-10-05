@@ -1,10 +1,10 @@
 <template>
     <div class="min-h-screen bg-gray-50">
         <!-- Header Section -->
-        <div class="bg-white shadow-sm border-b">
+        <div class="bg-white shadow-sm">
             <div class="container mx-auto px-4 py-8">
                 <div class="text-center mb-8">
-                    <i class="pi pi-bullseye text-6xl text-blue-600 mb-4"></i>
+                    <i class="pi pi-bullseye text-6xl text-sky-600 mb-4"></i>
                     <p class="text-xl text-gray-600 max-w-2xl mx-auto">
                         <i>Data Sharing Platform for collaborative research and analysis</i>
                     </p>
@@ -56,7 +56,7 @@
                             </div>
                         </div>
 
-                        <div class="text-center border-t pt-6">
+                        <div class="text-center border-t pt-6 text-gray-300">
                             <div v-if="!authStore.isLoggedIn" class="space-y-4">
                                 <p class="text-gray-600">Join the community to start sharing data</p>
                                 <div class="flex gap-3 justify-center">
@@ -66,7 +66,7 @@
                                 </div>
                             </div>
                             <div v-else class="space-y-4">
-                                <p class="text-gray-600">Ready to explore and share data?</p>
+                                <p class="text-gray-600"><i>Ready to explore and share data?</i></p>
                                 <div class="flex gap-3 justify-center">
                                     <Button label="Create Dataset" icon="pi pi-plus"
                                         @click="router.push('/datasets/create')" />
@@ -109,15 +109,12 @@
                                 <template #header>
                                     <div class="relative h-32 rounded-t-lg overflow-hidden">
                                         <!-- Header Photo or Fallback -->
-                                        <img v-if="getDatasetHeaderUrl(dataset)" :src="getDatasetHeaderUrl(dataset)"
-                                            :alt="dataset.name" class="w-full h-full object-cover" />
+                                        <img v-if="dataset.header_photo_url" :src="getDatasetHeaderUrl(dataset)"
+                                            :alt="dataset.name" class="object-cover" />
                                         <div v-else
                                             class="w-full h-full bg-gradient-to-br from-blue-400 to-gray-500 flex items-center justify-center text-white">
                                             <i class="pi pi-box text-3xl"></i>
                                         </div>
-                                        <Tag :value="dataset.status?.toUpperCase() || 'UNKNOWN'"
-                                            :severity="getStatusSeverity(dataset.status)"
-                                            class="absolute top-2 right-2" />
                                     </div>
                                 </template>
                                 <template #title>
@@ -125,16 +122,21 @@
                                 </template>
                                 <template #subtitle>
                                     <div class="flex items-center gap-2 mt-1">
-                                        <Avatar :image="getUserAvatarUrl(dataset.owner)"
-                                            :label="getUserInitials(dataset.owner)" size="small" shape="circle"
-                                            :class="getUserAvatarClasses(dataset.owner?.username)" />
+                                        <Avatar v-if="dataset.owner?.avatarUrl" :image="getUserAvatarUrl(dataset.owner)"
+                                            size="small" shape="circle" />
+                                        <Avatar v-else :label="getUserInitials(dataset.owner)" size="small"
+                                            shape="circle" :class="getUserAvatarClasses(dataset.owner?.username)" />
                                         <span class="text-sm text-gray-600">@{{ dataset.owner?.username || 'unknown'
-                                            }}</span>
+                                        }}</span>
                                     </div>
                                 </template>
                                 <template #content>
                                     <p class="text-gray-600 text-sm line-clamp-2 mb-3">{{ dataset.description }}</p>
                                     <div class="flex items-center justify-between text-xs text-gray-500">
+                                        <div class="flex items-center gap-1">
+                                            <i class="pi pi-calendar text-orange-500"></i>
+                                            <span>{{ formatDate(dataset.updated_at) }}</span>
+                                        </div>
                                         <div class="flex items-center gap-1">
                                             <i class="pi pi-star text-yellow-500"></i>
                                             <span>{{ dataset.vote_count || 0 }}</span>
@@ -143,10 +145,7 @@
                                             <i class="pi pi-download text-blue-500"></i>
                                             <span>{{ dataset.download_count || 0 }}</span>
                                         </div>
-                                        <div class="flex items-center gap-1">
-                                            <i class="pi pi-calendar"></i>
-                                            <span>{{ formatDate(dataset.updated_at) }}</span>
-                                        </div>
+
                                     </div>
                                 </template>
                             </Card>
@@ -165,23 +164,25 @@
                                 @click="navigateToProfile(user.username)">
                                 <template #content>
                                     <div class="flex items-center gap-3">
-                                        <Avatar :image="getUserAvatarUrl(user)" :label="getUserInitials(user)"
-                                            shape="circle" size="large" :class="getUserAvatarClasses(user.username)" />
+                                        <Avatar v-if="user.avatarUrl" :image="getUserAvatarUrl(user)" shape="circle"
+                                            size="large" />
+                                        <Avatar v-else :label="getUserInitials(user)" shape="circle" size="large"
+                                            :class="getUserAvatarClasses(user.username)" />
                                         <div class="flex-1">
                                             <div class="flex items-center gap-2 mb-1">
-                                                <span class="font-semibold text-gray-900">{{ user.name }}</span>
+                                                <span class="font-semibold text-gray-900">{{ user.fullName }}</span>
                                                 <i v-if="user.isAdmin" class="pi pi-verified text-blue-500"
                                                     title="Administrator"></i>
                                             </div>
                                             <p class="text-gray-500 text-sm mb-2">@{{ user.username }}</p>
                                             <div class="flex items-center gap-4 text-xs text-gray-500">
                                                 <div class="flex items-center gap-1">
-                                                    <i class="pi pi-users text-orange-500"></i>
-                                                    <span>{{ user.followers || 0 }} followers</span>
-                                                </div>
-                                                <div class="flex items-center gap-1">
                                                     <i class="pi pi-box text-blue-500"></i>
                                                     <span>{{ user.datasets || 0 }} datasets</span>
+                                                </div>
+                                                <div class="flex items-center gap-1">
+                                                    <i class="pi pi-users text-orange-500"></i>
+                                                    <span>{{ user.followers || 0 }} followers</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -267,8 +268,9 @@ const performSearch = async () => {
         const query = searchQuery.value.trim()
 
         if (searchType.value === 'datasets') {
-            const response = await searchService.searchDatasets(query)
-            searchResults.value = response.datasets?.map(dataset => ({
+            const datasets = await searchService.searchDatasets(query)
+
+            searchResults.value = datasets.map(dataset => ({
                 id: dataset.dataset_id,
                 name: dataset.dataset_name,
                 description: dataset.description,
@@ -276,20 +278,35 @@ const performSearch = async () => {
                 status: dataset.status,
                 vote_count: dataset.vote_count,
                 download_count: dataset.download_count,
-                updated_at: dataset.created_at,
+                created_at: dataset.created_at,
+                updated_at: dataset.updated_at,
                 header_photo_url: dataset.header_photo_url
-            })) || []
+            }))
+
         } else {
-            const response = await searchService.searchUsers(query)
-            searchResults.value = response.users?.map(user => ({
-                id: user.userId,
-                name: user.fullName,
-                username: user.username,
-                isAdmin: user.isAdmin,
-                avatarUrl: user.avatarUrl,
-                followers: 0, // You might want to fetch this separately
-                datasets: 0   // You might want to fetch this separately
-            })) || []
+            const users = await searchService.searchUsers(query)
+
+            // Enrich user data with additional information
+            const enrichedUsers = await Promise.all(
+                users.map(async (user) => {
+                    const [followers, datasets] = await Promise.all([
+                        searchService.getUserFollowerCount(user.username),
+                        searchService.getUserDatasetCount(user.username)
+                    ])
+
+                    return {
+                        id: user.userId,
+                        fullName: user.fullName,
+                        username: user.username,
+                        isAdmin: user.isAdmin,
+                        avatarUrl: user.avatarUrl,
+                        followers: followers,
+                        datasets: datasets
+                    }
+                })
+            )
+
+            searchResults.value = enrichedUsers
         }
 
     } catch (error) {
@@ -297,7 +314,7 @@ const performSearch = async () => {
         toast.add({
             severity: 'error',
             summary: 'Search failed',
-            detail: 'Please try again',
+            detail: error.message || 'Please try again',
             life: 5000
         })
         searchResults.value = []
@@ -370,25 +387,13 @@ const getUserAvatarClasses = (username) => {
  * Gets user initials
  */
 const getUserInitials = (user) => {
-    if (!user?.fullName) return 'U'
+    if (!user?.fullName) return '*'
     return user.fullName
         .split(' ')
-        .map(name => name.charAt(0))
+        .map(fullName => fullName.charAt(0))
         .join('')
         .toUpperCase()
         .substring(0, 2)
-}
-
-/**
- * Gets status severity for dataset badges
- */
-const getStatusSeverity = (status) => {
-    const severityMap = {
-        'approved': 'success',
-        'pending': 'warning',
-        'rejected': 'danger'
-    }
-    return severityMap[status] || 'info'
 }
 
 /**

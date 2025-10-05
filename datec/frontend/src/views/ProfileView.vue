@@ -100,7 +100,8 @@
                                                 class="w-full h-full bg-gradient-to-br from-blue-600 to-gray-300 flex items-center justify-center text-white">
                                                 <i class="pi pi-box text-3xl"></i>
                                             </div>
-                                            <Tag :icon="getStatusIcon(dataset.status)"
+                                            <Tag v-if="isOwnProfile || authStore.user?.isAdmin"
+                                                :icon="getStatusIcon(dataset.status)"
                                                 :value="dataset.status.toUpperCase()"
                                                 :severity="getStatusSeverity(dataset.status)"
                                                 class="absolute top-2 right-2" />
@@ -113,7 +114,8 @@
                                     <template #content>
                                         <p class="text-gray-600 text-sm line-clamp-2 mb-3">{{ dataset.description }}</p>
                                         <div class="flex items-center justify-between text-xs text-gray-500">
-                                            <div class="flex items-center gap-1">
+                                            <div v-if="isOwnProfile || authStore.user?.isAdmin"
+                                                class="flex items-center gap-1">
                                                 <i
                                                     :class="dataset.is_public ? 'pi pi-lock-open text-green-500' : 'pi pi-lock text-red-500'"></i>
                                                 <span>{{ dataset.is_public ? 'Public' : 'Private' }}</span>
@@ -166,7 +168,7 @@
                                             <div class="flex-1">
                                                 <div class="flex items-center gap-2">
                                                     <span class="font-medium text-gray-900">{{ follower.fullName
-                                                        }}</span>
+                                                    }}</span>
                                                     <i v-if="follower.isAdmin" class="pi pi-verified text-blue-500"
                                                         title="Administrator"></i>
                                                 </div>
@@ -208,7 +210,7 @@
                                             <div class="flex-1">
                                                 <div class="flex items-center gap-2">
                                                     <span class="font-medium text-gray-900">{{ followed.fullName
-                                                    }}</span>
+                                                        }}</span>
                                                     <i v-if="followed.isAdmin" class="pi pi-verified text-blue-500"
                                                         title="Administrator"></i>
                                                 </div>
@@ -577,7 +579,7 @@ const toggleFollow = async () => {
         toast.add({
             severity: 'success',
             summary: 'Success',
-            detail: isFollowing.value ? 'Unfollowed user' : 'Started following user',
+            detail: isFollowing.value ? 'Started following user' : 'Unfollowed user',
             life: 3000
         })
     } catch (err) {

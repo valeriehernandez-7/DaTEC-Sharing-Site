@@ -211,7 +211,7 @@ async function searchDatasets(req, res) {
             datasets.map(async (dataset) => {
                 const owner = await db.collection('users').findOne(
                     { user_id: dataset.owner_user_id },
-                    { projection: { username: 1, full_name: 1 } }
+                    { projection: { username: 1, full_name: 1, avatar_ref: 1} }
                 );
 
                 return {
@@ -221,7 +221,10 @@ async function searchDatasets(req, res) {
                     tags: dataset.tags,
                     owner: owner ? {
                         username: owner.username,
-                        fullName: owner.full_name
+                        fullName: owner.full_name,
+                        avatarUrl: owner.avatar_ref
+                            ? getFileUrl(owner.avatar_ref.couchdb_document_id, owner.avatar_ref.file_name)
+                            : null,
                     } : null,
                     header_photo_url: dataset.header_photo_ref
                         ? getFileUrl(dataset.header_photo_ref.couchdb_document_id, dataset.header_photo_ref.file_name)
@@ -229,7 +232,8 @@ async function searchDatasets(req, res) {
                     file_count: dataset.file_references.length,
                     download_count: dataset.download_count,
                     vote_count: dataset.vote_count,
-                    created_at: dataset.created_at
+                    created_at: dataset.created_at,
+                    updated_at: dataset.updated_at
                 };
             })
         );
