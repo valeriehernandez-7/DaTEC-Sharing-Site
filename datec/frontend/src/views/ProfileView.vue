@@ -28,10 +28,9 @@
 
                         <!-- User Information -->
                         <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-2">
+                            <div class="flex items-center gap-3">
                                 <h1 class="text-2xl font-bold text-gray-900">{{ userData.fullName }}</h1>
-                                <i v-if="userData.isAdmin" class="pi pi-verified text-blue-500 text-xl"
-                                    title="Administrator"></i>
+                                <i v-if="userData.isAdmin" class="pi pi-verified text-blue-500 text-3xl" title="Administrator"></i>
                             </div>
                             <p class="text-gray-600 text-lg">@{{ userData.username }}</p>
                         </div>
@@ -55,138 +54,166 @@
                         <span class="flex items-center gap-2">
                             <i class="pi pi-database"></i>
                             Datasets
-                            <Badge :value="datasets.length" severity="info" class="ml-2" />
+                            <Badge :value="datasets.length" severity="secondary" class="ml-2" />
                         </span>
                     </Tab>
                     <Tab value="followers">
                         <span class="flex items-center gap-2">
                             <i class="pi pi-users"></i>
                             Followers
-                            <Badge :value="followers.length" severity="success" class="ml-2" />
+                            <Badge :value="followers.length" severity="secondary" class="ml-2" />
                         </span>
                     </Tab>
                     <Tab value="following">
                         <span class="flex items-center gap-2">
                             <i class="pi pi-eye"></i>
                             Following
-                            <Badge :value="following.length" severity="help" class="ml-2" />
+                            <Badge :value="following.length" severity="secondary" class="ml-2" />
                         </span>
                     </Tab>
                 </TabList>
 
                 <!-- Datasets Tab -->
                 <TabPanel value="datasets">
-                    <div v-if="loadingDatasets" class="flex justify-center py-8">
-                        <ProgressSpinner />
-                    </div>
-                    <div v-else-if="datasets.length === 0" class="text-center py-8 text-gray-500">
-                        <i class="pi pi-inbox text-4xl mb-3"></i>
-                        <p class="text-lg mb-2">No datasets yet</p>
-                        <p class="text-sm" v-if="isOwnProfile">
-                            <Button label="Create your dataset" icon="pi pi-plus"
-                                @click="router.push('/datasets/create')" />
-                        </p>
-                    </div>
-                    <div v-else class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 py-8">
-                        <Card v-for="dataset in datasets" :key="dataset.dataset_id"
-                            class="cursor-pointer hover:shadow-lg transition-all duration-300"
-                            @click="navigateToDataset(dataset.dataset_id)">
-                            <template #header>
-                                <div
-                                    class="relative h-32 bg-gradient-to-br from-blue-400 to-purple-500 rounded-t-lg overflow-hidden">
-                                    <div class="absolute inset-0 bg-black bg-opacity-20"></div>
-                                    <div class="absolute inset-0 flex items-center justify-center text-white">
-                                        <i class="pi pi-database text-3xl"></i>
-                                    </div>
-                                    <Tag :value="dataset.status" :severity="getStatusSeverity(dataset.status)"
-                                        class="absolute top-2 right-2" />
-                                </div>
-                            </template>
-                            <template #title>
-                                <h3 class="text-lg font-semibold text-gray-900 line-clamp-1">{{ dataset.dataset_name }}
-                                </h3>
-                            </template>
-                            <template #content>
-                                <p class="text-gray-600 text-sm line-clamp-2 mb-3">{{ dataset.description }}</p>
-                                <div class="flex items-center justify-between text-xs text-gray-500">
-                                    <div class="flex items-center gap-1">
-                                        <i class="pi pi-star text-yellow-500"></i>
-                                        <span>{{ dataset.vote_count || 0 }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-1">
-                                        <i class="pi pi-download text-blue-500"></i>
-                                        <span>{{ dataset.download_count || 0 }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-1">
-                                        <i class="pi pi-calendar"></i>
-                                        <span>{{ formatDate(dataset.created_at) }}</span>
-                                    </div>
-                                </div>
-                            </template>
-                        </Card>
-                    </div>
+                    <DataView :value="datasets" :paginator="true" :rows="9" :loading="loadingDatasets"
+                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} datasets">
+                        <template #header>
+                            <div class="flex justify-between items-center">
+                                <Button v-if="isOwnProfile" icon="pi pi-folder-plus" raised rounded label="New Dataset"
+                                    v-tooltip="{ value: 'Create a new dataset', showDelay: 1000, hideDelay: 300 }"
+                                    @click="router.push('/datasets/create')" />
+                            </div>
+                        </template>
+
+                        <template #list="slotProps">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                                <Card v-for="dataset in slotProps.items" :key="dataset.dataset_id"
+                                    class="cursor-pointer hover:shadow-lg transition-all duration-300 h-full"
+                                    @click="navigateToDataset(dataset.dataset_id)">
+                                    <template #header>
+                                        <div
+                                            class="relative h-32 bg-gradient-to-br from-blue-400 to-purple-500 rounded-t-lg overflow-hidden">
+                                            <div class="absolute inset-0 bg-black bg-opacity-20"></div>
+                                            <div class="absolute inset-0 flex items-center justify-center text-white">
+                                                <i class="pi pi-database text-3xl"></i>
+                                            </div>
+                                            <Tag :value="dataset.status" :severity="getStatusSeverity(dataset.status)"
+                                                class="absolute top-2 right-2" />
+                                        </div>
+                                    </template>
+                                    <template #title>
+                                        <h3 class="text-lg font-semibold text-gray-900 line-clamp-1">{{
+                                            dataset.dataset_name }}</h3>
+                                    </template>
+                                    <template #content>
+                                        <p class="text-gray-600 text-sm line-clamp-2 mb-3">{{ dataset.description }}</p>
+                                        <div class="flex items-center justify-between text-xs text-gray-500">
+                                            <div class="flex items-center gap-1">
+                                                <i class="pi pi-star text-yellow-500"></i>
+                                                <span>{{ dataset.vote_count || 0 }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-1">
+                                                <i class="pi pi-download text-blue-500"></i>
+                                                <span>{{ dataset.download_count || 0 }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-1">
+                                                <i class="pi pi-calendar"></i>
+                                                <span>{{ formatDate(dataset.updated_at) }}</span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </Card>
+                            </div>
+                        </template>
+
+                        <template #empty>
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="pi pi-inbox text-4xl mb-3"></i>
+                                <p class="text-lg mb-2">No datasets yet</p>
+                                <p class="text-sm" v-if="isOwnProfile">
+                                    <Button label="Create your first dataset" icon="pi pi-plus"
+                                        @click="router.push('/datasets/create')" />
+                                </p>
+                            </div>
+                        </template>
+                    </DataView>
                 </TabPanel>
 
                 <!-- Followers Tab -->
                 <TabPanel value="followers">
-                    <div v-if="loadingFollowers" class="flex justify-center py-8">
-                        <ProgressSpinner />
-                    </div>
-                    <div v-else-if="followers.length === 0" class="text-center py-8 text-gray-500">
-                        <i class="pi pi-user-minus text-4xl mb-3"></i>
-                        <p>No followers yet</p>
-                    </div>
-                    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3  py-8">
-                        <Card v-for="follower in followers" :key="follower.userId"
-                            class="cursor-pointer hover:shadow-md transition-all"
-                            @click="navigateToProfile(follower.username)">
-                            <template #content>
-                                <div class="flex items-center gap-3">
-                                    <Avatar :image="getAvatarUrl(follower)" :label="getInitials(follower.fullName)"
-                                        shape="circle" class="bg-green-500 text-white" />
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-medium text-gray-900">{{ follower.fullName }}</span>
-                                            <i v-if="follower.isAdmin" class="pi pi-verified text-blue-500"
-                                                title="Administrator"></i>
+                    <DataView :value="followers" :paginator="true" :rows="12" :loading="loadingFollowers"
+                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} followers">
+                        <template #list="slotProps">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <Card v-for="follower in slotProps.items" :key="follower.userId"
+                                    class="cursor-pointer hover:shadow-md transition-all"
+                                    @click="navigateToProfile(follower.username)">
+                                    <template #content>
+                                        <div class="flex items-center gap-3">
+                                            <Avatar :image="getAvatarUrl(follower)"
+                                                :label="getInitials(follower.fullName)" shape="circle"
+                                                class="bg-green-500 text-white" />
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="font-medium text-gray-900">{{ follower.fullName
+                                                    }}</span>
+                                                    <i v-if="follower.isAdmin" class="pi pi-verified text-blue-500"
+                                                        title="Administrator"></i>
+                                                </div>
+                                                <p class="text-gray-500 text-sm">@{{ follower.username }}</p>
+                                            </div>
                                         </div>
-                                        <p class="text-gray-500 text-sm">@{{ follower.username }}</p>
-                                    </div>
-                                </div>
-                            </template>
-                        </Card>
-                    </div>
+                                    </template>
+                                </Card>
+                            </div>
+                        </template>
+
+                        <template #empty>
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="pi pi-user-minus text-4xl mb-3"></i>
+                                <p>No followers yet</p>
+                            </div>
+                        </template>
+                    </DataView>
                 </TabPanel>
 
                 <!-- Following Tab -->
                 <TabPanel value="following">
-                    <div v-if="loadingFollowing" class="flex justify-center py-8">
-                        <ProgressSpinner />
-                    </div>
-                    <div v-else-if="following.length === 0" class="text-center py-8 text-gray-500">
-                        <i class="pi pi-user-plus text-4xl mb-3"></i>
-                        <p>Not following anyone</p>
-                    </div>
-                    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3 py-8">
-                        <Card v-for="user in following" :key="user.userId"
-                            class="cursor-pointer hover:shadow-md transition-all"
-                            @click="navigateToProfile(user.username)">
-                            <template #content>
-                                <div class="flex items-center gap-3">
-                                    <Avatar :image="getAvatarUrl(user)" :label="getInitials(user.fullName)"
-                                        shape="circle" class="bg-purple-500 text-white" />
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-medium text-gray-900">{{ user.fullName }}</span>
-                                            <i v-if="user.isAdmin" class="pi pi-verified text-blue-500"
-                                                title="Administrator"></i>
+                    <DataView :value="following" :paginator="true" :rows="12" :loading="loadingFollowing"
+                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} followed">
+                        <template #list="slotProps">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <Card v-for="user in slotProps.items" :key="user.userId"
+                                    class="cursor-pointer hover:shadow-md transition-all"
+                                    @click="navigateToProfile(user.username)">
+                                    <template #content>
+                                        <div class="flex items-center gap-3">
+                                            <Avatar :image="getAvatarUrl(user)" :label="getInitials(user.fullName)"
+                                                shape="circle" class="bg-purple-500 text-white" />
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="font-medium text-gray-900">{{ user.fullName }}</span>
+                                                    <i v-if="user.isAdmin" class="pi pi-verified text-blue-500"
+                                                        title="Administrator"></i>
+                                                </div>
+                                                <p class="text-gray-500 text-sm">@{{ user.username }}</p>
+                                            </div>
                                         </div>
-                                        <p class="text-gray-500 text-sm">@{{ user.username }}</p>
-                                    </div>
-                                </div>
-                            </template>
-                        </Card>
-                    </div>
+                                    </template>
+                                </Card>
+                            </div>
+                        </template>
+
+                        <template #empty>
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="pi pi-user-plus text-4xl mb-3"></i>
+                                <p>Not following anyone</p>
+                            </div>
+                        </template>
+                    </DataView>
                 </TabPanel>
             </Tabs>
 
@@ -239,11 +266,16 @@
 
                     <!-- Message Input -->
                     <div class="p-4 border-t border-gray-200">
-                        <div class="flex gap-2">
-                            <InputText v-model="messageText" placeholder="Type a message..." class="flex-1"
-                                @keyup.enter="sendMessage" :disabled="sendingMessage" />
-                            <Button icon="pi pi-send" @click="sendMessage"
-                                :disabled="!messageText.trim() || sendingMessage" :loading="sendingMessage" />
+                        <div class="flex flex-col gap-2">
+                            <Textarea v-model="messageText" placeholder="Message"
+                                rows="3" class="w-full" @keydown="handleTextareaKeydown" :disabled="sendingMessage" />
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-500">
+                                    {{ messageText.length }}/2000
+                                </span>
+                                <Button label="Send" icon="pi pi-send" @click="sendMessage"
+                                    :disabled="!messageText.trim() || sendingMessage" :loading="sendingMessage" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -453,6 +485,17 @@ const scrollToBottom = () => {
     if (messagesContainer.value) {
         messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
     }
+}
+
+/**
+ * Handles textarea key events for Shift+Enter new line
+ */
+const handleTextareaKeydown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault()
+        sendMessage()
+    }
+    // Shift+Enter allows natural new line creation
 }
 
 /**

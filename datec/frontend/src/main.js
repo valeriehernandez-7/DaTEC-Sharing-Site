@@ -30,6 +30,8 @@ import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 import DataView from 'primevue/dataview'
 import Drawer from 'primevue/drawer'
+import Textarea from 'primevue/textarea';
+import Tooltip from 'primevue/tooltip';
 
 import App from './App.vue'
 import router from './router'
@@ -81,6 +83,8 @@ app.component('TabPanels', TabPanels)
 app.component('TabPanel', TabPanel)
 app.component('DataView', DataView)
 app.component('Drawer', Drawer)
+app.component('Textarea', Textarea)
+app.component('Tooltip', Tooltip)
 
 /**
  * Services and state management

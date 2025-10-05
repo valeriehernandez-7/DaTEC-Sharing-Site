@@ -393,7 +393,8 @@ async function getUserDatasets(req, res) {
             file_count: dataset.file_references.length,
             download_count: dataset.download_count,
             vote_count: dataset.vote_count,
-            created_at: dataset.created_at
+            created_at: dataset.created_at,
+            updated_at: dataset.updated_at
         }));
 
         res.json({
