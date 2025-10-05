@@ -21,8 +21,9 @@
                     <div class="flex items-center gap-6">
                         <!-- Avatar with proper CouchDB file handling -->
                         <div class="relative">
-                            <Avatar :image="userData.avatarUrl" :label="userInitials" size="xlarge" shape="circle"
-                                :class="avatarClasses" />
+                            <Avatar v-if="userData.avatarUrl" :image="getAvatarUrl(userData)" size="xlarge"
+                                shape="circle" :alt="userData.username" />
+                            <Avatar v-else :label="userInitials" size="xlarge" shape="circle" :class="avatarClasses" />
                         </div>
 
                         <!-- User Information -->
@@ -52,7 +53,7 @@
                 <TabList>
                     <Tab value="datasets">
                         <span class="flex items-center gap-2">
-                            <i class="pi pi-database"></i>
+                            <i class="pi pi-box"></i>
                             Datasets
                             <Badge :value="datasets.length" severity="secondary" class="ml-2" />
                         </span>
@@ -78,10 +79,9 @@
                     <DataView :value="datasets" :paginator="true" :rows="9" :loading="loadingDatasets"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
                         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} datasets">
-                        <template #header>
-                            <div class="flex justify-between items-center">
-                                <Button v-if="isOwnProfile" icon="pi pi-folder-plus" raised rounded label="New Dataset"
-                                    v-tooltip="{ value: 'Create a new dataset', showDelay: 1000, hideDelay: 300 }"
+                        <template v-if="isOwnProfile" #header>
+                            <div style="display: flex; justify-content: flex-end;">
+                                <Button icon="pi pi-folder-plus" raised rounded label="New Dataset"
                                     @click="router.push('/datasets/create')" />
                             </div>
                         </template>
@@ -94,11 +94,11 @@
                                     <template #header>
                                         <div class="relative h-32 rounded-t-lg overflow-hidden">
                                             <!-- Header Photo or Fallback -->
-                                            <img v-if="dataset.header_photo_url" :src="dataset.header_photo_url"
+                                            <img v-if="getDatasetHeaderUrl(dataset)" :src="getDatasetHeaderUrl(dataset)"
                                                 :alt="dataset.dataset_name" class="object-cover" />
                                             <div v-else
                                                 class="w-full h-full bg-gradient-to-br from-blue-600 to-gray-300 flex items-center justify-center text-white">
-                                                <i class="pi pi-database text-3xl"></i>
+                                                <i class="pi pi-box text-3xl"></i>
                                             </div>
                                             <Tag :icon="getStatusIcon(dataset.status)"
                                                 :value="dataset.status.toUpperCase()"
@@ -139,11 +139,7 @@
                         <template #empty>
                             <div class="text-center py-8 text-gray-500">
                                 <i class="pi pi-inbox text-4xl mb-3"></i>
-                                <p class="text-lg mb-2">No datasets yet</p>
-                                <p class="text-sm" v-if="isOwnProfile">
-                                    <Button label="Create your first dataset" icon="pi pi-plus"
-                                        @click="router.push('/datasets/create')" />
-                                </p>
+                                <p>No datasets yet</p>
                             </div>
                         </template>
                     </DataView>
@@ -161,8 +157,12 @@
                                     @click="navigateToProfile(follower.username)">
                                     <template #content>
                                         <div class="flex items-center gap-3">
-                                            <Avatar :image="follower.avatarUrl" :label="getInitials(follower.fullName)"
-                                                shape="circle" :class="getUserAvatarClasses(follower.username)" />
+                                            <div class="relative">
+                                                <Avatar v-if="follower.avatarUrl" :image="getAvatarUrl(follower)"
+                                                    shape="circle" :alt="follower.username" />
+                                                <Avatar v-else :label="getInitials(follower.fullName)" shape="circle"
+                                                    :class="getUserAvatarClasses(follower.username)" />
+                                            </div>
                                             <div class="flex-1">
                                                 <div class="flex items-center gap-2">
                                                     <span class="font-medium text-gray-900">{{ follower.fullName
@@ -194,20 +194,25 @@
                         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} followed">
                         <template #list="slotProps">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <Card v-for="user in slotProps.items" :key="user.userId"
+                                <Card v-for="followed in slotProps.items" :key="followed.userId"
                                     class="cursor-pointer hover:shadow-md transition-all"
-                                    @click="navigateToProfile(user.username)">
+                                    @click="navigateToProfile(followed.username)">
                                     <template #content>
                                         <div class="flex items-center gap-3">
-                                            <Avatar :image="user.avatarUrl" :label="getInitials(user.fullName)"
-                                                shape="circle" :class="getUserAvatarClasses(user.username)" />
+                                            <div class="relative">
+                                                <Avatar v-if="followed.avatarUrl" :image="getAvatarUrl(followed)"
+                                                    shape="circle" :alt="followed.username" />
+                                                <Avatar v-else :label="getInitials(followed.fullName)" shape="circle"
+                                                    :class="getUserAvatarClasses(followed.username)" />
+                                            </div>
                                             <div class="flex-1">
                                                 <div class="flex items-center gap-2">
-                                                    <span class="font-medium text-gray-900">{{ user.fullName }}</span>
-                                                    <i v-if="user.isAdmin" class="pi pi-verified text-blue-500"
+                                                    <span class="font-medium text-gray-900">{{ followed.fullName
+                                                    }}</span>
+                                                    <i v-if="followed.isAdmin" class="pi pi-verified text-blue-500"
                                                         title="Administrator"></i>
                                                 </div>
-                                                <p class="text-gray-500 text-sm">@{{ user.username }}</p>
+                                                <p class="text-gray-500 text-sm">@{{ followed.username }}</p>
                                             </div>
                                         </div>
                                     </template>
@@ -229,8 +234,11 @@
             <Drawer v-model:visible="showChatDrawer" position="right" :style="{ width: '450px' }" :dismissable="true">
                 <template #header>
                     <div class="flex items-center gap-3">
-                        <Avatar :image="userData.avatarUrl" :label="userInitials" shape="circle"
-                            :class="avatarClasses" />
+                        <div class="relative">
+                            <Avatar v-if="userData.avatarUrl" :image="getAvatarUrl(userData)" shape="circle"
+                                :alt="userData.username" />
+                            <Avatar v-else :label="userInitials" shape="circle" size="xlarge" :class="avatarClasses" />
+                        </div>
                         <div>
                             <div class="font-semibold text-gray-900">{{ userData.fullName }}</div>
                             <div class="text-sm text-gray-500">@{{ userData.username }}</div>
@@ -259,7 +267,7 @@
                                             : 'bg-gray-200 text-gray-900 rounded-bl-none'">
                                             <p class="text-sm whitespace-pre-wrap break-words">{{ message.content }}</p>
                                         </div>
-                                        <span class="text-xs text-gray-500 mt-1 px-1">
+                                        <span class="text-xs text-gray-500 mt-1 px-1 mb-2">
                                             {{ formatMessageTime(message.created_at) }}
                                         </span>
                                     </div>
@@ -321,7 +329,6 @@ const activeTab = ref('datasets')
 const error = ref('')
 const avatarLoadError = ref(false)
 const messagesContainer = ref(null)
-const datasetImageErrors = ref(new Set())
 
 /**
  * Computed properties for derived state
@@ -504,7 +511,7 @@ const handleTextareaKeydown = (event) => {
 }
 
 /**
- * Gets avatar classes for users in followers/following lists
+ * Gets avatar background color
  */
 const getUserAvatarClasses = (username) => {
     const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500']
@@ -695,6 +702,55 @@ const formatMessageTime = (dateString) => {
         minute: '2-digit'
     })
 }
+
+// Retrieve user avatarUrl
+const avatarUrl = computed(() => {
+    if (avatarLoadError.value || !userData.value.avatarUrl) return null
+
+    // Extraer documentId y filename de la URL original
+    const originalUrl = userData.value.avatarUrl;
+    const url = new URL(originalUrl);
+    const pathParts = url.pathname.split('/').filter(part => part);
+
+    if (pathParts.length < 3) return null;
+
+    const documentId = pathParts[1];
+    const filename = pathParts[2];
+
+    return `http://localhost:3000/api/files/${documentId}/${filename}`;
+});
+
+// Retrieve datasets header photo
+const getDatasetHeaderUrl = (dataset) => {
+    if (!dataset.header_photo_url) return null;
+
+    const url = new URL(dataset.header_photo_url);
+    const pathParts = url.pathname.split('/').filter(part => part);
+
+    if (pathParts.length < 3) return null;
+
+    const documentId = pathParts[1];
+    const filename = pathParts[2];
+
+    return `http://localhost:3000/api/files/${documentId}/${filename}`;
+};
+
+// Retrieve followers/following avatars
+const getAvatarUrl = (user) => {
+    if (!user.avatarUrl) return null;
+
+    const url = new URL(user.avatarUrl);
+    const pathParts = url.pathname.split('/').filter(part => part);
+
+    if (pathParts.length < 3) return null;
+
+    const documentId = pathParts[1];
+    const filename = pathParts[2];
+
+    return `http://localhost:3000/api/files/${documentId}/${filename}`;
+};
+
+
 </script>
 
 <style scoped>
