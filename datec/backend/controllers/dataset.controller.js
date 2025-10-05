@@ -206,13 +206,17 @@ async function searchDatasets(req, res) {
             ]
         }).limit(20).toArray();
 
-        // Enrich with owner information
+        // Enrich with owner information and real-time counters
         const enrichedDatasets = await Promise.all(
             datasets.map(async (dataset) => {
                 const owner = await db.collection('users').findOne(
                     { user_id: dataset.owner_user_id },
-                    { projection: { username: 1, full_name: 1, avatar_ref: 1} }
+                    { projection: { username: 1, full_name: 1, avatar_ref: 1 } }
                 );
+
+                // Get real-time counters from Redis
+                const downloadCount = await getCounter(`download_count:dataset:${dataset.dataset_id}`);
+                const voteCount = await getCounter(`vote_count:dataset:${dataset.dataset_id}`);
 
                 return {
                     dataset_id: dataset.dataset_id,
@@ -230,8 +234,9 @@ async function searchDatasets(req, res) {
                         ? getFileUrl(dataset.header_photo_ref.couchdb_document_id, dataset.header_photo_ref.file_name)
                         : null,
                     file_count: dataset.file_references.length,
-                    download_count: dataset.download_count,
-                    vote_count: dataset.vote_count,
+                    download_count: downloadCount || 0,
+                    vote_count: voteCount || 0,
+                    comment_count: dataset.comment_count || 0,
                     created_at: dataset.created_at,
                     updated_at: dataset.updated_at
                 };
@@ -384,22 +389,32 @@ async function getUserDatasets(req, res) {
             .sort({ created_at: -1 })
             .toArray();
 
-        const enrichedDatasets = datasets.map(dataset => ({
-            dataset_id: dataset.dataset_id,
-            dataset_name: dataset.dataset_name,
-            description: dataset.description,
-            tags: dataset.tags,
-            status: dataset.status,
-            is_public: dataset.is_public,
-            header_photo_url: dataset.header_photo_ref
-                ? getFileUrl(dataset.header_photo_ref.couchdb_document_id, dataset.header_photo_ref.file_name)
-                : null,
-            file_count: dataset.file_references.length,
-            download_count: dataset.download_count,
-            vote_count: dataset.vote_count,
-            created_at: dataset.created_at,
-            updated_at: dataset.updated_at
-        }));
+        // Enrich datasets with real-time counters from Redis
+        const enrichedDatasets = await Promise.all(
+            datasets.map(async (dataset) => {
+                // Get real-time counters from Redis
+                const downloadCount = await getCounter(`download_count:dataset:${dataset.dataset_id}`);
+                const voteCount = await getCounter(`vote_count:dataset:${dataset.dataset_id}`);
+
+                return {
+                    dataset_id: dataset.dataset_id,
+                    dataset_name: dataset.dataset_name,
+                    description: dataset.description,
+                    tags: dataset.tags,
+                    status: dataset.status,
+                    is_public: dataset.is_public,
+                    header_photo_url: dataset.header_photo_ref
+                        ? getFileUrl(dataset.header_photo_ref.couchdb_document_id, dataset.header_photo_ref.file_name)
+                        : null,
+                    file_count: dataset.file_references.length,
+                    download_count: downloadCount || 0,
+                    vote_count: voteCount || 0,
+                    comment_count: dataset.comment_count || 0,
+                    created_at: dataset.created_at,
+                    updated_at: dataset.updated_at
+                };
+            })
+        );
 
         res.json({
             success: true,
