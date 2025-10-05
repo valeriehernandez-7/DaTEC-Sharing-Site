@@ -2,13 +2,11 @@
     <div class="min-h-screen bg-gray-50">
         <!-- Header Section -->
         <div class="bg-white shadow-sm border-b">
-            <div class="container mx-auto px-4 py-6">
+            <div class="container mx-auto px-4 py-8">
                 <div class="text-center mb-8">
-                    <i class="pi pi-bullseye text-6xl text-sky-600 mb-4"></i>
-                    <!-- <h1 class="text-4xl font-bold text-sky-600 mb-4">DaTEC</h1> -->
+                    <i class="pi pi-bullseye text-6xl text-blue-600 mb-4"></i>
                     <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-                        <i>Data Sharing Platform for collaborative research and analysis </i><i
-                            class="pi pi-bolt text"></i>
+                        <i>Data Sharing Platform for collaborative research and analysis</i>
                     </p>
                 </div>
 
@@ -18,15 +16,15 @@
                     <div class="flex gap-2 mb-4">
                         <InputText v-model="searchQuery" placeholder="Search datasets or users..." class="flex-1"
                             @keyup.enter="performSearch" />
-                        <Button icon="pi pi-search" @click="performSearch" :loading="isLoading" />
+                        <Button icon="pi pi-search" label="Search" @click="performSearch" :loading="isLoading" />
                     </div>
 
                     <!-- Search Type Toggle -->
-                    <div class="flex justify-center gap-2 mb-6">
-                        <Button label="Datasets" icon="pi pi-chart-line"
+                    <div class="flex justify-center gap-2">
+                        <Button label="Datasets" icon="pi pi-box"
                             :severity="searchType === 'datasets' ? 'primary' : 'secondary'"
                             @click="setSearchType('datasets')" />
-                        <Button label="Users" icon="pi pi-user"
+                        <Button label="Users" icon="pi pi-users"
                             :severity="searchType === 'users' ? 'primary' : 'secondary'"
                             @click="setSearchType('users')" />
                     </div>
@@ -36,91 +34,175 @@
 
         <!-- Content Section -->
         <div class="container mx-auto px-4 py-8">
-            <!-- Empty State -->
-            <div v-if="!hasSearched" class="text-left py-12">
-                <Card class="max-w-2xl mx-auto">
+            <!-- Empty State / Welcome -->
+            <div v-if="!hasSearched" class="max-w-4xl mx-auto">
+                <Card>
                     <template #content>
-                        <div class="space-y-4">
-                            <div class="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                                <i class="pi pi-search text-2xl text-blue-600"></i>
-                                <div>
-                                    <h3 class="font-semibold text-blue-900">Start Searching</h3>
-                                    <p class="text-blue-700 text-sm">Enter a search term to discover datasets and users
-                                    </p>
-                                </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="text-center p-4">
+                                <i class="pi pi-search text-3xl text-blue-500 mb-3"></i>
+                                <h3 class="font-semibold text-gray-900 mb-2">Discover Data</h3>
+                                <p class="text-gray-600 text-sm">Find datasets shared by the community</p>
                             </div>
-
-                            <div class="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                                <i class="pi pi-upload text-2xl text-green-600"></i>
-                                <div>
-                                    <h3 class="font-semibold text-green-900">Share Your Data</h3>
-                                    <p class="text-green-700 text-sm">Upload and share your datasets with the community
-                                    </p>
-                                </div>
+                            <div class="text-center p-4">
+                                <i class="pi pi-upload text-3xl text-green-500 mb-3"></i>
+                                <h3 class="font-semibold text-gray-900 mb-2">Share Insights</h3>
+                                <p class="text-gray-600 text-sm">Upload and share your own datasets</p>
                             </div>
-
-                            <div class="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
-                                <i class="pi pi-users text-2xl text-orange-600"></i>
-                                <div>
-                                    <h3 class="font-semibold text-orange-900">Collaborate</h3>
-                                    <p class="text-orange-700 text-sm">Connect with researchers and data scientists</p>
-                                </div>
+                            <div class="text-center p-4">
+                                <i class="pi pi-users text-3xl text-orange-500 mb-3"></i>
+                                <h3 class="font-semibold text-gray-900 mb-2">Collaborate</h3>
+                                <p class="text-gray-600 text-sm">Connect with researchers worldwide</p>
                             </div>
                         </div>
 
-                        <div class="mt-6 text-center">
-                            <router-link v-if="!authStore.isLoggedIn" to="/login"
-                                class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                                Get Started
-                            </router-link>
-                            <p v-else class="text-gray-600">
-                                Use the search bar above to explore content.
-                            </p>
+                        <div class="text-center border-t pt-6">
+                            <div v-if="!authStore.isLoggedIn" class="space-y-4">
+                                <p class="text-gray-600">Join the community to start sharing data</p>
+                                <div class="flex gap-3 justify-center">
+                                    <Button label="Sign Up" icon="pi pi-user-plus" @click="router.push('/register')" />
+                                    <Button label="Login" icon="pi pi-sign-in" severity="secondary"
+                                        @click="router.push('/login')" />
+                                </div>
+                            </div>
+                            <div v-else class="space-y-4">
+                                <p class="text-gray-600">Ready to explore and share data?</p>
+                                <div class="flex gap-3 justify-center">
+                                    <Button label="Create Dataset" icon="pi pi-plus"
+                                        @click="router.push('/datasets/create')" />
+                                    <Button label="My Profile" icon="pi pi-user" severity="secondary"
+                                        @click="router.push(`/profile/${authStore.user.username}`)" />
+                                </div>
+                            </div>
                         </div>
                     </template>
                 </Card>
             </div>
 
             <!-- Loading State -->
-            <div v-else-if="isLoading" class="text-center py-12">
+            <div v-else-if="isLoading" class="flex justify-center items-center py-12">
                 <ProgressSpinner />
-                <p class="mt-4 text-gray-600">Looking for results</p>
+                <p class="ml-4 text-gray-600">Searching...</p>
             </div>
 
             <!-- Results Section -->
             <div v-else-if="searchResults.length > 0">
-                <!-- Results Count -->
-                <div class="mb-6">
-                    <h2 class="text-xl font-semibold text-gray-800">
-                        Found {{ searchResults.length }} {{ searchType }}
+                <!-- Results Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">
+                        {{ searchResults.length }} {{ searchType === 'datasets' ? 'Datasets' : 'Users' }} Found
                     </h2>
-                </div>
-
-                <!-- Results Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    <SearchResultCard v-for="item in searchResults" :key="`${item.type}-${item.id}`" :item="item" />
-                </div>
-
-                <!-- Pagination (Placeholder for future implementation) -->
-                <div class="flex justify-center items-center gap-2">
-                    <Button icon="pi pi-chevron-left" severity="secondary" :disabled="currentPage === 1"
-                        @click="previousPage" />
-                    <span class="px-4 py-2 text-sm text-gray-600">
-                        Page {{ currentPage }}
+                    <span class="text-gray-500 text-sm">
+                        for "{{ searchQuery }}"
                     </span>
-                    <Button icon="pi pi-chevron-right" severity="secondary" @click="nextPage" />
                 </div>
+
+                <!-- Datasets Results -->
+                <DataView v-if="searchType === 'datasets'" :value="searchResults" :paginator="true" :rows="9"
+                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} datasets">
+                    <template #list="slotProps">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                            <Card v-for="dataset in slotProps.items" :key="dataset.id"
+                                class="cursor-pointer hover:shadow-lg transition-all duration-300 h-full"
+                                @click="navigateToDataset(dataset.id)">
+                                <template #header>
+                                    <div class="relative h-32 rounded-t-lg overflow-hidden">
+                                        <!-- Header Photo or Fallback -->
+                                        <img v-if="getDatasetHeaderUrl(dataset)" :src="getDatasetHeaderUrl(dataset)"
+                                            :alt="dataset.name" class="w-full h-full object-cover" />
+                                        <div v-else
+                                            class="w-full h-full bg-gradient-to-br from-blue-400 to-gray-500 flex items-center justify-center text-white">
+                                            <i class="pi pi-box text-3xl"></i>
+                                        </div>
+                                        <Tag :value="dataset.status?.toUpperCase() || 'UNKNOWN'"
+                                            :severity="getStatusSeverity(dataset.status)"
+                                            class="absolute top-2 right-2" />
+                                    </div>
+                                </template>
+                                <template #title>
+                                    <h3 class="text-lg font-semibold text-gray-900 line-clamp-1">{{ dataset.name }}</h3>
+                                </template>
+                                <template #subtitle>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <Avatar :image="getUserAvatarUrl(dataset.owner)"
+                                            :label="getUserInitials(dataset.owner)" size="small" shape="circle"
+                                            :class="getUserAvatarClasses(dataset.owner?.username)" />
+                                        <span class="text-sm text-gray-600">@{{ dataset.owner?.username || 'unknown'
+                                            }}</span>
+                                    </div>
+                                </template>
+                                <template #content>
+                                    <p class="text-gray-600 text-sm line-clamp-2 mb-3">{{ dataset.description }}</p>
+                                    <div class="flex items-center justify-between text-xs text-gray-500">
+                                        <div class="flex items-center gap-1">
+                                            <i class="pi pi-star text-yellow-500"></i>
+                                            <span>{{ dataset.vote_count || 0 }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <i class="pi pi-download text-blue-500"></i>
+                                            <span>{{ dataset.download_count || 0 }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <i class="pi pi-calendar"></i>
+                                            <span>{{ formatDate(dataset.updated_at) }}</span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </Card>
+                        </div>
+                    </template>
+                </DataView>
+
+                <!-- Users Results -->
+                <DataView v-else :value="searchResults" :paginator="true" :rows="12"
+                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} users">
+                    <template #list="slotProps">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <Card v-for="user in slotProps.items" :key="user.id"
+                                class="cursor-pointer hover:shadow-md transition-all"
+                                @click="navigateToProfile(user.username)">
+                                <template #content>
+                                    <div class="flex items-center gap-3">
+                                        <Avatar :image="getUserAvatarUrl(user)" :label="getUserInitials(user)"
+                                            shape="circle" size="large" :class="getUserAvatarClasses(user.username)" />
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="font-semibold text-gray-900">{{ user.name }}</span>
+                                                <i v-if="user.isAdmin" class="pi pi-verified text-blue-500"
+                                                    title="Administrator"></i>
+                                            </div>
+                                            <p class="text-gray-500 text-sm mb-2">@{{ user.username }}</p>
+                                            <div class="flex items-center gap-4 text-xs text-gray-500">
+                                                <div class="flex items-center gap-1">
+                                                    <i class="pi pi-users text-orange-500"></i>
+                                                    <span>{{ user.followers || 0 }} followers</span>
+                                                </div>
+                                                <div class="flex items-center gap-1">
+                                                    <i class="pi pi-box text-blue-500"></i>
+                                                    <span>{{ user.datasets || 0 }} datasets</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </Card>
+                        </div>
+                    </template>
+                </DataView>
             </div>
 
             <!-- No Results State -->
-            <div v-else class="text-center py-12">
+            <div v-else-if="hasSearched" class="text-center py-12">
                 <Card class="max-w-md mx-auto">
                     <template #content>
-                        <i class="pi pi-spin pi-compass text-4xl text-gray-400 mb-4"></i>
+                        <i class="pi pi-inbox text-4xl text-gray-400 mb-4"></i>
                         <h3 class="text-lg font-semibold text-gray-700 mb-2">No results found</h3>
-                        <p class="text-gray-500">
-                            Try adjusting your search terms or<br>search for something else.
+                        <p class="text-gray-500 mb-4">
+                            No {{ searchType }} found for "{{ searchQuery }}"
                         </p>
+                        <Button label="Clear Search" icon="pi pi-times" severity="secondary" @click="clearSearch" />
                     </template>
                 </Card>
             </div>
@@ -129,14 +211,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { searchService } from '@/services/search'
 import { useToast } from 'primevue/usetoast'
+import { searchService } from '@/services/search'
 
-// Components
-import SearchResultCard from '@/components/SearchResultCard.vue'
-
+const router = useRouter()
 const authStore = useAuthStore()
 const toast = useToast()
 
@@ -146,11 +227,9 @@ const searchType = ref('datasets')
 const searchResults = ref([])
 const isLoading = ref(false)
 const hasSearched = ref(false)
-const currentPage = ref(1)
 
 /**
  * Sets the search type and performs search if query exists
- * @param {string} type - Search type ('datasets' or 'users')
  */
 const setSearchType = (type) => {
     searchType.value = type
@@ -160,24 +239,22 @@ const setSearchType = (type) => {
 }
 
 /**
- * Validates search query to prevent empty searches
- * @returns {boolean} Validation result
+ * Validates search query
  */
 const isValidSearch = () => {
     const trimmedQuery = searchQuery.value.trim()
-    return trimmedQuery.length >= 2 // Minimum 2 characters
+    return trimmedQuery.length >= 2
 }
 
 /**
- * Performs search operation based on current query and type
- * @returns {Promise<void>}
+ * Performs search operation
  */
 const performSearch = async () => {
     if (!isValidSearch()) {
         toast.add({
             severity: 'warn',
             summary: 'Search too short',
-            detail: 'Please enter at least 2 characters to search',
+            detail: 'Please enter at least 2 characters',
             life: 3000
         })
         return
@@ -190,60 +267,37 @@ const performSearch = async () => {
         const query = searchQuery.value.trim()
 
         if (searchType.value === 'datasets') {
-            const datasets = await searchService.searchDatasets(query)
-
-            // Enrich dataset data with additional details
-            searchResults.value = await Promise.all(
-                datasets.map(async (dataset) => {
-                    // Get detailed dataset info for vote count and other metrics
-                    const details = await searchService.getDatasetDetails(dataset.dataset_id)
-
-                    return {
-                        id: dataset.dataset_id,
-                        type: 'dataset',
-                        name: dataset.dataset_name,
-                        username: dataset.owner?.username || 'Unknown',
-                        updated_at: dataset.created_at,
-                        counter: details?.vote_count || dataset.vote_count || 0,
-                        thumbnail: dataset.header_photo_url,
-                        description: dataset.description,
-                        tags: dataset.tags,
-                        // Additional metrics for the card
-                        download_count: details?.download_count || 0,
-                        comment_count: details?.comment_count || 0
-                    }
-                })
-            )
+            const response = await searchService.searchDatasets(query)
+            searchResults.value = response.datasets?.map(dataset => ({
+                id: dataset.dataset_id,
+                name: dataset.dataset_name,
+                description: dataset.description,
+                owner: dataset.owner,
+                status: dataset.status,
+                vote_count: dataset.vote_count,
+                download_count: dataset.download_count,
+                updated_at: dataset.created_at,
+                header_photo_url: dataset.header_photo_url
+            })) || []
         } else {
-            const users = await searchService.searchUsers(query)
-
-            // Enrich user data with follower counts
-            searchResults.value = await Promise.all(
-                users.map(async (user) => {
-                    const followerCount = await searchService.getUserFollowerCount(user.username)
-
-                    return {
-                        id: user.userId,
-                        type: 'user',
-                        name: user.fullName,
-                        username: user.username,
-                        updated_at: user.createdAt,
-                        counter: followerCount,
-                        thumbnail: user.avatarUrl,
-                        isAdmin: user.isAdmin
-                    }
-                })
-            )
+            const response = await searchService.searchUsers(query)
+            searchResults.value = response.users?.map(user => ({
+                id: user.userId,
+                name: user.fullName,
+                username: user.username,
+                isAdmin: user.isAdmin,
+                avatarUrl: user.avatarUrl,
+                followers: 0, // You might want to fetch this separately
+                datasets: 0   // You might want to fetch this separately
+            })) || []
         }
-
-        currentPage.value = 1
 
     } catch (error) {
         console.error('Search failed:', error)
         toast.add({
             severity: 'error',
-            summary: 'Failed to perform search. Please try again.',
-            detail: error.message,
+            summary: 'Search failed',
+            detail: 'Please try again',
             life: 5000
         })
         searchResults.value = []
@@ -253,20 +307,139 @@ const performSearch = async () => {
 }
 
 /**
- * Navigates to previous results page
+ * Clears search results
  */
-const previousPage = () => {
-    if (currentPage.value > 1) {
-        currentPage.value--
-        // In future: implement actual pagination with API
+const clearSearch = () => {
+    searchQuery.value = ''
+    searchResults.value = []
+    hasSearched.value = false
+}
+
+/**
+ * Gets dataset header image URL
+ */
+const getDatasetHeaderUrl = (dataset) => {
+    if (!dataset.header_photo_url) return null
+
+    try {
+        const url = new URL(dataset.header_photo_url)
+        const pathParts = url.pathname.split('/').filter(part => part)
+
+        if (pathParts.length < 3) return null
+
+        const documentId = pathParts[1]
+        const filename = pathParts[2]
+
+        return `http://localhost:3000/api/files/${documentId}/${filename}`
+    } catch {
+        return null
     }
 }
 
 /**
- * Navigates to next results page
+ * Gets user avatar URL
  */
-const nextPage = () => {
-    currentPage.value++
-    // In future: implement actual pagination with API
+const getUserAvatarUrl = (user) => {
+    if (!user?.avatarUrl) return null
+
+    try {
+        const url = new URL(user.avatarUrl)
+        const pathParts = url.pathname.split('/').filter(part => part)
+
+        if (pathParts.length < 3) return null
+
+        const documentId = pathParts[1]
+        const filename = pathParts[2]
+
+        return `http://localhost:3000/api/files/${documentId}/${filename}`
+    } catch {
+        return null
+    }
+}
+
+/**
+ * Gets user avatar classes
+ */
+const getUserAvatarClasses = (username) => {
+    const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500']
+    const index = (username?.charCodeAt(0) || 0) % colors.length
+    return `${colors[index]} text-white`
+}
+
+/**
+ * Gets user initials
+ */
+const getUserInitials = (user) => {
+    if (!user?.fullName) return 'U'
+    return user.fullName
+        .split(' ')
+        .map(name => name.charAt(0))
+        .join('')
+        .toUpperCase()
+        .substring(0, 2)
+}
+
+/**
+ * Gets status severity for dataset badges
+ */
+const getStatusSeverity = (status) => {
+    const severityMap = {
+        'approved': 'success',
+        'pending': 'warning',
+        'rejected': 'danger'
+    }
+    return severityMap[status] || 'info'
+}
+
+/**
+ * Formats date for display
+ */
+const formatDate = (dateString) => {
+    if (!dateString) return 'N/A'
+
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffTime = Math.abs(now - date)
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 1) return '1 day ago'
+    if (diffDays < 7) return `${diffDays} days ago`
+    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`
+
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    })
+}
+
+/**
+ * Navigates to dataset detail
+ */
+const navigateToDataset = (datasetId) => {
+    router.push(`/datasets/${datasetId}`)
+}
+
+/**
+ * Navigates to user profile
+ */
+const navigateToProfile = (username) => {
+    router.push(`/profile/${username}`)
 }
 </script>
+
+<style scoped>
+.line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>

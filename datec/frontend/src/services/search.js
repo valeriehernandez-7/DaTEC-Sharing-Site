@@ -11,9 +11,14 @@ export const searchService = {
      * @param {number} limit - Maximum results to return
      * @returns {Promise<Array>} Search results
      */
-    async searchDatasets(query, limit = 10) {
-        const response = await api.get(`/datasets/search?q=${encodeURIComponent(query)}`)
-        return response.data.datasets || []
+    async searchDatasets(query, limit = 20) {
+        try {
+            const response = await api.get(`/datasets/search?q=${encodeURIComponent(query)}`)
+            return response.data.datasets || []
+        } catch (error) {
+            console.error('Dataset search failed:', error)
+            throw new Error('Failed to search datasets')
+        }
     },
 
     /**
@@ -22,9 +27,14 @@ export const searchService = {
      * @param {number} limit - Maximum results to return
      * @returns {Promise<Array>} Search results
      */
-    async searchUsers(query, limit = 10) {
-        const response = await api.get(`/users/search?q=${encodeURIComponent(query)}`)
-        return response.data.users || []
+    async searchUsers(query, limit = 20) {
+        try {
+            const response = await api.get(`/users/search?q=${encodeURIComponent(query)}`)
+            return response.data.users || []
+        } catch (error) {
+            console.error('User search failed:', error)
+            throw new Error('Failed to search users')
+        }
     },
 
     /**
@@ -54,6 +64,21 @@ export const searchService = {
         } catch (error) {
             console.error(`Failed to get dataset details for ${datasetId}:`, error)
             return null
+        }
+    },
+
+    /**
+     * Gets user datasets count
+     * @param {string} username - Target username
+     * @returns {Promise<number>} Dataset count
+     */
+    async getUserDatasetCount(username) {
+        try {
+            const response = await api.get(`/datasets/user/${username}`)
+            return response.data.count || 0
+        } catch (error) {
+            console.error(`Failed to get dataset count for ${username}:`, error)
+            return 0
         }
     }
 }
