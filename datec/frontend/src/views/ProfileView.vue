@@ -28,7 +28,7 @@
 
                         <!-- User Information -->
                         <div class="flex-1">
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-3 mb-2">
                                 <h1 class="text-2xl font-bold text-gray-900">{{ userData.fullName }}</h1>
                                 <i v-if="userData.isAdmin" class="pi pi-verified text-blue-500 text-xl"
                                     title="Administrator"></i>
@@ -191,7 +191,7 @@
             </Tabs>
 
             <!-- Chat Drawer -->
-            <Drawer v-model:visible="showChatDrawer" position="right" :style="{ width: '400px' }" :dismissable="true">
+            <Drawer v-model:visible="showChatDrawer" position="right" :style="{ width: '450px' }" :dismissable="true">
                 <template #header>
                     <div class="flex items-center gap-3">
                         <Avatar :image="avatarUrl" :label="userInitials" shape="circle"
@@ -205,10 +205,35 @@
 
                 <div class="h-full flex flex-col">
                     <!-- Messages Container -->
-                    <div class="flex-1 overflow-y-auto p-4">
-                        <div class="text-center text-gray-500 py-8">
+                    <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
+                        <div v-if="loadingMessages" class="flex justify-center py-4">
+                            <ProgressSpinner size="small" />
+                        </div>
+                        <div v-else-if="messages.length === 0" class="text-center text-gray-500 py-8">
                             <i class="pi pi-comments text-4xl mb-3"></i>
                             <p>Start a conversation with {{ userData.fullName }}</p>
+                        </div>
+                        <div v-else>
+                            <div v-for="message in messages" :key="message.message_id" class="flex"
+                                :class="message.is_own_message ? 'justify-end' : 'justify-start'">
+                                <div class="max-w-[80%]" :class="message.is_own_message ? 'order-2' : 'order-1'">
+                                    <div class="flex items-end gap-2"
+                                        :class="message.is_own_message ? 'flex-row-reverse' : 'flex-row'">
+                                        <div class="flex flex-col"
+                                            :class="message.is_own_message ? 'items-end' : 'items-start'">
+                                            <div class="px-4 py-2 rounded-2xl" :class="message.is_own_message
+                                                ? 'bg-blue-500 text-white rounded-br-none'
+                                                : 'bg-gray-200 text-gray-900 rounded-bl-none'">
+                                                <p class="text-sm whitespace-pre-wrap break-words">{{ message.content }}
+                                                </p>
+                                            </div>
+                                            <span class="text-xs text-gray-500 mt-1 px-1 mb-2">
+                                                {{ formatMessageTime(message.created_at) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -216,8 +241,9 @@
                     <div class="p-4 border-t border-gray-200">
                         <div class="flex gap-2">
                             <InputText v-model="messageText" placeholder="Type a message..." class="flex-1"
-                                @keyup.enter="sendMessage" />
-                            <Button icon="pi pi-send" @click="sendMessage" :disabled="!messageText.trim()" />
+                                @keyup.enter="sendMessage" :disabled="sendingMessage" />
+                            <Button icon="pi pi-send" @click="sendMessage"
+                                :disabled="!messageText.trim() || sendingMessage" :loading="sendingMessage" />
                         </div>
                     </div>
                 </div>
@@ -227,7 +253,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'primevue/usetoast'
@@ -245,16 +271,20 @@ const userData = ref({})
 const datasets = ref([])
 const followers = ref([])
 const following = ref([])
+const messages = ref([])
 const loading = ref(true)
 const loadingDatasets = ref(false)
 const loadingFollowers = ref(false)
 const loadingFollowing = ref(false)
+const loadingMessages = ref(false)
 const isFollowingLoading = ref(false)
+const sendingMessage = ref(false)
 const showChatDrawer = ref(false)
 const messageText = ref('')
 const activeTab = ref('datasets')
 const error = ref('')
 const avatarLoadError = ref(false)
+const messagesContainer = ref(null)
 
 /**
  * Computed properties for derived state
@@ -279,8 +309,9 @@ const isFollowing = computed(() => {
 })
 
 const avatarUrl = computed(() => {
-    if (avatarLoadError.value || !userData.value.avatarUrl) return null
-    return userData.value.avatarUrl
+    // Return the avatar URL directly from the API response
+    // The backend should handle CouchDB file serving
+    return userData.value.avatarUrl || null
 })
 
 /**
@@ -292,6 +323,14 @@ onMounted(() => {
 
 watch(() => route.params.username, () => {
     loadProfileData()
+})
+
+watch(showChatDrawer, (newVal) => {
+    if (newVal) {
+        loadMessages()
+    } else {
+        messages.value = []
+    }
 })
 
 /**
@@ -381,6 +420,38 @@ const loadFollowing = async () => {
         throw err
     } finally {
         loadingFollowing.value = false
+    }
+}
+
+/**
+ * Loads conversation messages
+ */
+const loadMessages = async () => {
+    if (!authStore.isLoggedIn) return
+
+    loadingMessages.value = true
+    try {
+        const response = await api.get(`/messages/${authStore.user.username}/${route.params.username}`)
+        messages.value = response.data.messages || []
+
+        // Scroll to bottom after messages load
+        nextTick(() => {
+            scrollToBottom()
+        })
+    } catch (err) {
+        console.error('Error loading messages:', err)
+        messages.value = []
+    } finally {
+        loadingMessages.value = false
+    }
+}
+
+/**
+ * Scrolls messages container to bottom
+ */
+const scrollToBottom = () => {
+    if (messagesContainer.value) {
+        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
     }
 }
 
@@ -479,13 +550,17 @@ const openChatDrawer = () => {
 const sendMessage = async () => {
     if (!messageText.value.trim()) return
 
+    sendingMessage.value = true
+
     try {
         await api.post(`/messages/${authStore.user.username}/${route.params.username}`, {
             content: messageText.value.trim()
         })
 
+        // Reload messages to show the new one
+        await loadMessages()
+
         messageText.value = ''
-        showChatDrawer.value = false
 
         toast.add({
             severity: 'success',
@@ -501,6 +576,8 @@ const sendMessage = async () => {
             detail: err.response?.data?.error || 'Failed to send message',
             life: 5000
         })
+    } finally {
+        sendingMessage.value = false
     }
 }
 
@@ -541,6 +618,29 @@ const formatDate = (dateString) => {
         day: 'numeric'
     })
 }
+
+/**
+ * Formats message time for display
+ */
+const formatMessageTime = (dateString) => {
+    if (!dateString) return ''
+
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now - date
+    const diffMins = Math.floor(diffMs / (1000 * 60))
+
+    if (diffMins < 1) return 'Just now'
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`
+
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    })
+}
 </script>
 
 <style scoped>
@@ -568,5 +668,29 @@ const formatDate = (dateString) => {
 
 :deep(.p-Tabs-nav-link) {
     padding: 1rem 1.5rem;
+}
+
+/* Custom scrollbar for messages */
+:deep(.messages-container) {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+:deep(.messages-container::-webkit-scrollbar) {
+    width: 6px;
+}
+
+:deep(.messages-container::-webkit-scrollbar-track) {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+:deep(.messages-container::-webkit-scrollbar-thumb) {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+:deep(.messages-container::-webkit-scrollbar-thumb:hover) {
+    background: #94a3b8;
 }
 </style>
