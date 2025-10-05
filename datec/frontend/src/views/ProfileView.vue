@@ -21,16 +21,16 @@
                     <div class="flex items-center gap-6">
                         <!-- Avatar with proper CouchDB file handling -->
                         <div class="relative">
-                            <Avatar :image="avatarUrl" :label="userInitials" size="xlarge" shape="circle"
-                                class="bg-blue-500 text-white border-2 border-white shadow-lg"
-                                @error="handleAvatarError" />
+                            <Avatar :image="userData.avatarUrl" :label="userInitials" size="xlarge" shape="circle"
+                                :class="avatarClasses" />
                         </div>
 
                         <!-- User Information -->
                         <div class="flex-1">
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-3 mb-2">
                                 <h1 class="text-2xl font-bold text-gray-900">{{ userData.fullName }}</h1>
-                                <i v-if="userData.isAdmin" class="pi pi-verified text-blue-500 text-3xl" title="Administrator"></i>
+                                <i v-if="userData.isAdmin" class="pi pi-verified text-blue-500 text-xl"
+                                    title="Administrator"></i>
                             </div>
                             <p class="text-gray-600 text-lg">@{{ userData.username }}</p>
                         </div>
@@ -92,13 +92,17 @@
                                     class="cursor-pointer hover:shadow-lg transition-all duration-300 h-full"
                                     @click="navigateToDataset(dataset.dataset_id)">
                                     <template #header>
-                                        <div
-                                            class="relative h-32 bg-gradient-to-br from-blue-400 to-purple-500 rounded-t-lg overflow-hidden">
-                                            <div class="absolute inset-0 bg-black bg-opacity-20"></div>
-                                            <div class="absolute inset-0 flex items-center justify-center text-white">
+                                        <div class="relative h-32 rounded-t-lg overflow-hidden">
+                                            <!-- Header Photo or Fallback -->
+                                            <img v-if="dataset.header_photo_url" :src="dataset.header_photo_url"
+                                                :alt="dataset.dataset_name" class="object-cover" />
+                                            <div v-else
+                                                class="w-full h-full bg-gradient-to-br from-blue-600 to-gray-300 flex items-center justify-center text-white">
                                                 <i class="pi pi-database text-3xl"></i>
                                             </div>
-                                            <Tag :value="dataset.status" :severity="getStatusSeverity(dataset.status)"
+                                            <Tag :icon="getStatusIcon(dataset.status)"
+                                                :value="dataset.status.toUpperCase()"
+                                                :severity="getStatusSeverity(dataset.status)"
                                                 class="absolute top-2 right-2" />
                                         </div>
                                     </template>
@@ -110,16 +114,21 @@
                                         <p class="text-gray-600 text-sm line-clamp-2 mb-3">{{ dataset.description }}</p>
                                         <div class="flex items-center justify-between text-xs text-gray-500">
                                             <div class="flex items-center gap-1">
+                                                <i
+                                                    :class="dataset.is_public ? 'pi pi-lock-open text-green-500' : 'pi pi-lock text-red-500'"></i>
+                                                <span>{{ dataset.is_public ? 'Public' : 'Private' }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-1">
+                                                <i class="pi pi-calendar  text-orange-500"></i>
+                                                <span>{{ formatDate(dataset.updated_at) }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-1">
                                                 <i class="pi pi-star text-yellow-500"></i>
                                                 <span>{{ dataset.vote_count || 0 }}</span>
                                             </div>
                                             <div class="flex items-center gap-1">
                                                 <i class="pi pi-download text-blue-500"></i>
                                                 <span>{{ dataset.download_count || 0 }}</span>
-                                            </div>
-                                            <div class="flex items-center gap-1">
-                                                <i class="pi pi-calendar"></i>
-                                                <span>{{ formatDate(dataset.updated_at) }}</span>
                                             </div>
                                         </div>
                                     </template>
@@ -152,13 +161,12 @@
                                     @click="navigateToProfile(follower.username)">
                                     <template #content>
                                         <div class="flex items-center gap-3">
-                                            <Avatar :image="getAvatarUrl(follower)"
-                                                :label="getInitials(follower.fullName)" shape="circle"
-                                                class="bg-green-500 text-white" />
+                                            <Avatar :image="follower.avatarUrl" :label="getInitials(follower.fullName)"
+                                                shape="circle" :class="getUserAvatarClasses(follower.username)" />
                                             <div class="flex-1">
                                                 <div class="flex items-center gap-2">
                                                     <span class="font-medium text-gray-900">{{ follower.fullName
-                                                    }}</span>
+                                                        }}</span>
                                                     <i v-if="follower.isAdmin" class="pi pi-verified text-blue-500"
                                                         title="Administrator"></i>
                                                 </div>
@@ -191,8 +199,8 @@
                                     @click="navigateToProfile(user.username)">
                                     <template #content>
                                         <div class="flex items-center gap-3">
-                                            <Avatar :image="getAvatarUrl(user)" :label="getInitials(user.fullName)"
-                                                shape="circle" class="bg-purple-500 text-white" />
+                                            <Avatar :image="user.avatarUrl" :label="getInitials(user.fullName)"
+                                                shape="circle" :class="getUserAvatarClasses(user.username)" />
                                             <div class="flex-1">
                                                 <div class="flex items-center gap-2">
                                                     <span class="font-medium text-gray-900">{{ user.fullName }}</span>
@@ -221,8 +229,8 @@
             <Drawer v-model:visible="showChatDrawer" position="right" :style="{ width: '450px' }" :dismissable="true">
                 <template #header>
                     <div class="flex items-center gap-3">
-                        <Avatar :image="avatarUrl" :label="userInitials" shape="circle"
-                            class="bg-blue-500 text-white" />
+                        <Avatar :image="userData.avatarUrl" :label="userInitials" shape="circle"
+                            :class="avatarClasses" />
                         <div>
                             <div class="font-semibold text-gray-900">{{ userData.fullName }}</div>
                             <div class="text-sm text-gray-500">@{{ userData.username }}</div>
@@ -232,7 +240,7 @@
 
                 <div class="h-full flex flex-col">
                     <!-- Messages Container -->
-                    <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4 messages-container">
                         <div v-if="loadingMessages" class="flex justify-center py-4">
                             <ProgressSpinner size="small" />
                         </div>
@@ -243,21 +251,17 @@
                         <div v-else>
                             <div v-for="message in messages" :key="message.message_id" class="flex"
                                 :class="message.is_own_message ? 'justify-end' : 'justify-start'">
-                                <div class="max-w-[80%]" :class="message.is_own_message ? 'order-2' : 'order-1'">
-                                    <div class="flex items-end gap-2"
-                                        :class="message.is_own_message ? 'flex-row-reverse' : 'flex-row'">
-                                        <div class="flex flex-col"
-                                            :class="message.is_own_message ? 'items-end' : 'items-start'">
-                                            <div class="px-4 py-2 rounded-2xl" :class="message.is_own_message
-                                                ? 'bg-blue-500 text-white rounded-br-none'
-                                                : 'bg-gray-200 text-gray-900 rounded-bl-none'">
-                                                <p class="text-sm whitespace-pre-wrap break-words">{{ message.content }}
-                                                </p>
-                                            </div>
-                                            <span class="text-xs text-gray-500 mt-1 px-1 mb-2">
-                                                {{ formatMessageTime(message.created_at) }}
-                                            </span>
+                                <div class="max-w-[80%]">
+                                    <div class="flex flex-col"
+                                        :class="message.is_own_message ? 'items-end' : 'items-start'">
+                                        <div class="px-4 py-2 rounded-2xl" :class="message.is_own_message
+                                            ? 'bg-blue-500 text-white rounded-br-none'
+                                            : 'bg-gray-200 text-gray-900 rounded-bl-none'">
+                                            <p class="text-sm whitespace-pre-wrap break-words">{{ message.content }}</p>
                                         </div>
+                                        <span class="text-xs text-gray-500 mt-1 px-1">
+                                            {{ formatMessageTime(message.created_at) }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -267,8 +271,8 @@
                     <!-- Message Input -->
                     <div class="p-4 border-t border-gray-200">
                         <div class="flex flex-col gap-2">
-                            <Textarea v-model="messageText" placeholder="Message"
-                                rows="3" class="w-full" @keydown="handleTextareaKeydown" :disabled="sendingMessage" />
+                            <Textarea v-model="messageText" placeholder="Message" rows="3" class="w-full"
+                                @keydown="handleTextareaKeydown" :disabled="sendingMessage" />
                             <div class="flex justify-between items-center">
                                 <span class="text-xs text-gray-500">
                                     {{ messageText.length }}/2000
@@ -317,6 +321,7 @@ const activeTab = ref('datasets')
 const error = ref('')
 const avatarLoadError = ref(false)
 const messagesContainer = ref(null)
+const datasetImageErrors = ref(new Set())
 
 /**
  * Computed properties for derived state
@@ -340,10 +345,10 @@ const isFollowing = computed(() => {
     return followers.value.some(follower => follower.userId === authStore.user.userId)
 })
 
-const avatarUrl = computed(() => {
-    // Return the avatar URL directly from the API response
-    // The backend should handle CouchDB file serving
-    return userData.value.avatarUrl || null
+const avatarClasses = computed(() => {
+    const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500']
+    const index = (userData.value.username?.charCodeAt(0) || 0) % colors.length
+    return `${colors[index]} text-white border-2 border-white shadow-lg`
 })
 
 /**
@@ -499,6 +504,52 @@ const handleTextareaKeydown = (event) => {
 }
 
 /**
+ * Gets avatar classes for users in followers/following lists
+ */
+const getUserAvatarClasses = (username) => {
+    const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500']
+    const index = (username?.charCodeAt(0) || 0) % colors.length
+    return `${colors[index]} text-white`
+}
+
+/**
+ * Gets initials for avatar fallback
+ */
+const getInitials = (fullName) => {
+    if (!fullName) return 'U'
+    return fullName
+        .split(' ')
+        .map(name => name.charAt(0))
+        .join('')
+        .toUpperCase()
+        .substring(0, 2)
+}
+
+/**
+ * Gets status icon for dataset badges
+ */
+const getStatusIcon = (status) => {
+    const iconMap = {
+        'approved': 'pi pi-check-circle',
+        'pending': 'pi pi-file-edit',
+        'rejected': 'pi pi-ban'
+    }
+    return iconMap[status] || 'info'
+}
+
+/**
+ * Gets status severity for dataset badges
+ */
+const getStatusSeverity = (status) => {
+    const severityMap = {
+        'approved': 'success',
+        'pending': 'warning',
+        'rejected': 'danger'
+    }
+    return severityMap[status] || 'info'
+}
+
+/**
  * Toggles follow/unfollow status
  */
 const toggleFollow = async () => {
@@ -533,46 +584,6 @@ const toggleFollow = async () => {
     } finally {
         isFollowingLoading.value = false
     }
-}
-
-/**
- * Handles avatar loading errors
- */
-const handleAvatarError = () => {
-    console.warn('Failed to load avatar image')
-    avatarLoadError.value = true
-}
-
-/**
- * Gets avatar URL for users in followers/following lists
- */
-const getAvatarUrl = (user) => {
-    return user.avatarUrl || null
-}
-
-/**
- * Gets initials for avatar fallback
- */
-const getInitials = (fullName) => {
-    if (!fullName) return 'U'
-    return fullName
-        .split(' ')
-        .map(name => name.charAt(0))
-        .join('')
-        .toUpperCase()
-        .substring(0, 2)
-}
-
-/**
- * Gets status severity for dataset badges
- */
-const getStatusSeverity = (status) => {
-    const severityMap = {
-        'approved': 'success',
-        'pending': 'warning',
-        'rejected': 'danger'
-    }
-    return severityMap[status] || 'info'
 }
 
 /**
@@ -714,26 +725,26 @@ const formatMessageTime = (dateString) => {
 }
 
 /* Custom scrollbar for messages */
-:deep(.messages-container) {
+.messages-container {
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f1f5f9;
 }
 
-:deep(.messages-container::-webkit-scrollbar) {
+.messages-container::-webkit-scrollbar {
     width: 6px;
 }
 
-:deep(.messages-container::-webkit-scrollbar-track) {
+.messages-container::-webkit-scrollbar-track {
     background: #f1f5f9;
     border-radius: 3px;
 }
 
-:deep(.messages-container::-webkit-scrollbar-thumb) {
+.messages-container::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 3px;
 }
 
-:deep(.messages-container::-webkit-scrollbar-thumb:hover) {
+.messages-container::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
 </style>

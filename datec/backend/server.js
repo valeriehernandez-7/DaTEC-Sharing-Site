@@ -34,6 +34,57 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+// CouchDB file handler
+app.get('/api/files/:documentId/:filename', async (req, res) => {
+    try {
+        const { getFile } = require('./utils/couchdb-manager');
+        const { documentId, filename } = req.params;
+
+        console.log('File request:', { documentId, filename });
+
+        const fileBuffer = await getFile(documentId, filename);
+
+        // Determinar content-type basado en extensión del archivo
+        const getContentType = (filename) => {
+            const ext = filename.toLowerCase().split('.').pop();
+            const types = {
+                'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'png': 'image/png',
+                'gif': 'image/gif',
+                'webp': 'image/webp',
+                'svg': 'image/svg+xml'
+            };
+            return types[ext] || 'application/octet-stream';
+        };
+
+        const contentType = getContentType(filename);
+
+        // Set headers
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache por 1 hora
+        res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+
+        // Send file
+        res.send(fileBuffer);
+
+    } catch (error) {
+        console.error('File serve error:', error.message);
+
+        if (error.message === 'File not found') {
+            return res.status(404).json({
+                success: false,
+                error: 'File not found'
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            error: 'Failed to serve file'
+        });
+    }
+});
+
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/user.routes'));
