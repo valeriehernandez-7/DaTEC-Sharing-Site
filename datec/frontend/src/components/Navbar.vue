@@ -10,30 +10,30 @@
 
             <template #end>
                 <div class="flex items-center gap-2">
-                    <!-- Notifications (only when logged in) -->
+                    <!-- Notifications Menu (only when logged in) -->
                     <Button v-if="authStore.isLoggedIn" icon="pi pi-bell" text rounded severity="secondary"
                         @click="toggleNotifications"
                         :badge="notificationCount > 0 ? notificationCount.toString() : null"
                         badge-class="notification-badge" />
 
-                    <!-- Notifications Menu -->
                     <Menu v-if="authStore.isLoggedIn" ref="notificationsMenu" :model="notificationItems" :popup="true"
                         class="notifications-overlay" />
 
-                    <!-- User Avatar (clickable to profile) -->
-                    <Avatar v-if="authStore.isLoggedIn" :image="userAvatar" :label="userInitials" size="medium"
-                        shape="circle" :class="avatarClasses" class="cursor-pointer" @click="goToProfile" />
+                    <!-- User Section (only when logged in) -->
+                    <div v-if="authStore.isLoggedIn" class="flex items-center gap-2">
 
-                    <!-- User Menu Button -->
-                    <Button v-if="authStore.isLoggedIn" icon="pi pi-ellipsis-v" text rounded severity="secondary"
-                        @click="toggleUserMenu" />
+                        <Avatar v-if="authStore.user?.avatarUrl" :image="userAvatarUrl" size="medium" shape="circle"
+                            class="cursor-pointer" @click="goToProfile" />
+                        <Avatar v-else :label="userInitials" size="medium" shape="circle" :class="avatarClasses"
+                            class="cursor-pointer" @click="goToProfile" />
 
-                    <!-- Login Button when not authenticated -->
+                        <Button icon="pi pi-ellipsis-v" text rounded severity="secondary" @click="toggleUserMenu" />
+
+                        <Menu ref="userMenu" :model="userMenuItems" :popup="true" class="user-menu-overlay" />
+                    </div>
+
+                    <!-- Login Button (when not authenticated) -->
                     <Button v-else label="Log In" icon="pi pi-sign-in" @click="goToLogin" rounded class="bg-sky-600" />
-
-                    <!-- User Menu (only when logged in) -->
-                    <Menu v-if="authStore.isLoggedIn" ref="userMenu" :model="userMenuItems" :popup="true"
-                        class="user-menu-overlay" />
                 </div>
             </template>
         </Menubar>
@@ -63,8 +63,8 @@
             :closable="false">
             <template #header>
                 <div class="inline-flex items-center justify-center gap-3">
-                    <Avatar :image="userData?.avatarUrl" :label="userData?.fullName?.charAt(0) || 'U'" size="large"
-                        shape="circle" class="bg-blue-500 text-white" />
+                    <Avatar v-if="authStore.user?.avatarUrl" :image="userAvatarUrl" size="xlarge" shape="circle" />
+                    <Avatar v-else :label="userInitials" size="xlarge" shape="circle" :class="avatarClasses" />
                     <span class="font-bold text-lg">{{ userData?.fullName || 'User' }}</span>
                 </div>
             </template>
@@ -75,11 +75,12 @@
                     <label class="block text-sm font-medium text-gray-700 mb-3">Profile Picture</label>
                     <FileUpload mode="basic" name="avatar" accept="image/*" :maxFileSize="5000000"
                         chooseLabel="Choose New Avatar" :auto="true" @select="onAvatarSelect" class="w-full" />
-                    <small class="text-gray-500 block mt-2">Max file size: 5MB. Supported formats: JPG, PNG, GIF</small>
+                    <small class="text-gray-500 block mt-2">
+                        Max file size: 5MB. Supported formats: JPG, PNG, GIF
+                    </small>
                 </div>
 
                 <!-- Form Fields -->
-
                 <div class="flex items-center gap-4">
                     <label for="username" class="font-semibold w-32">Username</label>
                     <InputText id="username" v-model="userData.username" class="flex-auto" disabled
@@ -138,9 +139,9 @@
             <div class="text-center" v-if="selectedAvatarFile">
                 <img :src="avatarPreviewUrl" alt="Avatar Preview"
                     class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-2 border-gray-300" />
-                <p class="text-sm text-gray-600 mb-4">{{ selectedAvatarFile.name }} ({{
-                    formatFileSize(selectedAvatarFile.size)
-                }})</p>
+                <p class="text-sm text-gray-600 mb-4">
+                    {{ selectedAvatarFile.name }} ({{ formatFileSize(selectedAvatarFile.size) }})
+                </p>
 
                 <div class="flex gap-2 justify-center">
                     <Button label="Cancel" icon="pi pi-times" text @click="cancelAvatarUpload" />
@@ -180,11 +181,34 @@ const selectedAvatarFile = ref(null)
 const avatarPreviewUrl = ref('')
 const saveError = ref('')
 
-// Computed properties
-const userAvatar = computed(() => authStore.user?.avatarUrl || null)
+/**
+ * Computed property for user avatar URL with proper CouchDB file handling
+ * @returns {string|null} Formatted avatar URL or null if not available
+ */
+const userAvatarUrl = computed(() => {
+    if (!authStore.user?.avatarUrl) return null
 
+    try {
+        const url = new URL(authStore.user.avatarUrl)
+        const pathParts = url.pathname.split('/').filter(part => part)
+
+        if (pathParts.length < 3) return null
+
+        const documentId = pathParts[1]
+        const filename = pathParts[2]
+
+        return `http://localhost:3000/api/files/${documentId}/${filename}`
+    } catch {
+        return null
+    }
+})
+
+/**
+ * Computed property for user initials for avatar fallback
+ * @returns {string} User initials or default 'U'
+ */
 const userInitials = computed(() => {
-    if (!authStore.user?.fullName) return '?'
+    if (!authStore.user?.fullName) return 'U'
     return authStore.user.fullName
         .split(' ')
         .map(name => name.charAt(0))
@@ -193,17 +217,28 @@ const userInitials = computed(() => {
         .substring(0, 2)
 })
 
+/**
+ * Computed property for avatar background color classes
+ * @returns {string} CSS classes for avatar background
+ */
 const avatarClasses = computed(() => {
-    const colors = ['bg-emerald-200', 'bg-emerald-300', 'bg-emerald-400', 'bg-emerald-500', 'bg-emerald-600', 'bg-emerald-800']
+    const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500']
     const index = (authStore.user?.username?.charCodeAt(0) || 0) % colors.length
     return `${colors[index]} text-white`
 })
 
+/**
+ * Computed property to validate username input
+ * @returns {boolean} True if username is valid
+ */
 const isValidUsername = computed(() => {
     return contactUsername.value.trim().length >= 2
 })
 
-// Update hasChanges computed to ignore empty password
+/**
+ * Computed property to detect changes in user data
+ * @returns {boolean} True if user data has been modified
+ */
 const hasChanges = computed(() => {
     if (!userData.value || !originalUserData.value) return false
 
@@ -219,17 +254,28 @@ const hasChanges = computed(() => {
     return JSON.stringify(currentData) !== JSON.stringify(originalData)
 })
 
+/**
+ * Computed property for maximum allowed birth date (15 years ago)
+ * @returns {Date} Maximum allowed date
+ */
 const maxDate = computed(() => {
     const today = new Date()
     return new Date(today.getFullYear() - 15, today.getMonth(), today.getDate())
 })
 
+/**
+ * Computed property for minimum allowed birth date (100 years ago)
+ * @returns {Date} Minimum allowed date
+ */
 const minDate = computed(() => {
     const today = new Date()
-    return new Date(today.getFullYear() - 100, today.getMonth(), today.getDate()) // 100 years max
+    return new Date(today.getFullYear() - 100, today.getMonth(), today.getDate())
 })
 
-// Notification items
+/**
+ * Computed property for notification menu items
+ * @returns {Array} Array of notification menu items
+ */
 const notificationItems = computed(() => {
     if (notifications.value.length === 0) {
         return [
@@ -257,10 +303,23 @@ const notificationItems = computed(() => {
     return items
 })
 
-// Main menu items for Menubar
-const menuItems = ref([])
+/**
+ * Main menu items for Menubar - only show when logged in
+ */
+const menuItems = computed(() => {
+    if (!authStore.isLoggedIn) {
+        return [] // Hide menu items when not logged in
+    }
 
-// User menu items
+    return [
+        // Menu items would go here if needed for the main menubar
+        // Currently using the user menu for all actions
+    ]
+})
+
+/**
+ * User menu items - only available when logged in
+ */
 const userMenuItems = computed(() => [
     {
         label: 'Search',
@@ -307,7 +366,7 @@ const userMenuItems = computed(() => [
     }
 ])
 
-// Lifecycle
+// Lifecycle hooks
 onMounted(() => {
     if (authStore.isLoggedIn) {
         loadNotificationCount()
@@ -315,19 +374,32 @@ onMounted(() => {
     }
 })
 
-// Methods
+/**
+ * Toggles user menu visibility
+ * @param {Event} event - Click event
+ */
 const toggleUserMenu = (event) => {
     userMenu.value.toggle(event)
 }
 
+/**
+ * Toggles notifications menu visibility
+ * @param {Event} event - Click event
+ */
 const toggleNotifications = (event) => {
     notificationsMenu.value.toggle(event)
 }
 
+/**
+ * Navigates to login page
+ */
 const goToLogin = () => {
     router.push('/login')
 }
 
+/**
+ * Navigates to user's profile page
+ */
 const goToProfile = () => {
     if (authStore.isLoggedIn) {
         router.push(`/profile/${authStore.user.username}`)
@@ -335,7 +407,7 @@ const goToProfile = () => {
 }
 
 /**
- * Load notification count
+ * Loads notification count from API
  */
 const loadNotificationCount = async () => {
     try {
@@ -355,7 +427,7 @@ const loadNotificationCount = async () => {
 }
 
 /**
- * Load notifications
+ * Loads notifications from API
  */
 const loadNotifications = async () => {
     try {
@@ -375,7 +447,7 @@ const loadNotifications = async () => {
 }
 
 /**
- * Clear all notifications
+ * Clears all notifications
  */
 const clearAllNotifications = async () => {
     try {
@@ -408,7 +480,9 @@ const clearAllNotifications = async () => {
 }
 
 /**
- * Format notification message
+ * Formats notification message based on type
+ * @param {Object} notification - Notification object
+ * @returns {string} Formatted notification message
  */
 const formatNotification = (notification) => {
     const messages = {
@@ -422,7 +496,9 @@ const formatNotification = (notification) => {
 }
 
 /**
- * Get notification icon
+ * Gets appropriate icon for notification type
+ * @param {string} type - Notification type
+ * @returns {string} PrimeVue icon class
  */
 const getNotificationIcon = (type) => {
     const icons = {
@@ -436,7 +512,8 @@ const getNotificationIcon = (type) => {
 }
 
 /**
- * Handle notification click
+ * Handles notification click action
+ * @param {Object} notification - Clicked notification
  */
 const handleNotificationClick = (notification) => {
     if (notification.dataset_id) {
@@ -447,7 +524,8 @@ const handleNotificationClick = (notification) => {
 }
 
 /**
- * Handle avatar file selection
+ * Handles avatar file selection
+ * @param {Object} event - File upload event
  */
 const onAvatarSelect = (event) => {
     const file = event.files[0]
@@ -464,7 +542,7 @@ const onAvatarSelect = (event) => {
 }
 
 /**
- * Cancel avatar upload
+ * Cancels avatar upload and resets state
  */
 const cancelAvatarUpload = () => {
     selectedAvatarFile.value = null
@@ -473,7 +551,7 @@ const cancelAvatarUpload = () => {
 }
 
 /**
- * Upload avatar to server
+ * Uploads avatar to server
  */
 const uploadAvatar = async () => {
     if (!selectedAvatarFile.value) return
@@ -526,7 +604,9 @@ const uploadAvatar = async () => {
 }
 
 /**
- * Format file size for display
+ * Formats file size for display
+ * @param {number} bytes - File size in bytes
+ * @returns {string} Formatted file size
  */
 const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes'
@@ -537,7 +617,9 @@ const formatFileSize = (bytes) => {
 }
 
 /**
- * Format date for display
+ * Formats date for display
+ * @param {string} dateString - ISO date string
+ * @returns {string} Formatted date
  */
 const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
@@ -549,7 +631,7 @@ const formatDate = (dateString) => {
 }
 
 /**
- * Load user data for settings
+ * Loads user data for settings dialog
  */
 const loadUserData = async () => {
     try {
@@ -582,7 +664,7 @@ const loadUserData = async () => {
 }
 
 /**
- * Open settings dialog
+ * Opens settings dialog and loads user data
  */
 const openSettingsDialog = async () => {
     showSettingsDialog.value = true
@@ -602,7 +684,7 @@ const openSettingsDialog = async () => {
 }
 
 /**
- * Save user settings - simplified without age validation
+ * Saves user settings to server
  */
 const saveSettings = async () => {
     if (!userData.value || !hasChanges.value) return
@@ -686,12 +768,12 @@ const saveSettings = async () => {
         })
     } finally {
         isSaving.value = false
+        closeSettingsDialog()
     }
 }
 
-
 /**
- * Close settings dialog and reset state
+ * Closes settings dialog and resets state
  */
 const closeSettingsDialog = () => {
     showSettingsDialog.value = false
@@ -701,7 +783,7 @@ const closeSettingsDialog = () => {
 }
 
 /**
- * Close contact dialog and reset state
+ * Closes contact dialog and resets state
  */
 const closeContactDialog = () => {
     showContactDialog.value = false
