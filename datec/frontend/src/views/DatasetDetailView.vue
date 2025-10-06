@@ -36,6 +36,8 @@
                         <i v-if="isOwner || authStore.user?.isAdmin"
                             :class="datasetData.is_public ? 'pi pi-lock-open text-green-500' : 'pi pi-lock text-red-500'"
                             class="text-xl" :title="datasetData.is_public ? 'Public' : 'Private'"></i>
+                        <i v-if="datasetData.parent_dataset_id" class="pi pi-clone text-sky-600 text-xl"
+                            @click="router.push(`/datasets/${datasetData.parent_dataset_id}`)"></i>
                     </div>
 
                     <!-- Description -->
@@ -373,7 +375,7 @@
                                             <div class="text-center">
                                                 <i class="pi pi-download text-blue-500 text-2xl mb-2"></i>
                                                 <h3 class="text-xl font-bold">{{ downloadStats.statistics.totalDownloads
-                                                    }}</h3>
+                                                }}</h3>
                                                 <p class="text-gray-600">Total Downloads</p>
                                             </div>
                                         </template>
@@ -665,6 +667,21 @@
                 </div>
             </template>
         </Dialog>
+        <!-- Clone Dataset Dialog -->
+        <Dialog v-model:visible="showCloneDialog" :style="{ width: '500px' }" header="Clone Dataset" :modal="true">
+            <div class="p-fluid">
+                <div class="field">
+                    <label for="cloneName" class="font-medium">New Dataset Name</label>
+                    <InputText id="cloneName" v-model="cloneDatasetName"
+                        placeholder="Enter a name for the cloned dataset" class="w-full mt-2"
+                        @keyup.enter="confirmClone" />
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Cancel" icon="pi pi-times" text @click="showCloneDialog = false" />
+                <Button label="Clone" icon="pi pi-copy" @click="confirmClone" :disabled="!cloneDatasetName" />
+            </template>
+        </Dialog>
     </div>
 </template>
 
@@ -703,6 +720,8 @@ const commentCount = ref(0)
 const editMode = ref(false)
 const visibilityModel = ref(false)
 const maxFiles = 10
+const showCloneDialog = ref(false)
+const cloneDatasetName = ref('')
 
 // Edit form
 const editForm = ref({
@@ -1327,12 +1346,21 @@ const removeVote = async () => {
  * Clones the dataset
  */
 const cloneDataset = async () => {
-    try {
-        const newName = prompt(`Enter a new name for the cloned dataset:`, `${datasetData.value.dataset_name}-clone`)
-        if (!newName) return
+    if (!authStore.isLoggedIn) {
+        router.push('/login')
+        return
+    }
 
+    showCloneDialog.value = true
+    cloneDatasetName.value = `${datasetData.value.dataset_name}-clone`
+}
+
+const confirmClone = async () => {
+    if (!cloneDatasetName.value) return
+
+    try {
         const response = await api.post(`/datasets/${route.params.id}/clone`, {
-            new_dataset_name: newName
+            new_dataset_name: cloneDatasetName.value
         })
 
         toast.add({
@@ -1341,6 +1369,8 @@ const cloneDataset = async () => {
             detail: 'Dataset cloned successfully',
             life: 3000
         })
+
+        showCloneDialog.value = false
 
         // Navigate to the new cloned dataset
         if (response.data.dataset) {
@@ -1354,6 +1384,8 @@ const cloneDataset = async () => {
             detail: err.response?.data?.error || 'Failed to clone dataset',
             life: 5000
         })
+    } finally {
+        cloneDatasetName.value = ''
     }
 }
 
