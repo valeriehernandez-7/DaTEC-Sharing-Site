@@ -501,8 +501,8 @@
                                     </div>
 
                                     <Button v-if="datasetData.status !== 'approved' && datasetData.status !== 'pending'"
-                                        label="Request Admin Approval" icon="pi pi-send" @click="requestApproval"
-                                        severity="help" class="w-full" />
+                                        label="Request Approval" icon="pi pi-send" @click="requestApproval"
+                                        class="w-full" />
                                 </div>
 
                                 <Divider class="mb-10" />
@@ -628,6 +628,7 @@
                                     </div>
                                 </div>
                             </div>
+                            <ConfirmDialog />
                         </template>
                     </Card>
                 </TabPanel>
@@ -672,12 +673,14 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from "primevue/useconfirm"
 import api from '@/services/api'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const toast = useToast()
+const confirm = useConfirm();
 
 /**
  * Reactive state management
@@ -856,6 +859,49 @@ watch(() => datasetData.value, (newDataset) => {
         }
     }
 }, { immediate: true })
+
+/**
+ * Delete the entire dataset
+ */
+const deleteDataset = async () => {
+    try {
+        await api.delete(`/datasets/${route.params.id}`)
+
+        toast.add({
+            severity: 'success',
+            summary: 'Dataset Deleted',
+            detail: 'Dataset has been permanently deleted',
+            life: 3000
+        })
+
+        // Redirect to user profile
+        router.push(`/profile/${authStore.user?.username}`)
+    } catch (error) {
+        console.error('Error deleting dataset:', error)
+        toast.add({
+            severity: 'error',
+            summary: 'Delete Failed',
+            detail: error.response?.data?.error || 'Failed to delete dataset',
+            life: 5000
+        })
+    }
+}
+
+/**
+ * Confirm dataset deletion
+ */
+const confirmDatasetDelete = () => {
+    confirm.require({
+        message: `Are you sure you want to delete "${datasetData.value.dataset_name}"? This will permanently delete all files and data.`,
+        header: 'Confirm Dataset Deletion',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-danger',
+        accept: () => deleteDataset(),
+        reject: () => {
+            // Optional rejection handler
+        }
+    })
+}
 
 const loadComments = async () => {
     if (!isDatasetAccessible.value) return
