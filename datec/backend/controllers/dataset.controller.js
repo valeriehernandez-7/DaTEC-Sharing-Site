@@ -604,7 +604,16 @@ async function updateDataset(req, res) {
         }
 
         const { dataset_name, description, tags, tutorial_video_url, is_public } = value;
-        const filesToDelete = req.body.files_to_delete || [];
+
+        let filesToDelete = [];
+        if (req.body.files_to_delete) {
+            try {
+                filesToDelete = JSON.parse(req.body.files_to_delete);
+            } catch (error) {
+                console.warn('Failed to parse files_to_delete:', error);
+                filesToDelete = [];
+            }
+        }
 
         // Get existing dataset
         const dataset = await db.collection('datasets').findOne({
@@ -670,7 +679,17 @@ async function updateDataset(req, res) {
 
         // Handle new file uploads
         if (req.files && req.files.data_files) {
-            const newFileReferences = [...(updates.file_references || dataset.file_references)];
+            const currentFiles = updates.file_references || dataset.file_references;
+
+            // Check if adding new files would exceed the limit
+            if (currentFiles.length + req.files.data_files.length > 10) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Cannot exceed maximum of 10 files per dataset'
+                });
+            }
+
+            const newFileReferences = [...currentFiles];
             let nextFileIndex = newFileReferences.length + 1;
 
             for (let i = 0; i < req.files.data_files.length; i++) {
@@ -1382,7 +1401,7 @@ async function downloadDataset(req, res) {
                     // Check if user already downloaded this dataset
                     const { relationshipExists, createRelationship } = require('../utils/neo4j-relations');
 
-                    
+
                     // // Only track if first time downloading this dataset
 
                     // const alreadyDownloaded = await relationshipExists(
@@ -1391,7 +1410,7 @@ async function downloadDataset(req, res) {
                     //     'DOWNLOADED'
                     // );
 
-                    
+
                     // if (!alreadyDownloaded) {
                     //     // Create DOWNLOADED relationship in Neo4j
                     //     await createRelationship(

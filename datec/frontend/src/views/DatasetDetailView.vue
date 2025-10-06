@@ -196,7 +196,7 @@
 
                 <!-- Activity Tab -->
                 <TabPanel value="activity">
-                    <Accordion :multiple="true" :activeIndex="[0]">
+                    <Accordion :activeIndex="[0]">
                         <!-- Voting Details -->
                         <AccordionPanel value="0">
                             <AccordionHeader>
@@ -373,7 +373,7 @@
                                             <div class="text-center">
                                                 <i class="pi pi-download text-blue-500 text-2xl mb-2"></i>
                                                 <h3 class="text-xl font-bold">{{ downloadStats.statistics.totalDownloads
-                                                }}</h3>
+                                                    }}</h3>
                                                 <p class="text-gray-600">Total Downloads</p>
                                             </div>
                                         </template>
@@ -452,10 +452,10 @@
                             <div class="space-y-6">
                                 <!-- Privacy & Visibility -->
                                 <div class="space-y-4">
-                                    <h3 class="text-lg font-semibold">Privacy & Visibility</h3>
+                                    <h3 class="text-lg font-semibold"><i class="pi pi-unlock"></i> Privacy</h3>
                                     <div class="flex items-center justify-between mt-4 rounded-lg">
                                         <div>
-                                            <h4 class="font-medium">Make Dataset Public</h4>
+                                            <h4 class="font-medium">Dataset Access</h4>
                                             <p class="text-sm text-gray-600">
                                                 {{ datasetData.is_public ?
                                                     'Visible to all users' :
@@ -476,11 +476,11 @@
                                     </Message>
                                 </div>
 
-                                <Divider />
+                                <Divider class="mb-10" />
 
                                 <!-- Approval Status -->
                                 <div class="space-y-4">
-                                    <h3 class="text-lg font-semibold">Approval Status</h3>
+                                    <h3 class="text-lg font-semibold"><i class="pi pi-list-check"></i> Moderation</h3>
 
                                     <div class="p-4 rounded-lg" :class="statusStyle.class">
                                         <div class="flex items-center gap-2" :class="statusStyle.textColor">
@@ -505,12 +505,12 @@
                                         severity="help" class="w-full" />
                                 </div>
 
-                                <Divider />
+                                <Divider class="mb-10" />
 
                                 <!-- Dataset Information -->
                                 <div class="space-y-4">
                                     <div class="flex justify-between items-center">
-                                        <h3 class="text-lg font-semibold">Dataset Information</h3>
+                                        <h3 class="text-lg font-semibold"><i class="pi pi-id-card"></i> Details</h3>
                                         <Button :label="editMode ? 'Cancel' : 'Edit'"
                                             :icon="editMode ? 'pi pi-times' : 'pi pi-pencil'" @click="toggleEditMode"
                                             :severity="editMode ? 'danger' : 'secondary'" />
@@ -539,7 +539,7 @@
                                                 <label class="font-medium text-sm">Dataset Name</label>
                                                 <InputText v-model="editForm.dataset_name" :disabled="!editMode"
                                                     :class="{ 'p-invalid': editFormErrors.dataset_name }"
-                                                    class="w-full mt-1" />
+                                                    class="w-full mt-1" placeholder="Dataset name" />
                                                 <small class="p-error">{{ editFormErrors.dataset_name }}</small>
                                             </div>
 
@@ -547,14 +547,14 @@
                                                 <label class="font-medium text-sm">Description</label>
                                                 <Textarea v-model="editForm.description" :disabled="!editMode" rows="3"
                                                     :class="{ 'p-invalid': editFormErrors.description }"
-                                                    class="w-full mt-1" />
+                                                    class="w-full mt-1" placeholder="Dataset description" />
                                                 <small class="p-error">{{ editFormErrors.description }}</small>
                                             </div>
 
                                             <div>
                                                 <label class="font-medium text-sm">Tags</label>
-                                                <Chips v-model="editForm.tags" :disabled="!editMode" separator=","
-                                                    class="w-full mt-1" placeholder="Add tags..." />
+                                                <InputChips v-model="editForm.tags" :disabled="!editMode" separator=","
+                                                    class="w-full mt-1" placeholder="Dataset tags" />
                                             </div>
 
                                             <div>
@@ -569,12 +569,13 @@
                                     </div>
                                 </div>
 
-                                <Divider />
+                                <Divider class="mb-10" />
 
                                 <!-- File Management -->
                                 <div class="space-y-4">
                                     <div class="flex justify-between items-center">
-                                        <h3 class="text-lg font-semibold">File Management</h3>
+                                        <h3 class="text-lg font-semibold"><i class="pi pi-folder-open"></i> File
+                                            Management</h3>
                                         <Button label="Add Files" icon="pi pi-plus" @click="openFileUploadDialog"
                                             :disabled="remainingFileSlots <= 0" />
                                     </div>
@@ -610,7 +611,9 @@
 
                                 <!-- Danger Zone -->
                                 <div class="space-y-4">
-                                    <h3 class="text-lg font-semibold text-red-600">Danger Zone</h3>
+                                    <h3 class="text-lg font-semibold text-red-600"><i
+                                            class="pi pi-exclamation-triangle"></i> Danger Zone
+                                    </h3>
                                     <div class="p-4 border border-red-200 rounded-lg bg-red-50">
                                         <div class="flex items-center justify-between">
                                             <div>
