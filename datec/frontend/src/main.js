@@ -48,7 +48,14 @@ import SpeedDial from 'primevue/speeddial'
 import ToggleSwitch from 'primevue/toggleswitch'
 import InputChips from 'primevue/inputchips'
 import Fieldset from 'primevue/fieldset'
-
+import Stepper from 'primevue/stepper'
+import StepList from 'primevue/steplist'
+import StepPanels from 'primevue/steppanels'
+import Step from 'primevue/step'
+import StepPanel from 'primevue/steppanel'
+import FloatLabel from 'primevue/floatlabel'
+import Chip from 'primevue/chip'
+import AutoComplete  from 'primevue/autocomplete'
 
 import CommentThread from '@/components/comments/CommentThread.vue'
 import CommentForm from '@/components/comments/CommentForm.vue'
@@ -121,7 +128,15 @@ app.component('CommentForm', CommentForm)
 app.component('SpeedDial', SpeedDial)
 app.component('ToggleSwitch', ToggleSwitch)
 app.component('InputChips', InputChips)
-app.component('Fieldset ', Fieldset)
+app.component('Fieldset', Fieldset)
+app.component('Stepper', Stepper)
+app.component('StepList', StepList)
+app.component('StepPanels', StepPanels)
+app.component('Step', Step)
+app.component('StepPanel', StepPanel)
+app.component('FloatLabel', FloatLabel)
+app.component('Chip', Chip)
+app.component('AutoComplete ', AutoComplete)
 
 /**
  * Services and state management
