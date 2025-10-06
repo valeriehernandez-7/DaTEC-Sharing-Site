@@ -19,6 +19,8 @@ import Message from 'primevue/message'
 import Menubar from 'primevue/menubar'
 import Menu from 'primevue/menu'
 import Dialog from 'primevue/dialog'
+import ConfirmDialog from 'primevue/confirmdialog'
+import ConfirmationService from 'primevue/confirmationservice'
 import Badge from 'primevue/badge'
 import Tag from 'primevue/tag'
 import FileUpload from 'primevue/fileupload'
@@ -41,7 +43,11 @@ import AccordionHeader from 'primevue/accordionheader'
 import AccordionContent from 'primevue/accordioncontent'
 import Chart from 'primevue/chart'
 import Select from 'primevue/select'
-import Divider from 'primevue/divider';
+import Divider from 'primevue/divider'
+import SpeedDial from 'primevue/speeddial'
+import ToggleSwitch from 'primevue/toggleswitch'
+import InputChips from 'primevue/inputchips'
+import Fieldset from 'primevue/fieldset'
 
 
 import CommentThread from '@/components/comments/CommentThread.vue'
@@ -86,6 +92,7 @@ app.component('FormField', FormField)
 app.component('Menubar', Menubar)
 app.component('Menu', Menu)
 app.component('Dialog', Dialog)
+app.component('ConfirmDialog', ConfirmDialog)
 app.component('Badge', Badge)
 app.component('Tag', Tag)
 app.component('FileUpload', FileUpload)
@@ -111,11 +118,16 @@ app.component('Select', Select)
 app.component('Divider', Divider)
 app.component('CommentThread', CommentThread)
 app.component('CommentForm', CommentForm)
+app.component('SpeedDial', SpeedDial)
+app.component('ToggleSwitch', ToggleSwitch)
+app.component('InputChips', InputChips)
+app.component('Fieldset ', Fieldset)
 
 /**
  * Services and state management
  */
 app.use(ToastService)
+app.use(ConfirmationService)
 
 const pinia = createPinia()
 app.use(pinia)

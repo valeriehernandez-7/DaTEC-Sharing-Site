@@ -373,7 +373,7 @@
                                             <div class="text-center">
                                                 <i class="pi pi-download text-blue-500 text-2xl mb-2"></i>
                                                 <h3 class="text-xl font-bold">{{ downloadStats.statistics.totalDownloads
-                                                    }}</h3>
+                                                }}</h3>
                                                 <p class="text-gray-600">Total Downloads</p>
                                             </div>
                                         </template>
@@ -448,17 +448,182 @@
                 <!-- Settings Tab (Owner Only) -->
                 <TabPanel v-if="isOwner" value="settings">
                     <Card>
-                        <template #title>
-                            <div class="flex items-center gap-2">
-                                <i class="pi pi-cog text-gray-500"></i>
-                                <span>Dataset Settings</span>
-                            </div>
-                        </template>
                         <template #content>
-                            <!-- TODO: Settings content will go here -->
-                            <div class="text-center py-8 text-gray-500">
-                                <i class="pi pi-cog text-4xl mb-3"></i>
-                                <p>Settings panel coming soon</p>
+                            <div class="space-y-6">
+                                <!-- Privacy & Visibility -->
+                                <div class="space-y-4">
+                                    <h3 class="text-lg font-semibold">Privacy & Visibility</h3>
+                                    <div class="flex items-center justify-between mt-4 rounded-lg">
+                                        <div>
+                                            <h4 class="font-medium">Make Dataset Public</h4>
+                                            <p class="text-sm text-gray-600">
+                                                {{ datasetData.is_public ?
+                                                    'Visible to all users' :
+                                                    'Only visible to you'
+                                                }}
+                                            </p>
+                                        </div>
+                                        <ToggleSwitch v-model="visibilityModel" @change="handleVisibilityToggle"
+                                            :disabled="!isDatasetApproved" />
+                                    </div>
+
+                                    <Message v-if="!isDatasetApproved && datasetData.is_public" severity="warn"
+                                        :closable="false">
+                                        <div class="flex items-center gap-2">
+                                            <i class="pi pi-exclamation-triangle"></i>
+                                            <span>Only approved datasets can be made public</span>
+                                        </div>
+                                    </Message>
+                                </div>
+
+                                <Divider />
+
+                                <!-- Approval Status -->
+                                <div class="space-y-4">
+                                    <h3 class="text-lg font-semibold">Approval Status</h3>
+
+                                    <div class="p-4 rounded-lg" :class="statusStyle.class">
+                                        <div class="flex items-center gap-2" :class="statusStyle.textColor">
+                                            <i :class="statusStyle.icon"></i>
+                                            <span class="font-medium">{{ datasetData.status?.toUpperCase() }}</span>
+                                        </div>
+                                        <p class="text-sm mt-1" :class="statusStyle.textColor">
+                                            {{ statusStyle.message }}
+                                        </p>
+                                        <p v-if="datasetData.reviewed_at" class="text-sm mt-1"
+                                            :class="statusStyle.textColor">
+                                            {{ statusStyle.dateLabel }}: {{ formatDate(datasetData.reviewed_at) }}
+                                        </p>
+                                        <p v-if="datasetData.admin_review"
+                                            class="text-sm mt-1 text-gray-600 font-medium">
+                                            Admin feedback: <i>{{ datasetData.admin_review }}</i>
+                                        </p>
+                                    </div>
+
+                                    <Button v-if="datasetData.status !== 'approved' && datasetData.status !== 'pending'"
+                                        label="Request Admin Approval" icon="pi pi-send" @click="requestApproval"
+                                        severity="help" class="w-full" />
+                                </div>
+
+                                <Divider />
+
+                                <!-- Dataset Information -->
+                                <div class="space-y-4">
+                                    <div class="flex justify-between items-center">
+                                        <h3 class="text-lg font-semibold">Dataset Information</h3>
+                                        <Button :label="editMode ? 'Cancel' : 'Edit'"
+                                            :icon="editMode ? 'pi pi-times' : 'pi pi-pencil'" @click="toggleEditMode"
+                                            :severity="editMode ? 'danger' : 'secondary'" />
+                                    </div>
+
+                                    <!-- Header Photo -->
+                                    <div v-if="datasetData.header_photo_url" class="rounded-lg">
+                                        <h4 class="font-medium mb-2">Header Photo</h4>
+                                        <div class="flex items-center gap-4">
+                                            <img :src="getDatasetHeaderUrl(datasetData)" :alt="datasetData.dataset_name"
+                                                class="w-2x1 h-50 object-cover rounded-lg" />
+                                            <div class="flex-1">
+                                                <Button v-if="editMode" label="Change" icon="pi pi-image"
+                                                    severity="secondary" size="small" @click="triggerHeaderUpload"
+                                                    class="mt-1" />
+                                            </div>
+                                        </div>
+                                        <input v-if="editMode" ref="headerUploadRef" type="file" accept="image/*"
+                                            @change="handleHeaderPhotoChange" class="hidden" />
+                                    </div>
+
+                                    <!-- Edit Form -->
+                                    <div class="space-y-4">
+                                        <div class="grid grid-cols-1 gap-4">
+                                            <div>
+                                                <label class="font-medium text-sm">Dataset Name</label>
+                                                <InputText v-model="editForm.dataset_name" :disabled="!editMode"
+                                                    :class="{ 'p-invalid': editFormErrors.dataset_name }"
+                                                    class="w-full mt-1" />
+                                                <small class="p-error">{{ editFormErrors.dataset_name }}</small>
+                                            </div>
+
+                                            <div>
+                                                <label class="font-medium text-sm">Description</label>
+                                                <Textarea v-model="editForm.description" :disabled="!editMode" rows="3"
+                                                    :class="{ 'p-invalid': editFormErrors.description }"
+                                                    class="w-full mt-1" />
+                                                <small class="p-error">{{ editFormErrors.description }}</small>
+                                            </div>
+
+                                            <div>
+                                                <label class="font-medium text-sm">Tags</label>
+                                                <Chips v-model="editForm.tags" :disabled="!editMode" separator=","
+                                                    class="w-full mt-1" placeholder="Add tags..." />
+                                            </div>
+
+                                            <div>
+                                                <label class="font-medium text-sm">Tutorial Video URL</label>
+                                                <InputText v-model="editForm.tutorial_video_url" :disabled="!editMode"
+                                                    placeholder="https://youtube.com/..." class="w-full mt-1" />
+                                            </div>
+                                        </div>
+
+                                        <Button v-if="editMode" label="Save Changes" icon="pi pi-check"
+                                            @click="saveDatasetChanges" :loading="editLoading" class="w-full" />
+                                    </div>
+                                </div>
+
+                                <Divider />
+
+                                <!-- File Management -->
+                                <div class="space-y-4">
+                                    <div class="flex justify-between items-center">
+                                        <h3 class="text-lg font-semibold">File Management</h3>
+                                        <Button label="Add Files" icon="pi pi-plus" @click="openFileUploadDialog"
+                                            :disabled="remainingFileSlots <= 0" />
+                                    </div>
+
+                                    <p class="text-sm text-gray-600">
+                                        {{ datasetData.files?.length || 0 }} of {{ maxFiles }} files ({{
+                                            remainingFileSlots }} remaining)
+                                    </p>
+
+                                    <DataTable :value="datasetData.files" class="p-datatable-sm" :rows="5" paginator
+                                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+                                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} files">
+                                        <Column field="file_name" header="File Name" sortable></Column>
+                                        <Column field="file_size_bytes" header="Size" sortable>
+                                            <template #body="slotProps">
+                                                {{ formatFileSize(slotProps.data.file_size_bytes) }}
+                                            </template>
+                                        </Column>
+                                        <Column field="mime_type" header="Type" sortable></Column>
+                                        <Column header="Actions" style="width: 120px">
+                                            <template #body="slotProps">
+                                                <div class="flex gap-1">
+                                                    <Button icon="pi pi-download" severity="info" text rounded
+                                                        size="small"
+                                                        @click="downloadFile(slotProps.data.download_url, slotProps.data.file_name)" />
+                                                    <Button icon="pi pi-trash" severity="danger" text rounded
+                                                        size="small" @click="confirmFileDelete(slotProps.data)" />
+                                                </div>
+                                            </template>
+                                        </Column>
+                                    </DataTable>
+                                </div>
+
+                                <!-- Danger Zone -->
+                                <div class="space-y-4">
+                                    <h3 class="text-lg font-semibold text-red-600">Danger Zone</h3>
+                                    <div class="p-4 border border-red-200 rounded-lg bg-red-50">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h4 class="font-semibold text-red-800">Delete Dataset</h4>
+                                                <p class="text-sm text-red-600">
+                                                    This will permanently delete the dataset and all associated files.
+                                                </p>
+                                            </div>
+                                            <Button label="Delete" icon="pi pi-trash" severity="danger"
+                                                @click="confirmDatasetDelete" />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </template>
                     </Card>
@@ -529,6 +694,19 @@ const commentsData = ref([])
 const loadingComments = ref(false)
 const commentsError = ref('')
 const commentCount = ref(0)
+const editMode = ref(false)
+const visibilityModel = ref(false)
+const maxFiles = 10
+
+// Edit form
+const editForm = ref({
+    dataset_name: '',
+    description: '',
+    tags: [],
+    tutorial_video_url: ''
+})
+
+const editFormErrors = ref({})
 
 const downloadChartData = ref({
     labels: [],
@@ -615,6 +793,41 @@ const isDatasetAccessible = computed(() => {
     return datasetData.value.status === 'approved' && datasetData.value.is_public
 })
 
+const isDatasetApproved = computed(() => {
+    return datasetData.value.status === 'approved'
+})
+
+const remainingFileSlots = computed(() => {
+    return maxFiles - (datasetData.value.files?.length || 0)
+})
+
+const statusStyle = computed(() => {
+    const styles = {
+        approved: {
+            class: 'bg-green-50 border border-green-200',
+            textColor: 'text-green-700',
+            icon: 'pi pi-check',
+            message: 'Your dataset is approved and publicly accessible',
+            dateLabel: 'Approved on'
+        },
+        pending: {
+            class: 'bg-blue-50 border border-blue-200',
+            textColor: 'text-blue-700',
+            icon: 'pi pi-clock',
+            message: 'Your dataset is pending admin review',
+            dateLabel: 'Submitted on'
+        },
+        rejected: {
+            class: 'bg-red-50 border border-red-200',
+            textColor: 'text-red-700',
+            icon: 'pi pi-times',
+            message: 'Your dataset was rejected',
+            dateLabel: 'Reviewed on'
+        }
+    }
+    return styles[datasetData.value.status] || styles.pending
+})
+
 /**
  * Lifecycle hooks
  */
@@ -625,6 +838,21 @@ onMounted(() => {
 watch(() => route.params.id, () => {
     loadDatasetData()
 })
+
+watch(() => datasetData.value.is_public, (newValue) => {
+    visibilityModel.value = newValue
+}, { immediate: true })
+
+watch(() => datasetData.value, (newDataset) => {
+    if (newDataset) {
+        editForm.value = {
+            dataset_name: newDataset.dataset_name || '',
+            description: newDataset.description || '',
+            tags: newDataset.tags ? [...newDataset.tags] : [],
+            tutorial_video_url: newDataset.tutorial_video?.url || ''
+        }
+    }
+}, { immediate: true })
 
 const loadComments = async () => {
     if (!isDatasetAccessible.value) return
@@ -646,6 +874,34 @@ const loadComments = async () => {
 
 const handleNewComment = () => {
     loadComments() // Reload comments after new comment
+}
+
+const toggleEditMode = () => {
+    editMode.value = !editMode.value
+    if (!editMode.value) {
+        // Reset form on cancel
+        editForm.value = {
+            dataset_name: datasetData.value.dataset_name || '',
+            description: datasetData.value.description || '',
+            tags: datasetData.value.tags ? [...datasetData.value.tags] : [],
+            tutorial_video_url: datasetData.value.tutorial_video?.url || ''
+        }
+        editFormErrors.value = {}
+    }
+}
+
+const handleVisibilityToggle = async () => {
+    try {
+        const response = await api.patch(`/datasets/${route.params.id}/visibility`, {
+            is_public: visibilityModel.value
+        })
+        datasetData.value.is_public = visibilityModel.value
+        toast.add({ severity: 'success', summary: 'Visibility Updated', detail: `Dataset is now ${visibilityModel.value ? 'public' : 'private'}`, life: 3000 })
+    } catch (error) {
+        console.error('Error updating visibility:', error)
+        visibilityModel.value = !visibilityModel.value
+        toast.add({ severity: 'error', summary: 'Update Failed', detail: error.response?.data?.error || 'Failed to update visibility', life: 5000 })
+    }
 }
 
 /**
