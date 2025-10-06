@@ -17,6 +17,7 @@
     "@primevue/forms": "^4.4.0",
     "@primevue/themes": "^4.4.0",
     "axios": "^1.12.2",
+    "chart.js": "^4.5.0",
     "dayjs": "^1.11.18",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.5.0",

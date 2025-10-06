@@ -1447,13 +1447,13 @@ async function getDownloadStats(req, res) {
             });
         }
 
-        // Only owner can view download statistics
-        if (dataset.owner_user_id !== req.user.userId) {
-            return res.status(403).json({
-                success: false,
-                error: 'Forbidden: Only dataset owner can view download statistics'
-            });
-        }
+        // // Only owner can view download statistics
+        // if (dataset.owner_user_id !== req.user.userId) {
+        //     return res.status(403).json({
+        //         success: false,
+        //         error: 'Forbidden: Only dataset owner can view download statistics'
+        //     });
+        // }
 
         // Get download history from Neo4j
         const { getNeo4j } = require('../config/databases');

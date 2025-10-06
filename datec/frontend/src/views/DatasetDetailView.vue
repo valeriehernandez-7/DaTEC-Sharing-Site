@@ -1,0 +1,720 @@
+<template>
+    <div class="dataset-detail container mx-auto px-4 py-8">
+        <!-- Loading State -->
+        <div v-if="loading" class="flex justify-center items-center py-12">
+            <ProgressSpinner />
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="error" class="text-center py-8">
+            <Message severity="error" :closable="false">
+                {{ error }}
+            </Message>
+            <Button label="Go Home" icon="pi pi-home" @click="router.push('/')" class="mt-4" />
+        </div>
+
+        <!-- Dataset Content -->
+        <div v-else>
+            <!-- Dataset Header -->
+            <Card class="dataset-header mb-6">
+                <template #header>
+                    <div class="relative h-48 rounded-t-lg overflow-hidden">
+                        <!-- Header Photo or Fallback -->
+                        <img v-if="datasetData.header_photo_url" :src="getDatasetHeaderUrl(datasetData)"
+                            :alt="datasetData.dataset_name" class="object-cover" />
+                        <div v-else
+                            class="w-full h-full bg-gradient-to-br from-blue-600 to-gray-300 flex items-center justify-center text-white">
+                            <i class="pi pi-box text-5xl"></i>
+                        </div>
+                    </div>
+                </template>
+
+                <template #content>
+                    <!-- Dataset Name + Privacy Icon -->
+                    <div class="flex items-center gap-3 mb-2">
+                        <h1 class="text-3xl font-bold text-gray-900">{{ datasetData.dataset_name }}</h1>
+                        <i v-if="isOwner || authStore.user?.isAdmin"
+                            :class="datasetData.is_public ? 'pi pi-lock-open text-green-500' : 'pi pi-lock text-red-500'"
+                            class="text-xl" :title="datasetData.is_public ? 'Public' : 'Private'"></i>
+                    </div>
+
+                    <!-- Description -->
+                    <p class="text-gray-600 text-lg mb-4">{{ datasetData.description }}</p>
+
+                    <!-- Author Info -->
+                    <div class="flex items-center gap-3 mb-4">
+                        <Avatar v-if="datasetData.owner.avatarUrl" :image="getAvatarUrl(datasetData.owner)"
+                            shape="circle" size="normal" :alt="datasetData.owner.username" />
+                        <Avatar v-else :label="getInitials(datasetData.owner.fullName)" shape="circle" size="normal"
+                            :class="getUserAvatarClasses(datasetData.owner.username)" />
+                        <div>
+                            <p class="font-medium text-gray-900">{{ datasetData.owner.fullName }}</p>
+                            <p class="text-gray-500 text-sm">@{{ datasetData.owner.username }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap gap-2">
+                        <Button label="Vote" icon="pi pi-star" @click="openVoteDialog" />
+                        <Button label="Clone" icon="pi pi-copy" @click="cloneDataset" />
+                        <Button label="Download" icon="pi pi-download" @click="downloadDataset" />
+                    </div>
+                </template>
+            </Card>
+
+            <!-- Content Tabs -->
+            <Tabs v-model:value="activeTab">
+                <TabList>
+                    <Tab value="data">
+                        <span class="flex items-center gap-2">
+                            <i class="pi pi-file"></i>
+                            Data
+                        </span>
+                    </Tab>
+                    <Tab value="discussion">
+                        <span class="flex items-center gap-2">
+                            <i class="pi pi-comments"></i>
+                            Discussion
+                        </span>
+                    </Tab>
+                    <Tab value="activity">
+                        <span class="flex items-center gap-2">
+                            <i class="pi pi-chart-line"></i>
+                            Activity
+                        </span>
+                    </Tab>
+                    <Tab v-if="isOwner" value="settings">
+                        <span class="flex items-center gap-2">
+                            <i class="pi pi-cog"></i>
+                            Settings
+                        </span>
+                    </Tab>
+                </TabList>
+
+                <!-- Data Tab -->
+                <TabPanel value="data">
+                    <!-- Files Section -->
+                    <Card class="mb-6">
+                        <template #content>
+                            <DataTable :value="datasetData.files" :paginator="true" :rows="10"
+                                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+                                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} files">
+                                <Column field="file_name" header="File Name" sortable></Column>
+                                <Column field="file_size_bytes" header="Size" sortable>
+                                    <template #body="slotProps">
+                                        {{ formatFileSize(slotProps.data.file_size_bytes) }}
+                                    </template>
+                                </Column>
+                                <Column field="mime_type" header="Type" sortable></Column>
+                                <Column header="Actions">
+                                    <template #body="slotProps">
+                                        <Button icon="pi pi-download" label="Download" severity="secondary" size="small"
+                                            @click="downloadFile(slotProps.data.download_url, slotProps.data.file_name)" />
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </template>
+                    </Card>
+
+                    <!-- Tutorial Video Section -->
+                    <Card v-if="datasetData.tutorial_video" class="mb-6">
+                        <template #title>
+                            <div class="flex items-center gap-2">
+                                <i class="pi pi-video text-red-500"></i>
+                                <span>Tutorial Video</span>
+                            </div>
+                        </template>
+                        <template #content>
+                            <div class="video-container">
+                                <iframe v-if="datasetData.tutorial_video.platform === 'youtube'"
+                                    :src="getYouTubeEmbedUrl(datasetData.tutorial_video.url)" width="100%" height="400"
+                                    frameborder="0" allowfullscreen></iframe>
+                                <iframe v-else-if="datasetData.tutorial_video.platform === 'vimeo'"
+                                    :src="getVimeoEmbedUrl(datasetData.tutorial_video.url)" width="100%" height="400"
+                                    frameborder="0" allowfullscreen></iframe>
+                                <div v-else class="text-center py-8 text-gray-500">
+                                    <i class="pi pi-exclamation-triangle text-2xl mb-2"></i>
+                                    <p>Video platform not supported for embedding</p>
+                                    <Button :label="`Watch on ${datasetData.tutorial_video.platform}`"
+                                        icon="pi pi-external-link"
+                                        @click="openExternalVideo(datasetData.tutorial_video.url)" class="mt-2" />
+                                </div>
+                            </div>
+                        </template>
+                    </Card>
+                </TabPanel>
+
+                <!-- TODO: Discussion Tab -->
+                <TabPanel value="discussion">
+                    <Card>
+                        <template #content>
+                            <!-- Comment Thread Component will go here -->
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="pi pi-comments text-4xl mb-3"></i>
+                                <p>Comment system coming soon</p>
+                            </div>
+                        </template>
+                    </Card>
+                </TabPanel>
+
+                <!-- Activity Tab -->
+                <TabPanel value="activity">
+                    <Accordion :multiple="true" :activeIndex="[0]">
+                        <!-- Voting Details -->
+                        <AccordionPanel header="Voting Details">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="text-center">
+                                    <i class="pi pi-star text-yellow-500 text-2xl"></i>
+                                    <h3 class="text-xl font-bold">{{ votesData.averageRating }}/5</h3>
+                                    <p class="text-gray-600">Rating</p>
+                                </div>
+                                <div class="text-center">
+                                    <i class="pi pi-users text-purple-500 text-2xl"></i>
+                                    <h3 class="text-xl font-bold">{{ votesData.totalVotes }}</h3>
+                                    <p class="text-gray-600">Voters</p>
+                                </div>
+                            </div>
+
+                            <DataTable :value="votesData.votes" :paginator="true" :rows="10">
+                                <Column header="Voter">
+                                    <template #body="slotProps">
+                                        <div class="flex items-center gap-2">
+                                            <Avatar v-if="slotProps.data.voter.avatarUrl"
+                                                :image="getAvatarUrl(slotProps.data.voter)" shape="circle"
+                                                size="small" />
+                                            <Avatar v-else :label="getInitials(slotProps.data.voter.fullName)"
+                                                shape="circle" size="small"
+                                                :class="getUserAvatarClasses(slotProps.data.voter.username)" />
+                                            <span>{{ slotProps.data.voter.fullName }}</span>
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column field="rating" header="Rating">
+                                    <template #body="slotProps">
+                                        <Rating :modelValue="slotProps.data.rating" :readonly="true" :cancel="false" />
+                                    </template>
+                                </Column>
+                                <Column field="created_at" header="Date">
+                                    <template #body="slotProps">
+                                        {{ formatDate(slotProps.data.created_at) }}
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </AccordionPanel>
+
+                        <!-- Dataset Clones -->
+                        <AccordionPanel header="Dataset Clones">
+                            <DataTable :value="clonesData" :paginator="true" :rows="10">
+                                <Column header="Dataset">
+                                    <template #body="slotProps">
+                                        <a @click="navigateToDataset(slotProps.data.dataset_id)"
+                                            class="text-blue-600 hover:underline cursor-pointer">
+                                            {{ slotProps.data.dataset_name }}
+                                        </a>
+                                    </template>
+                                </Column>
+                                <Column header="Cloner">
+                                    <template #body="slotProps">
+                                        <div class="flex items-center gap-2">
+                                            <Avatar v-if="slotProps.data.owner.avatarUrl"
+                                                :image="getAvatarUrl(slotProps.data.owner)" shape="circle"
+                                                size="small" />
+                                            <Avatar v-else :label="getInitials(slotProps.data.owner.fullName)"
+                                                shape="circle" size="small"
+                                                :class="getUserAvatarClasses(slotProps.data.owner.username)" />
+                                            <span>{{ slotProps.data.owner.fullName }}</span>
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column field="created_at" header="Date">
+                                    <template #body="slotProps">
+                                        {{ formatDate(slotProps.data.created_at) }}
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </AccordionPanel>
+
+                        <!-- Download Statistics -->
+                        <AccordionPanel header="Download Statistics">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <Card>
+                                    <template #content>
+                                        <div class="text-center">
+                                            <i class="pi pi-download text-blue-500 text-2xl mb-2"></i>
+                                            <h3 class="text-xl font-bold">{{ downloadStats.statistics.totalDownloads }}
+                                            </h3>
+                                            <p class="text-gray-600">Total</p>
+                                        </div>
+                                    </template>
+                                </Card>
+                                <Card>
+                                    <template #content>
+                                        <div class="text-center">
+                                            <i class="pi pi-users text-green-500 text-2xl mb-2"></i>
+                                            <h3 class="text-xl font-bold">{{ downloadStats.statistics.uniqueUsers }}
+                                            </h3>
+                                            <p class="text-gray-600">Users</p>
+                                        </div>
+                                    </template>
+                                </Card>
+                                <Card>
+                                    <template #content>
+                                        <div class="text-center">
+                                            <i class="pi pi-calendar text-orange-500 text-2xl mb-2"></i>
+                                            <h3 class="text-xl font-bold">{{ lastDownloadDate }}</h3>
+                                            <p class="text-gray-600">Lastest</p>
+                                        </div>
+                                    </template>
+                                </Card>
+                            </div>
+
+                            <!-- Download Chart (Owner Only) -->
+                            <div v-if="isOwner">
+                                <h4 class="font-semibold mb-4">Download History</h4>
+                                <Chart type="line" :data="downloadChartData" class="h-80" />
+                            </div>
+
+                            <!-- Download History Table (Owner Only) -->
+                            <DataTable v-if="isOwner" :value="downloadStats.statistics.recentDownloads"
+                                :paginator="true" :rows="10">
+                                <Column header="User">
+                                    <template #body="slotProps">
+                                        <div class="flex items-center gap-2">
+                                            <Avatar v-if="slotProps.data.avatarUrl"
+                                                :image="getAvatarUrl(slotProps.data)" shape="circle" size="small" />
+                                            <Avatar v-else :label="getInitials(slotProps.data.fullName)" shape="circle"
+                                                size="small" :class="getUserAvatarClasses(slotProps.data.username)" />
+                                            <span>{{ slotProps.data.fullName }}</span>
+                                        </div>
+                                    </template>
+                                </Column>
+                                <Column field="downloadedAt" header="Download Date">
+                                    <template #body="slotProps">
+                                        {{ formatDate(slotProps.data.downloadedAt) }}
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </AccordionPanel>
+                    </Accordion>
+                </TabPanel>
+
+                <!-- Settings Tab (Owner Only) -->
+                <TabPanel v-if="isOwner" value="settings">
+                    <Card>
+                        <template #title>
+                            <div class="flex items-center gap-2">
+                                <i class="pi pi-cog text-gray-500"></i>
+                                <span>Dataset Settings</span>
+                            </div>
+                        </template>
+                        <template #content>
+                            <!-- TODO: Settings content will go here -->
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="pi pi-cog text-4xl mb-3"></i>
+                                <p>Settings panel coming soon</p>
+                            </div>
+                        </template>
+                    </Card>
+                </TabPanel>
+            </Tabs>
+        </div>
+    </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { useToast } from 'primevue/usetoast'
+import api from '@/services/api'
+
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
+const toast = useToast()
+
+/**
+ * Reactive state management
+ */
+const datasetData = ref({})
+const votesData = ref({ votes: [], totalVotes: 0, averageRating: 0 })
+const downloadStats = ref({ statistics: { totalDownloads: 0, uniqueUsers: 0, recentDownloads: [] } })
+const clonesData = ref([])
+const loading = ref(true)
+const activeTab = ref('data')
+const error = ref('')
+
+/**
+ * Computed properties for derived state
+ */
+const isOwner = computed(() => {
+    return authStore.isLoggedIn && authStore.user?.userId === datasetData.value.owner?.userId
+})
+
+const lastDownloadDate = computed(() => {
+    if (!downloadStats.value.statistics.recentDownloads.length) return 'Never'
+    return formatDate(downloadStats.value.statistics.recentDownloads[0].downloadedAt)
+})
+
+/**
+ * Lifecycle hooks
+ */
+onMounted(() => {
+    loadDatasetData()
+})
+
+watch(() => route.params.id, () => {
+    loadDatasetData()
+})
+
+/**
+ * Loads all dataset-related data
+ */
+const loadDatasetData = async () => {
+    loading.value = true
+    error.value = ''
+
+    try {
+        await Promise.all([
+            loadDatasetDetails(),
+            loadVotesData(),
+            loadDownloadStats(),
+            loadClonesData()
+        ])
+    } catch (err) {
+        error.value = 'Failed to load dataset data'
+        console.error('Error loading dataset data:', err)
+    } finally {
+        loading.value = false
+    }
+}
+
+/**
+ * Fetches dataset details
+ */
+const loadDatasetDetails = async () => {
+    try {
+        const response = await api.get(`/datasets/${route.params.id}`)
+        datasetData.value = response.data.dataset
+    } catch (err) {
+        if (err.response?.status === 404) {
+            error.value = 'Dataset not found'
+        } else {
+            throw err
+        }
+    }
+}
+
+/**
+ * Fetches votes data
+ */
+const loadVotesData = async () => {
+    try {
+        const response = await api.get(`/datasets/${route.params.id}/votes`)
+        votesData.value = response.data
+    } catch (err) {
+        console.error('Error loading votes:', err)
+        votesData.value = { votes: [], totalVotes: 0, averageRating: 0 }
+    }
+}
+
+/**
+ * Fetches download statistics
+ */
+const loadDownloadStats = async () => {
+    try {
+        const response = await api.get(`/datasets/${route.params.id}/downloads`)
+        downloadStats.value = response.data
+    } catch (err) {
+        console.error('Error loading download stats:', err)
+        downloadStats.value = { statistics: { totalDownloads: 0, uniqueUsers: 0, recentDownloads: [] } }
+    }
+}
+
+/**
+ * Fetches clones data
+ */
+const loadClonesData = async () => {
+    try {
+        const response = await api.get(`/datasets/${route.params.id}/clones`)
+        clonesData.value = response.data.clones || []
+    } catch (err) {
+        console.error('Error loading clones:', err)
+        clonesData.value = []
+    }
+}
+
+/**
+ * Gets avatar background color classes
+ */
+const getUserAvatarClasses = (username) => {
+    const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500']
+    const index = (username?.charCodeAt(0) || 0) % colors.length
+    return `${colors[index]} text-white`
+}
+
+/**
+ * Gets initials for avatar fallback
+ */
+const getInitials = (fullName) => {
+    if (!fullName) return 'U'
+    return fullName
+        .split(' ')
+        .map(name => name.charAt(0))
+        .join('')
+        .toUpperCase()
+        .substring(0, 2)
+}
+
+/**
+ * Gets avatar URL with proper CouchDB file handling
+ */
+const getAvatarUrl = (user) => {
+    if (!user?.avatarUrl) return null
+
+    try {
+        const url = new URL(user.avatarUrl)
+        const pathParts = url.pathname.split('/').filter(part => part)
+
+        if (pathParts.length < 3) return null
+
+        const documentId = pathParts[1]
+        const filename = pathParts[2]
+
+        return `http://localhost:3000/api/files/${documentId}/${filename}`
+    } catch {
+        return null
+    }
+}
+
+/**
+ * Formats date for display
+ */
+const formatDate = (dateString) => {
+    if (!dateString) return 'N/A'
+
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffTime = Math.abs(now - date)
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 1) return '1 day ago'
+    if (diffDays < 7) return `${diffDays} days ago`
+    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`
+
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    })
+}
+
+/**
+ * Formats file size for display
+ */
+const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+/**
+ * Gets YouTube embed URL
+ */
+const getYouTubeEmbedUrl = (url) => {
+    const videoId = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)?.[1]
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : url
+}
+
+/**
+ * Gets Vimeo embed URL
+ */
+const getVimeoEmbedUrl = (url) => {
+    const videoId = url.match(/vimeo\.com\/(\d+)/)?.[1]
+    return videoId ? `https://player.vimeo.com/video/${videoId}` : url
+}
+
+/**
+ * Opens external video in new tab
+ */
+const openExternalVideo = (url) => {
+    window.open(url, '_blank')
+}
+
+/**
+ * Downloads a single file
+ */
+const downloadFile = async (downloadUrl, fileName) => {
+    try {
+        // Implementation for single file download
+        const response = await api.get(downloadUrl, { responseType: 'blob' })
+        const blob = new Blob([response.data])
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = fileName
+        link.click()
+        URL.revokeObjectURL(link.href)
+
+        toast.add({
+            severity: 'success',
+            summary: 'Download Started',
+            detail: `Downloading ${fileName}`,
+            life: 3000
+        })
+    } catch (err) {
+        console.error('Error downloading file:', err)
+        toast.add({
+            severity: 'error',
+            summary: 'Download Failed',
+            detail: 'Failed to download file',
+            life: 5000
+        })
+    }
+}
+
+/**
+ * Downloads complete dataset as ZIP
+ */
+const downloadDataset = async () => {
+    try {
+        const response = await api.get(`/datasets/${route.params.id}/download`, { responseType: 'blob' })
+        const blob = new Blob([response.data])
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = `${datasetData.value.dataset_name}.zip`
+        link.click()
+        URL.revokeObjectURL(link.href)
+
+        toast.add({
+            severity: 'success',
+            summary: 'Download Started',
+            detail: 'Downloading dataset as ZIP',
+            life: 3000
+        })
+    } catch (err) {
+        console.error('Error downloading dataset:', err)
+        toast.add({
+            severity: 'error',
+            summary: 'Download Failed',
+            detail: 'Failed to download dataset',
+            life: 5000
+        })
+    }
+}
+
+/**
+ * Opens vote dialog
+ */
+const openVoteDialog = () => {
+    // TODO: Implementation for voting dialog
+    toast.add({
+        severity: 'info',
+        summary: 'Voting',
+        detail: 'Voting functionality coming soon',
+        life: 3000
+    })
+}
+
+/**
+ * Clones the dataset
+ */
+const cloneDataset = async () => {
+    try {
+        const newName = prompt(`Enter a new name for the cloned dataset:`, `${datasetData.value.dataset_name}-clone`)
+        if (!newName) return
+
+        const response = await api.post(`/datasets/${route.params.id}/clone`, {
+            new_dataset_name: newName
+        })
+
+        toast.add({
+            severity: 'success',
+            summary: 'Dataset Cloned',
+            detail: 'Dataset cloned successfully',
+            life: 3000
+        })
+
+        // Navigate to the new cloned dataset
+        if (response.data.dataset) {
+            router.push(`/datasets/${response.data.dataset.dataset_id}`)
+        }
+    } catch (err) {
+        console.error('Error cloning dataset:', err)
+        toast.add({
+            severity: 'error',
+            summary: 'Clone Failed',
+            detail: err.response?.data?.error || 'Failed to clone dataset',
+            life: 5000
+        })
+    }
+}
+
+// Retrieve datasets header photo
+const getDatasetHeaderUrl = (dataset) => {
+    if (!dataset.header_photo_url) return null;
+
+    const url = new URL(dataset.header_photo_url);
+    const pathParts = url.pathname.split('/').filter(part => part);
+
+    if (pathParts.length < 3) return null;
+
+    const documentId = pathParts[1];
+    const filename = pathParts[2];
+
+    return `http://localhost:3000/api/files/${documentId}/${filename}`;
+};
+
+/**
+ * Navigates to dataset detail page
+ */
+const navigateToDataset = (datasetId) => {
+    router.push(`/datasets/${datasetId}`)
+}
+
+// TODO: Implement download chart data
+const downloadChartData = ref({
+    labels: [],
+    datasets: [
+        {
+            label: 'Downloads',
+            data: [],
+            fill: false,
+            borderColor: '#42A5F5',
+            tension: 0.4
+        }
+    ]
+})
+</script>
+
+<style scoped>
+.dataset-detail {
+    max-width: 1200px;
+}
+
+.video-container {
+    position: relative;
+    padding-bottom: 56.25%;
+    /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+}
+
+:deep(.p-Tabs-nav) {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+:deep(.p-Tabs-nav-link) {
+    padding: 1rem 1.5rem;
+}
+</style>

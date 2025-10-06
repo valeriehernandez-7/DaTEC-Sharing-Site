@@ -23,15 +23,23 @@ import Badge from 'primevue/badge'
 import Tag from 'primevue/tag'
 import FileUpload from 'primevue/fileupload'
 import DatePicker from 'primevue/datepicker'
-import Tabs from 'primevue/tabs';
-import TabList from 'primevue/tablist';
-import Tab from 'primevue/tab';
-import TabPanels from 'primevue/tabpanels';
-import TabPanel from 'primevue/tabpanel';
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
+import TabPanel from 'primevue/tabpanel'
 import DataView from 'primevue/dataview'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
 import Drawer from 'primevue/drawer'
-import Textarea from 'primevue/textarea';
-import Tooltip from 'primevue/tooltip';
+import Textarea from 'primevue/textarea'
+import Tooltip from 'primevue/tooltip'
+import Rating from 'primevue/rating'
+import Accordion from 'primevue/accordion'
+import AccordionPanel from 'primevue/accordionpanel'
+import AccordionHeader from 'primevue/accordionheader'
+import AccordionContent from 'primevue/accordioncontent'
+import Chart from 'primevue/chart'
 
 import App from './App.vue'
 import router from './router'
@@ -85,6 +93,14 @@ app.component('DataView', DataView)
 app.component('Drawer', Drawer)
 app.component('Textarea', Textarea)
 app.component('Tooltip', Tooltip)
+app.component('Accordion', Accordion);
+app.component('AccordionPanel', AccordionPanel);
+app.component('AccordionHeader', AccordionHeader);
+app.component('AccordionContent', AccordionContent);
+app.component('DataTable', DataTable);
+app.component('Column', Column);
+app.component('Rating', Rating);
+app.component('Chart', Chart);
 
 /**
  * Services and state management

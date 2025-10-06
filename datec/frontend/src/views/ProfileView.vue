@@ -552,7 +552,7 @@ const getStatusIcon = (status) => {
 const getStatusSeverity = (status) => {
     const severityMap = {
         'approved': 'success',
-        'pending': 'warning',
+        'pending': 'info',
         'rejected': 'danger'
     }
     return severityMap[status] || 'info'
