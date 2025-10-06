@@ -41,6 +41,16 @@
                     <!-- Description -->
                     <p class="text-gray-600 text-lg mb-4">{{ datasetData.description }}</p>
 
+                    <!-- Current User Vote Display -->
+                    <div v-if="hasUserVoted && authStore.isLoggedIn" class="mb-4 p-3 bg-blue-50 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-star text-yellow-500"></i>
+                            <span class="font-medium">Your rating:</span>
+                            <Rating :modelValue="userCurrentRating" :readonly="true" :cancel="false" />
+                            <span class="text-gray-600">({{ userCurrentRating }} stars)</span>
+                        </div>
+                    </div>
+
                     <!-- Author Info -->
                     <div class="flex items-center gap-3 mb-4" @click="goToProfile(datasetData.owner.username)">
                         <Avatar v-if="datasetData.owner.avatarUrl" :image="getAvatarUrl(datasetData.owner)"
@@ -55,7 +65,8 @@
 
                     <!-- Action Buttons -->
                     <div class="flex flex-wrap gap-2">
-                        <Button label="Vote" icon="pi pi-star" @click="openVoteDialog" />
+                        <Button :label="hasUserVoted ? 'Update Vote' : 'Vote'" icon="pi pi-star" @click="openVoteDialog"
+                            :severity="hasUserVoted ? 'warning' : 'primary'" />
                         <Button label="Clone" icon="pi pi-copy" @click="cloneDataset" />
                         <Button label="Download" icon="pi pi-download" @click="downloadDataset" />
                     </div>
@@ -176,18 +187,18 @@
                                     <Card>
                                         <template #content>
                                             <div class="text-center">
-                                                <i class="pi pi-star text-yellow-500 text-2xl mb-2"></i>
-                                                <h3 class="text-xl font-bold">{{ votesData.averageRating }}/5</h3>
-                                                <p class="text-gray-600">Average Rating</p>
+                                                <i class="pi pi-users text-purple-500 text-2xl mb-2"></i>
+                                                <h3 class="text-xl font-bold">{{ votesData.totalVotes }}</h3>
+                                                <p class="text-gray-600">Total Votes</p>
                                             </div>
                                         </template>
                                     </Card>
                                     <Card>
                                         <template #content>
                                             <div class="text-center">
-                                                <i class="pi pi-users text-purple-500 text-2xl mb-2"></i>
-                                                <h3 class="text-xl font-bold">{{ votesData.totalVotes }}</h3>
-                                                <p class="text-gray-600">Total Votes</p>
+                                                <i class="pi pi-star text-yellow-500 text-2xl mb-2"></i>
+                                                <h3 class="text-xl font-bold">{{ votesData.averageRating }}/5</h3>
+                                                <p class="text-gray-600">Average Rating</p>
                                             </div>
                                         </template>
                                     </Card>
@@ -196,7 +207,7 @@
                                 <!-- Votes Table -->
                                 <DataTable v-if="votesData.votes.length !== 0" :value="votesData.votes"
                                     :paginator="true" :rows="10" class="mb-4">
-                                    <Column header="User">
+                                    <Column header="Voter">
                                         <template #body="slotProps">
                                             <div class="flex items-center gap-2"
                                                 @click="goToProfile(slotProps.data.voter.username)">
@@ -243,7 +254,8 @@
                             </AccordionHeader>
                             <AccordionContent>
                                 <!-- Clones Stats Card -->
-                                <div v-if="filteredClones.length !== 0" class="mb-6">
+                                <div v-if="filteredClones.length !== 0"
+                                    class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                     <Card>
                                         <template #content>
                                             <div class="text-center">
@@ -253,26 +265,40 @@
                                             </div>
                                         </template>
                                     </Card>
+                                    <Card>
+                                        <template #content>
+                                            <div class="text-center">
+                                                <i class="pi pi-calendar text-orange-500 text-2xl mb-2"></i>
+                                                <h3 class="text-xl font-bold">{{
+                                                    formatDate(filteredClones[0].created_at) }} </h3>
+                                                <p class="text-gray-600">Lastest Clone</p>
+                                            </div>
+                                        </template>
+                                    </Card>
                                 </div>
 
                                 <!-- Clones Table -->
                                 <DataTable v-if="filteredClones.length !== 0" :value="filteredClones" :paginator="true"
                                     :rows="10" class="mb-4">
-                                    <Column header="Dataset">
+                                    <Column header="Clone">
                                         <template #body="slotProps">
                                             <div class="flex items-center gap-2">
                                                 <a @click="navigateToDataset(slotProps.data.dataset_id)"
                                                     class="text-blue-600 hover:underline cursor-pointer font-medium">
                                                     {{ slotProps.data.dataset_name }}
                                                 </a>
-                                                <Tag v-if="slotProps.data.status === 'pending'" value="PENDING"
-                                                    severity="warning" />
-                                                <Tag v-else-if="slotProps.data.status === 'approved'" value="APPROVED"
-                                                    severity="success" />
+                                                <div v-if="authStore.user?.username === slotProps.data.owner?.username">
+                                                    <Tag v-if="slotProps.data.status === 'pending'" value="PENDING"
+                                                        severity="info" />
+                                                    <Tag v-else-if="slotProps.data.status === 'rejected'"
+                                                        value="REJECTED" severity="danger" />
+                                                    <Tag v-else-if="slotProps.data.status === 'approved'"
+                                                        value="APPROVED" severity="success" />
+                                                </div>
                                             </div>
                                         </template>
                                     </Column>
-                                    <Column header="Cloned By">
+                                    <Column header="Owner">
                                         <template #body="slotProps">
                                             <div class="flex items-center gap-2"
                                                 @click="goToProfile(slotProps.data.owner.username)">
@@ -286,7 +312,7 @@
                                             </div>
                                         </template>
                                     </Column>
-                                    <Column field="created_at" header="Cloned Date">
+                                    <Column field="created_at" header="Date">
                                         <template #body="slotProps">
                                             {{ formatDate(slotProps.data.created_at) }}
                                         </template>
@@ -315,7 +341,7 @@
                             <AccordionContent>
                                 <!-- Download Stats Cards -->
                                 <div v-if="downloadStats.statistics.recentDownloads.length !== 0"
-                                    class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                    class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                     <Card>
                                         <template #content>
                                             <div class="text-center">
@@ -329,19 +355,9 @@
                                     <Card>
                                         <template #content>
                                             <div class="text-center">
-                                                <i class="pi pi-users text-green-500 text-2xl mb-2"></i>
-                                                <h3 class="text-xl font-bold">{{ downloadStats.statistics.uniqueUsers }}
-                                                </h3>
-                                                <p class="text-gray-600">Users</p>
-                                            </div>
-                                        </template>
-                                    </Card>
-                                    <Card>
-                                        <template #content>
-                                            <div class="text-center">
                                                 <i class="pi pi-calendar text-orange-500 text-2xl mb-2"></i>
                                                 <h3 class="text-xl font-bold">{{ lastDownloadDate }}</h3>
-                                                <p class="text-gray-600">Lastest</p>
+                                                <p class="text-gray-600">Lastest Download</p>
                                             </div>
                                         </template>
                                     </Card>
@@ -381,7 +397,7 @@
                                                         </div>
                                                     </template>
                                                 </Column>
-                                                <Column field="downloadedAt" header="Download Date">
+                                                <Column field="downloadedAt" header="Date">
                                                     <template #body="slotProps">
                                                         {{ formatDate(slotProps.data.downloadedAt) }}
                                                     </template>
@@ -422,6 +438,35 @@
                 </TabPanel>
             </Tabs>
         </div>
+        <!-- Vote Dialog -->
+        <Dialog v-model:visible="showVoteDialog" :style="{ width: '450px' }" :modal="true">
+            <template #header>
+                <div class="inline-flex items-center justify-center gap-2">
+                    <span>
+                        <h2>Rate <i class="pi pi-star-fill text-2xl"></i> {{ datasetData.dataset_name }}</h2>
+                    </span>
+                </div>
+            </template>
+            <div class="p-fluid">
+                <div class="field">
+                    <label class="block mb-3 text-lg font-semibold">How would you rate this dataset?</label>
+                    <div class="flex justify-center my-4">
+                        <Rating v-model="selectedRating" :stars="5" :cancel="false" />
+                    </div>
+                    <div class="text-center text-gray-600 mt-2">
+                        <span v-if="selectedRating === 0">Select your rating</span>
+                        <span v-else>{{ selectedRating }} star{{ selectedRating > 1 ? 's' : '' }}</span>
+                    </div>
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Cancel" icon="pi pi-times" text @click="showVoteDialog = false" />
+                <Button v-if="hasUserVoted" label="Remove Vote" icon="pi pi-trash" severity="danger" @click="removeVote"
+                    :loading="votingLoading" />
+                <Button label="Submit Rating" icon="pi pi-check" @click="submitVote" :loading="votingLoading"
+                    :disabled="!selectedRating" />
+            </template>
+        </Dialog>
     </div>
 </template>
 
@@ -447,6 +492,10 @@ const clonesData = ref([])
 const loading = ref(true)
 const activeTab = ref('data')
 const error = ref('')
+const userVote = ref(null)
+const votingLoading = ref(false)
+const showVoteDialog = ref(false)
+const selectedRating = ref(0)
 
 /**
  * Computed properties for derived state
@@ -459,6 +508,30 @@ const lastDownloadDate = computed(() => {
     if (!downloadStats.value.statistics.recentDownloads.length) return 'Never'
     return formatDate(downloadStats.value.statistics.recentDownloads[0].downloadedAt)
 })
+
+const hasUserVoted = computed(() => {
+    return userVote.value !== null
+})
+
+const userCurrentRating = computed(() => {
+    return userVote.value?.rating || 0
+})
+
+const filteredClones = computed(() => {
+    return clonesData.value.filter(clone => {
+        // Show approved clones to everyone
+        if (clone.status === 'approved') return true;
+
+        // Show pending clones only to the clone owner or dataset owner
+        if (clone.status === 'pending' || clone.status === 'rejected') {
+            const isCloneOwner = authStore.isLoggedIn && authStore.user?.username === clone.owner?.username;
+            const isDatasetOwner = isOwner.value;
+            return isCloneOwner || isDatasetOwner;
+        }
+
+        return false;
+    });
+});
 
 /**
  * Lifecycle hooks
@@ -654,7 +727,6 @@ const openExternalVideo = (url) => {
  */
 function extractFileID(url) {
     const parts = url.split('/');
-    console.log(parts[4])
     return parts.length >= 5 ? parts[4] : null;
 }
 
@@ -721,16 +793,118 @@ const downloadDataset = async () => {
 }
 
 /**
- * Opens vote dialog
+ * Opens vote dialog and loads user's current vote
  */
-const openVoteDialog = () => {
-    // TODO: Implementation for voting dialog
-    toast.add({
-        severity: 'info',
-        summary: 'Voting',
-        detail: 'Voting functionality coming soon',
-        life: 3000
-    })
+const openVoteDialog = async () => {
+    if (!authStore.isLoggedIn) {
+        router.push('/login')
+        return
+    }
+
+    showVoteDialog.value = true
+    votingLoading.value = true
+
+    try {
+        // Load user's current vote
+        const response = await api.get(`/datasets/${route.params.id}/votes/me`)
+        if (response.data.hasVoted) {
+            userVote.value = response.data.vote
+            selectedRating.value = response.data.vote.rating
+        } else {
+            userVote.value = null
+            selectedRating.value = 0
+        }
+    } catch (err) {
+        console.error('Error loading user vote:', err)
+        userVote.value = null
+        selectedRating.value = 0
+    } finally {
+        votingLoading.value = false
+    }
+}
+
+/**
+ * Submits user's vote
+ */
+const submitVote = async () => {
+    if (!selectedRating.value) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Select Rating',
+            detail: 'Please select a rating between 1 and 5 stars',
+            life: 3000
+        })
+        return
+    }
+
+    votingLoading.value = true
+
+    try {
+        await api.post(`/datasets/${route.params.id}/votes`, {
+            rating: selectedRating.value
+        })
+
+        // Reload votes data
+        await loadVotesData()
+
+        // Reload user's vote
+        const response = await api.get(`/datasets/${route.params.id}/votes/me`)
+        userVote.value = response.data.hasVoted ? response.data.vote : null
+
+        toast.add({
+            severity: 'success',
+            summary: 'Vote Submitted',
+            detail: `You rated this dataset ${selectedRating.value} stars`,
+            life: 3000
+        })
+
+        showVoteDialog.value = false
+    } catch (err) {
+        console.error('Error submitting vote:', err)
+        toast.add({
+            severity: 'error',
+            summary: 'Vote Failed',
+            detail: err.response?.data?.error || 'Failed to submit vote',
+            life: 5000
+        })
+    } finally {
+        votingLoading.value = false
+    }
+}
+
+/**
+ * Removes user's vote
+ */
+const removeVote = async () => {
+    votingLoading.value = true
+
+    try {
+        await api.delete(`/datasets/${route.params.id}/votes`)
+
+        // Reload votes data
+        await loadVotesData()
+        userVote.value = null
+        selectedRating.value = 0
+
+        toast.add({
+            severity: 'success',
+            summary: 'Vote Removed',
+            detail: 'Your vote has been removed',
+            life: 3000
+        })
+
+        showVoteDialog.value = false
+    } catch (err) {
+        console.error('Error removing vote:', err)
+        toast.add({
+            severity: 'error',
+            summary: 'Remove Failed',
+            detail: err.response?.data?.error || 'Failed to remove vote',
+            life: 5000
+        })
+    } finally {
+        votingLoading.value = false
+    }
 }
 
 /**
@@ -782,28 +956,13 @@ const getDatasetHeaderUrl = (dataset) => {
     return `http://localhost:3000/api/files/${documentId}/${filename}`;
 };
 
-// Add to computed properties section
-const filteredClones = computed(() => {
-    return clonesData.value.filter(clone => {
-        // Show approved clones to everyone
-        if (clone.status === 'approved') return true;
-
-        // Show pending clones only to the clone owner or dataset owner
-        if (clone.status === 'pending') {
-            const isCloneOwner = authStore.isLoggedIn && authStore.user?.userId === clone.owner?.userId;
-            const isDatasetOwner = isOwner.value;
-            return isCloneOwner || isDatasetOwner;
-        }
-
-        return false;
-    });
-});
-
 /**
  * Navigates to user's profile page
  */
 const goToProfile = (username) => {
-    router.push(`/profile/${username}`)
+    if (username) {
+        router.push(`/profile/${username}`)
+    }
 }
 
 /**
