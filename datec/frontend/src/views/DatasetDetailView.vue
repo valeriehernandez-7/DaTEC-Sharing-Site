@@ -41,16 +41,6 @@
                     <!-- Description -->
                     <p class="text-gray-600 text-lg mb-4">{{ datasetData.description }}</p>
 
-                    <!-- Current User Vote Display -->
-                    <div v-if="hasUserVoted && authStore.isLoggedIn && !isOwner" class="mb-4 p-3 bg-blue-50 rounded-lg">
-                        <div class="flex items-center gap-2">
-                            <i class="pi pi-star text-yellow-500"></i>
-                            <span class="font-medium">Your rating:</span>
-                            <Rating :modelValue="userCurrentRating" :readonly="true" :cancel="false" />
-                            <span class="text-gray-600">({{ userCurrentRating }} stars)</span>
-                        </div>
-                    </div>
-
                     <!-- Author Info -->
                     <div class="flex items-center gap-3 mb-4" @click="goToProfile(datasetData.owner.username)">
                         <Avatar v-if="datasetData.owner.avatarUrl" :image="getAvatarUrl(datasetData.owner)"
@@ -63,9 +53,19 @@
                         </div>
                     </div>
 
+                    <!-- Current User Vote Display -->
+                    <div v-if="hasUserVoted && authStore.isLoggedIn && !isOwner" class="mb-4 p-3 bg-blue-50 rounded-lg">
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-star text-yellow-500"></i>
+                            <span class="font-medium">Your rating:</span>
+                            <Rating :modelValue="userCurrentRating" :readonly="true" :cancel="false" />
+                            <span class="text-gray-600">({{ userCurrentRating }} stars)</span>
+                        </div>
+                    </div>
+
                     <!-- Action Buttons -->
                     <div class="flex flex-wrap gap-2">
-                        <Button v-if="!isOwner" :label="hasUserVoted ? 'Update Vote' : 'Vote'" icon="pi pi-star"
+                        <Button v-if="!isOwner" :label="hasUserVoted ? 'Revote' : 'Vote'" icon="pi pi-star"
                             @click="openVoteDialog" :severity="hasUserVoted ? 'warning' : 'primary'" />
                         <Button label="Clone" icon="pi pi-copy" @click="cloneDataset" />
                         <Button label="Download" icon="pi pi-download" @click="downloadDataset" />
@@ -440,11 +440,11 @@
             </Tabs>
         </div>
         <!-- Vote Dialog -->
-        <Dialog v-model:visible="showVoteDialog" :style="{ width: '450px' }" :modal="true">
+        <Dialog v-model:visible="showVoteDialog" :style="{ width: '600px' }" :modal="true">
             <template #header>
                 <div class="inline-flex items-center justify-center gap-2">
                     <span>
-                        <h2>Rate <i class="pi pi-star-fill text-2xl"></i> {{ datasetData.dataset_name }}</h2>
+                        <h2>{{ datasetData.dataset_name }}</h2>
                     </span>
                 </div>
             </template>
@@ -461,11 +461,13 @@
                 </div>
             </div>
             <template #footer>
-                <Button label="Cancel" icon="pi pi-times" text @click="showVoteDialog = false" />
-                <Button v-if="hasUserVoted" label="Remove Vote" icon="pi pi-trash" severity="danger" @click="removeVote"
-                    :loading="votingLoading" />
-                <Button label="Submit Rating" icon="pi pi-check" @click="submitVote" :loading="votingLoading"
-                    :disabled="!selectedRating" />
+                <div class="flex flex-wrap gap-2">
+                    <Button label="Cancel" icon="pi pi-times" text @click="showVoteDialog = false" />
+                    <Button v-if="hasUserVoted" label="Unvote" icon="pi pi-trash" severity="danger" @click="removeVote"
+                        :loading="votingLoading" />
+                    <Button label="Vote" icon="pi pi-check" @click="submitVote" :loading="votingLoading"
+                        :disabled="!selectedRating" />
+                </div>
             </template>
         </Dialog>
     </div>
@@ -602,7 +604,8 @@ const loadDatasetData = async () => {
             loadDatasetDetails(),
             loadVotesData(),
             loadDownloadStats(),
-            loadClonesData()
+            loadClonesData(),
+            loadUserVote()
         ])
     } catch (err) {
         error.value = 'Failed to load dataset data'
@@ -677,6 +680,24 @@ const getUserAvatarClasses = (username) => {
     const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500']
     const index = (username?.charCodeAt(0) || 0) % colors.length
     return `${colors[index]} text-white`
+}
+
+/**
+ * Loads current user's vote for this dataset
+ */
+const loadUserVote = async () => {
+    if (!authStore.isLoggedIn || isOwner.value) {
+        userVote.value = null
+        return
+    }
+
+    try {
+        const response = await api.get(`/datasets/${route.params.id}/votes/me`)
+        userVote.value = response.data.hasVoted ? response.data.vote : null
+    } catch (err) {
+        console.error('Error loading user vote:', err)
+        userVote.value = null
+    }
 }
 
 /**
@@ -851,25 +872,7 @@ const openVoteDialog = async () => {
     }
 
     showVoteDialog.value = true
-    votingLoading.value = true
-
-    try {
-        // Load user's current vote
-        const response = await api.get(`/datasets/${route.params.id}/votes/me`)
-        if (response.data.hasVoted) {
-            userVote.value = response.data.vote
-            selectedRating.value = response.data.vote.rating
-        } else {
-            userVote.value = null
-            selectedRating.value = 0
-        }
-    } catch (err) {
-        console.error('Error loading user vote:', err)
-        userVote.value = null
-        selectedRating.value = 0
-    } finally {
-        votingLoading.value = false
-    }
+    selectedRating.value = userVote.value?.rating || 0
 }
 
 /**
@@ -897,8 +900,7 @@ const submitVote = async () => {
         await loadVotesData()
 
         // Reload user's vote
-        const response = await api.get(`/datasets/${route.params.id}/votes/me`)
-        userVote.value = response.data.hasVoted ? response.data.vote : null
+        await loadUserVote()
 
         toast.add({
             severity: 'success',
@@ -930,9 +932,9 @@ const removeVote = async () => {
     try {
         await api.delete(`/datasets/${route.params.id}/votes`)
 
-        // Reload votes data
+        // Reload votes data and user vote
         await loadVotesData()
-        userVote.value = null
+        await loadUserVote()
         selectedRating.value = 0
 
         toast.add({
