@@ -41,6 +41,11 @@ import AccordionHeader from 'primevue/accordionheader'
 import AccordionContent from 'primevue/accordioncontent'
 import Chart from 'primevue/chart'
 import Select from 'primevue/select'
+import Divider from 'primevue/divider';
+
+
+import CommentThread from '@/components/comments/CommentThread.vue'
+import CommentForm from '@/components/comments/CommentForm.vue'
 
 import App from './App.vue'
 import router from './router'
@@ -103,6 +108,9 @@ app.component('Column', Column)
 app.component('Rating', Rating)
 app.component('Chart', Chart)
 app.component('Select', Select)
+app.component('Divider', Divider)
+app.component('CommentThread', CommentThread)
+app.component('CommentForm', CommentForm)
 
 /**
  * Services and state management

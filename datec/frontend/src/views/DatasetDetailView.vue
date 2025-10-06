@@ -155,14 +155,39 @@
                     </Card>
                 </TabPanel>
 
-                <!-- TODO: Discussion Tab -->
+                <!-- Discussion Tab -->
                 <TabPanel value="discussion">
                     <Card>
                         <template #content>
-                            <!-- Comment Thread Component will go here -->
-                            <div class="text-center py-8 text-gray-500">
-                                <i class="pi pi-comments text-4xl mb-3"></i>
-                                <p>Comment system coming soon</p>
+                            <div class="discussion-container">
+                                <!-- Comment Form for Top-Level Comments -->
+                                <CommentForm v-if="authStore.isLoggedIn && isDatasetAccessible"
+                                    @submit="handleNewComment" class="mb-6" />
+
+                                <Divider type="dotted" />
+
+                                <!-- Loading State -->
+                                <div v-if="loadingComments" class="flex justify-center py-8">
+                                    <ProgressSpinner />
+                                </div>
+
+                                <!-- Error State -->
+                                <div v-else-if="commentsError" class="text-center py-8 text-red-500">
+                                    <i class="pi pi-exclamation-triangle text-2xl mb-2"></i>
+                                    <p>Failed to load comments</p>
+                                    <Button label="Retry" icon="pi pi-refresh" @click="loadComments" class="mt-2" />
+                                </div>
+
+                                <!-- Empty State -->
+                                <div v-else-if="commentCount === 0" class="text-center py-8 text-gray-500">
+                                    <i class="pi pi-comments text-4xl mb-3"></i>
+                                    <p>No comments yet</p>
+                                    <p class="text-sm">Be the first to start the discussion!</p>
+                                </div>
+
+                                <!-- Comments Thread -->
+                                <CommentThread v-else :comments="commentsData"
+                                    :datasetOwnerId="datasetData.owner?.userId" @comment-updated="loadComments" />
                             </div>
                         </template>
                     </Card>
@@ -347,7 +372,7 @@
                                             <div class="text-center">
                                                 <i class="pi pi-download text-blue-500 text-2xl mb-2"></i>
                                                 <h3 class="text-xl font-bold">{{ downloadStats.statistics.totalDownloads
-                                                    }}</h3>
+                                                }}</h3>
                                                 <p class="text-gray-600">Total Downloads</p>
                                             </div>
                                         </template>
@@ -499,6 +524,10 @@ const userVote = ref(null)
 const votingLoading = ref(false)
 const showVoteDialog = ref(false)
 const selectedRating = ref(0)
+const commentsData = ref([])
+const loadingComments = ref(false)
+const commentsError = ref('')
+const commentCount = ref(0)
 
 const downloadChartData = ref({
     labels: [],
@@ -581,6 +610,10 @@ const filteredClones = computed(() => {
     });
 });
 
+const isDatasetAccessible = computed(() => {
+    return datasetData.value.status === 'approved' && datasetData.value.is_public
+})
+
 /**
  * Lifecycle hooks
  */
@@ -591,6 +624,28 @@ onMounted(() => {
 watch(() => route.params.id, () => {
     loadDatasetData()
 })
+
+const loadComments = async () => {
+    if (!isDatasetAccessible.value) return
+
+    loadingComments.value = true
+    commentsError.value = ''
+
+    try {
+        const response = await api.get(`/datasets/${route.params.id}/comments`)
+        commentsData.value = response.data.comments
+        commentCount.value = response.data.comment_count
+    } catch (error) {
+        console.error('Error loading comments:', error)
+        commentsError.value = 'Failed to load comments'
+    } finally {
+        loadingComments.value = false
+    }
+}
+
+const handleNewComment = () => {
+    loadComments() // Reload comments after new comment
+}
 
 /**
  * Loads all dataset-related data
@@ -607,6 +662,10 @@ const loadDatasetData = async () => {
             loadClonesData(),
             loadUserVote()
         ])
+
+        if (isDatasetAccessible.value) {
+            await loadComments()
+        }
     } catch (err) {
         error.value = 'Failed to load dataset data'
         console.error('Error loading dataset data:', err)
