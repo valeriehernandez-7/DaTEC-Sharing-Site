@@ -42,7 +42,7 @@
                     <p class="text-gray-600 text-lg mb-4">{{ datasetData.description }}</p>
 
                     <!-- Author Info -->
-                    <div class="flex items-center gap-3 mb-4">
+                    <div class="flex items-center gap-3 mb-4" @click="goToProfile(datasetData.owner.username)">
                         <Avatar v-if="datasetData.owner.avatarUrl" :image="getAvatarUrl(datasetData.owner)"
                             shape="circle" size="normal" :alt="datasetData.owner.username" />
                         <Avatar v-else :label="getInitials(datasetData.owner.fullName)" shape="circle" size="normal"
@@ -161,139 +161,243 @@
                 <TabPanel value="activity">
                     <Accordion :multiple="true" :activeIndex="[0]">
                         <!-- Voting Details -->
-                        <AccordionPanel header="Voting Details">
-                            <div class="flex items-center gap-4 mb-4">
-                                <div class="text-center">
-                                    <i class="pi pi-star text-yellow-500 text-2xl"></i>
-                                    <h3 class="text-xl font-bold">{{ votesData.averageRating }}/5</h3>
-                                    <p class="text-gray-600">Rating</p>
+                        <AccordionPanel value="0">
+                            <AccordionHeader>
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-star text-yellow-500"></i>
+                                    <span>Votes</span>
+                                    <Badge :value="votesData.totalVotes" severity="secondary" class="ml-2" />
                                 </div>
-                                <div class="text-center">
-                                    <i class="pi pi-users text-purple-500 text-2xl"></i>
-                                    <h3 class="text-xl font-bold">{{ votesData.totalVotes }}</h3>
-                                    <p class="text-gray-600">Voters</p>
+                            </AccordionHeader>
+                            <AccordionContent>
+                                <!-- Voting Stats Cards -->
+                                <div v-if="votesData.votes.length !== 0"
+                                    class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                    <Card>
+                                        <template #content>
+                                            <div class="text-center">
+                                                <i class="pi pi-star text-yellow-500 text-2xl mb-2"></i>
+                                                <h3 class="text-xl font-bold">{{ votesData.averageRating }}/5</h3>
+                                                <p class="text-gray-600">Average Rating</p>
+                                            </div>
+                                        </template>
+                                    </Card>
+                                    <Card>
+                                        <template #content>
+                                            <div class="text-center">
+                                                <i class="pi pi-users text-purple-500 text-2xl mb-2"></i>
+                                                <h3 class="text-xl font-bold">{{ votesData.totalVotes }}</h3>
+                                                <p class="text-gray-600">Total Votes</p>
+                                            </div>
+                                        </template>
+                                    </Card>
                                 </div>
-                            </div>
 
-                            <DataTable :value="votesData.votes" :paginator="true" :rows="10">
-                                <Column header="Voter">
-                                    <template #body="slotProps">
-                                        <div class="flex items-center gap-2">
-                                            <Avatar v-if="slotProps.data.voter.avatarUrl"
-                                                :image="getAvatarUrl(slotProps.data.voter)" shape="circle"
-                                                size="small" />
-                                            <Avatar v-else :label="getInitials(slotProps.data.voter.fullName)"
-                                                shape="circle" size="small"
-                                                :class="getUserAvatarClasses(slotProps.data.voter.username)" />
-                                            <span>{{ slotProps.data.voter.fullName }}</span>
-                                        </div>
-                                    </template>
-                                </Column>
-                                <Column field="rating" header="Rating">
-                                    <template #body="slotProps">
-                                        <Rating :modelValue="slotProps.data.rating" :readonly="true" :cancel="false" />
-                                    </template>
-                                </Column>
-                                <Column field="created_at" header="Date">
-                                    <template #body="slotProps">
-                                        {{ formatDate(slotProps.data.created_at) }}
-                                    </template>
-                                </Column>
-                            </DataTable>
+                                <!-- Votes Table -->
+                                <DataTable v-if="votesData.votes.length !== 0" :value="votesData.votes"
+                                    :paginator="true" :rows="10" class="mb-4">
+                                    <Column header="User">
+                                        <template #body="slotProps">
+                                            <div class="flex items-center gap-2"
+                                                @click="goToProfile(slotProps.data.voter.username)">
+                                                <Avatar v-if="slotProps.data.voter.avatarUrl"
+                                                    :image="getAvatarUrl(slotProps.data.voter)" shape="circle"
+                                                    size="small" />
+                                                <Avatar v-else :label="getInitials(slotProps.data.voter.fullName)"
+                                                    shape="circle" size="small"
+                                                    :class="getUserAvatarClasses(slotProps.data.voter.username)" />
+                                                <span>{{ slotProps.data.voter.fullName }}</span>
+                                            </div>
+                                        </template>
+                                    </Column>
+                                    <Column field="rating" header="Rating">
+                                        <template #body="slotProps">
+                                            <Rating :modelValue="slotProps.data.rating" :readonly="true"
+                                                :cancel="false" />
+                                        </template>
+                                    </Column>
+                                    <Column field="created_at" header="Date">
+                                        <template #body="slotProps">
+                                            {{ formatDate(slotProps.data.created_at) }}
+                                        </template>
+                                    </Column>
+                                </DataTable>
+
+                                <!-- Empty State for Votes -->
+                                <div v-if="votesData.votes.length === 0" class="text-center py-8 text-gray-500">
+                                    <i class="pi pi-star text-4xl mb-3"></i>
+                                    <p>No votes yet</p>
+                                    <p class="text-sm">Be the first to rate this dataset!</p>
+                                </div>
+                            </AccordionContent>
                         </AccordionPanel>
 
                         <!-- Dataset Clones -->
-                        <AccordionPanel header="Dataset Clones">
-                            <DataTable :value="clonesData" :paginator="true" :rows="10">
-                                <Column header="Dataset">
-                                    <template #body="slotProps">
-                                        <a @click="navigateToDataset(slotProps.data.dataset_id)"
-                                            class="text-blue-600 hover:underline cursor-pointer">
-                                            {{ slotProps.data.dataset_name }}
-                                        </a>
-                                    </template>
-                                </Column>
-                                <Column header="Cloner">
-                                    <template #body="slotProps">
-                                        <div class="flex items-center gap-2">
-                                            <Avatar v-if="slotProps.data.owner.avatarUrl"
-                                                :image="getAvatarUrl(slotProps.data.owner)" shape="circle"
-                                                size="small" />
-                                            <Avatar v-else :label="getInitials(slotProps.data.owner.fullName)"
-                                                shape="circle" size="small"
-                                                :class="getUserAvatarClasses(slotProps.data.owner.username)" />
-                                            <span>{{ slotProps.data.owner.fullName }}</span>
-                                        </div>
-                                    </template>
-                                </Column>
-                                <Column field="created_at" header="Date">
-                                    <template #body="slotProps">
-                                        {{ formatDate(slotProps.data.created_at) }}
-                                    </template>
-                                </Column>
-                            </DataTable>
+                        <AccordionPanel value="1">
+                            <AccordionHeader>
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-copy text-blue-500"></i>
+                                    <span>Clones</span>
+                                    <Badge :value="filteredClones.length" severity="secondary" class="ml-2" />
+                                </div>
+                            </AccordionHeader>
+                            <AccordionContent>
+                                <!-- Clones Stats Card -->
+                                <div v-if="filteredClones.length !== 0" class="mb-6">
+                                    <Card>
+                                        <template #content>
+                                            <div class="text-center">
+                                                <i class="pi pi-copy text-blue-500 text-2xl mb-2"></i>
+                                                <h3 class="text-xl font-bold">{{ filteredClones.length }}</h3>
+                                                <p class="text-gray-600">Total Clones</p>
+                                            </div>
+                                        </template>
+                                    </Card>
+                                </div>
+
+                                <!-- Clones Table -->
+                                <DataTable v-if="filteredClones.length !== 0" :value="filteredClones" :paginator="true"
+                                    :rows="10" class="mb-4">
+                                    <Column header="Dataset">
+                                        <template #body="slotProps">
+                                            <div class="flex items-center gap-2">
+                                                <a @click="navigateToDataset(slotProps.data.dataset_id)"
+                                                    class="text-blue-600 hover:underline cursor-pointer font-medium">
+                                                    {{ slotProps.data.dataset_name }}
+                                                </a>
+                                                <Tag v-if="slotProps.data.status === 'pending'" value="PENDING"
+                                                    severity="warning" />
+                                                <Tag v-else-if="slotProps.data.status === 'approved'" value="APPROVED"
+                                                    severity="success" />
+                                            </div>
+                                        </template>
+                                    </Column>
+                                    <Column header="Cloned By">
+                                        <template #body="slotProps">
+                                            <div class="flex items-center gap-2"
+                                                @click="goToProfile(slotProps.data.owner.username)">
+                                                <Avatar v-if="slotProps.data.owner.avatarUrl"
+                                                    :image="getAvatarUrl(slotProps.data.owner)" shape="circle"
+                                                    size="small" />
+                                                <Avatar v-else :label="getInitials(slotProps.data.owner.fullName)"
+                                                    shape="circle" size="small"
+                                                    :class="getUserAvatarClasses(slotProps.data.owner.username)" />
+                                                <span>{{ slotProps.data.owner.fullName }}</span>
+                                            </div>
+                                        </template>
+                                    </Column>
+                                    <Column field="created_at" header="Cloned Date">
+                                        <template #body="slotProps">
+                                            {{ formatDate(slotProps.data.created_at) }}
+                                        </template>
+                                    </Column>
+                                </DataTable>
+
+                                <!-- Empty State for Clones -->
+                                <div v-if="filteredClones.length === 0" class="text-center py-8 text-gray-500">
+                                    <i class="pi pi-copy text-4xl mb-3"></i>
+                                    <p>No clones yet</p>
+                                    <p class="text-sm">Be the first to clone this dataset!</p>
+                                </div>
+                            </AccordionContent>
                         </AccordionPanel>
 
                         <!-- Download Statistics -->
-                        <AccordionPanel header="Download Statistics">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                                <Card>
-                                    <template #content>
-                                        <div class="text-center">
-                                            <i class="pi pi-download text-blue-500 text-2xl mb-2"></i>
-                                            <h3 class="text-xl font-bold">{{ downloadStats.statistics.totalDownloads }}
-                                            </h3>
-                                            <p class="text-gray-600">Total</p>
-                                        </div>
-                                    </template>
-                                </Card>
-                                <Card>
-                                    <template #content>
-                                        <div class="text-center">
-                                            <i class="pi pi-users text-green-500 text-2xl mb-2"></i>
-                                            <h3 class="text-xl font-bold">{{ downloadStats.statistics.uniqueUsers }}
-                                            </h3>
-                                            <p class="text-gray-600">Users</p>
-                                        </div>
-                                    </template>
-                                </Card>
-                                <Card>
-                                    <template #content>
-                                        <div class="text-center">
-                                            <i class="pi pi-calendar text-orange-500 text-2xl mb-2"></i>
-                                            <h3 class="text-xl font-bold">{{ lastDownloadDate }}</h3>
-                                            <p class="text-gray-600">Lastest</p>
-                                        </div>
-                                    </template>
-                                </Card>
-                            </div>
+                        <AccordionPanel value="2">
+                            <AccordionHeader>
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-download text-green-500"></i>
+                                    <span>Downloads</span>
+                                    <Badge :value="downloadStats.statistics.totalDownloads" severity="secondary"
+                                        class="ml-2" />
+                                </div>
+                            </AccordionHeader>
+                            <AccordionContent>
+                                <!-- Download Stats Cards -->
+                                <div v-if="downloadStats.statistics.recentDownloads.length !== 0"
+                                    class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                    <Card>
+                                        <template #content>
+                                            <div class="text-center">
+                                                <i class="pi pi-download text-blue-500 text-2xl mb-2"></i>
+                                                <h3 class="text-xl font-bold">{{ downloadStats.statistics.totalDownloads
+                                                }}</h3>
+                                                <p class="text-gray-600">Total Downloads</p>
+                                            </div>
+                                        </template>
+                                    </Card>
+                                    <Card>
+                                        <template #content>
+                                            <div class="text-center">
+                                                <i class="pi pi-users text-green-500 text-2xl mb-2"></i>
+                                                <h3 class="text-xl font-bold">{{ downloadStats.statistics.uniqueUsers }}
+                                                </h3>
+                                                <p class="text-gray-600">Users</p>
+                                            </div>
+                                        </template>
+                                    </Card>
+                                    <Card>
+                                        <template #content>
+                                            <div class="text-center">
+                                                <i class="pi pi-calendar text-orange-500 text-2xl mb-2"></i>
+                                                <h3 class="text-xl font-bold">{{ lastDownloadDate }}</h3>
+                                                <p class="text-gray-600">Lastest</p>
+                                            </div>
+                                        </template>
+                                    </Card>
+                                </div>
 
-                            <!-- Download Chart (Owner Only) -->
-                            <div v-if="isOwner">
-                                <h4 class="font-semibold mb-4">Download History</h4>
-                                <Chart type="line" :data="downloadChartData" class="h-80" />
-                            </div>
+                                <!-- Download Chart (Owner Only) -->
+                                <div v-if="isOwner && downloadStats.statistics.recentDownloads.length !== 0"
+                                    class="mb-6">
+                                    <Card>
+                                        <template #content>
+                                            <h4 class="font-semibold mb-4">Download History Chart</h4>
+                                            <Chart type="line" :data="downloadChartData" class="h-80" />
+                                        </template>
+                                    </Card>
+                                </div>
 
-                            <!-- Download History Table (Owner Only) -->
-                            <DataTable v-if="isOwner" :value="downloadStats.statistics.recentDownloads"
-                                :paginator="true" :rows="10">
-                                <Column header="User">
-                                    <template #body="slotProps">
-                                        <div class="flex items-center gap-2">
-                                            <Avatar v-if="slotProps.data.avatarUrl"
-                                                :image="getAvatarUrl(slotProps.data)" shape="circle" size="small" />
-                                            <Avatar v-else :label="getInitials(slotProps.data.fullName)" shape="circle"
-                                                size="small" :class="getUserAvatarClasses(slotProps.data.username)" />
-                                            <span>{{ slotProps.data.fullName }}</span>
-                                        </div>
-                                    </template>
-                                </Column>
-                                <Column field="downloadedAt" header="Download Date">
-                                    <template #body="slotProps">
-                                        {{ formatDate(slotProps.data.downloadedAt) }}
-                                    </template>
-                                </Column>
-                            </DataTable>
+                                <!-- Download History Table (Owner Only) -->
+                                <div v-if="isOwner && downloadStats.statistics.recentDownloads.length !== 0"
+                                    class="mt-6">
+                                    <Card>
+                                        <template #content>
+                                            <h4 class="font-semibold mb-4">Recent Downloads</h4>
+                                            <DataTable v-if="downloadStats.statistics.recentDownloads.length !== 0"
+                                                :value="downloadStats.statistics.recentDownloads" :paginator="true"
+                                                :rows="10">
+                                                <Column header="User">
+                                                    <template #body="slotProps">
+                                                        <div class="flex items-center gap-2"
+                                                            @click="goToProfile(slotProps.data.username)">
+                                                            <Avatar v-if="slotProps.data.avatarUrl"
+                                                                :image="getAvatarUrl(slotProps.data)" shape="circle"
+                                                                size="small" />
+                                                            <Avatar v-else :label="getInitials(slotProps.data.fullName)"
+                                                                shape="circle" size="small"
+                                                                :class="getUserAvatarClasses(slotProps.data.username)" />
+                                                            <span>{{ slotProps.data.fullName }}</span>
+                                                        </div>
+                                                    </template>
+                                                </Column>
+                                                <Column field="downloadedAt" header="Download Date">
+                                                    <template #body="slotProps">
+                                                        {{ formatDate(slotProps.data.downloadedAt) }}
+                                                    </template>
+                                                </Column>
+                                            </DataTable>
+                                        </template>
+                                    </Card>
+                                </div>
+                                <!-- Empty State for Downloads -->
+                                <div v-if="downloadStats.statistics.recentDownloads.length === 0"
+                                    class="text-center py-8 text-gray-500">
+                                    <i class="pi pi-download text-4xl mb-3"></i>
+                                    <p>No downloads yet</p>
+                                    <p class="text-sm">Be the first to download this dataset!</p>
+                                </div>
+                            </AccordionContent>
                         </AccordionPanel>
                     </Accordion>
                 </TabPanel>
@@ -544,12 +648,24 @@ const openExternalVideo = (url) => {
 }
 
 /**
+ * Extracts the document ID from a CouchDB URL
+ * @param {string} url - The full CouchDB URL
+ * @returns {string|null} The document ID or null if not found
+ */
+function extractFileID(url) {
+    const parts = url.split('/');
+    console.log(parts[4])
+    return parts.length >= 5 ? parts[4] : null;
+}
+
+/**
  * Downloads a single file
  */
-const downloadFile = async (downloadUrl, fileName) => {
+const downloadFile = async (fileURL, fileName) => {
     try {
         // Implementation for single file download
-        const response = await api.get(downloadUrl, { responseType: 'blob' })
+        const fileID = extractFileID(fileURL)
+        const response = await api.get(`/datasets/${route.params.id}/files/${fileID}`, { responseType: 'blob' })
         const blob = new Blob([response.data])
         const link = document.createElement('a')
         link.href = URL.createObjectURL(blob)
@@ -568,7 +684,7 @@ const downloadFile = async (downloadUrl, fileName) => {
         toast.add({
             severity: 'error',
             summary: 'Download Failed',
-            detail: 'Failed to download file',
+            detail: err.message,
             life: 5000
         })
     }
@@ -598,7 +714,7 @@ const downloadDataset = async () => {
         toast.add({
             severity: 'error',
             summary: 'Download Failed',
-            detail: 'Failed to download dataset',
+            detail: err.message,
             life: 5000
         })
     }
@@ -665,6 +781,30 @@ const getDatasetHeaderUrl = (dataset) => {
 
     return `http://localhost:3000/api/files/${documentId}/${filename}`;
 };
+
+// Add to computed properties section
+const filteredClones = computed(() => {
+    return clonesData.value.filter(clone => {
+        // Show approved clones to everyone
+        if (clone.status === 'approved') return true;
+
+        // Show pending clones only to the clone owner or dataset owner
+        if (clone.status === 'pending') {
+            const isCloneOwner = authStore.isLoggedIn && authStore.user?.userId === clone.owner?.userId;
+            const isDatasetOwner = isOwner.value;
+            return isCloneOwner || isDatasetOwner;
+        }
+
+        return false;
+    });
+});
+
+/**
+ * Navigates to user's profile page
+ */
+const goToProfile = (username) => {
+    router.push(`/profile/${username}`)
+}
 
 /**
  * Navigates to dataset detail page
