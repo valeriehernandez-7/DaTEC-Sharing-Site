@@ -347,7 +347,7 @@
                                             <div class="text-center">
                                                 <i class="pi pi-download text-blue-500 text-2xl mb-2"></i>
                                                 <h3 class="text-xl font-bold">{{ downloadStats.statistics.totalDownloads
-                                                }}</h3>
+                                                    }}</h3>
                                                 <p class="text-gray-600">Total Downloads</p>
                                             </div>
                                         </template>
@@ -368,8 +368,9 @@
                                     class="mb-6">
                                     <Card>
                                         <template #content>
-                                            <h4 class="font-semibold mb-4">Download History Chart</h4>
-                                            <Chart type="line" :data="downloadChartData" class="h-80" />
+                                            <h4 class="font-semibold mb-4">Monthly Download History</h4>
+                                            <Chart type="line" :data="downloadChartData" :options="chartOptions"
+                                                class="h-80" />
                                         </template>
                                     </Card>
                                 </div>
@@ -497,11 +498,30 @@ const votingLoading = ref(false)
 const showVoteDialog = ref(false)
 const selectedRating = ref(0)
 
+const downloadChartData = ref({
+    labels: [],
+    datasets: [
+        {
+            label: 'Monthly Downloads',
+            data: [],
+            fill: true,
+            borderColor: '#42A5F5',
+            backgroundColor: 'rgba(66, 165, 245, 0.1)',
+            tension: 0.4
+        }
+    ]
+})
+
+const chartOptions = ref({
+    responsive: true,
+    maintainAspectRatio: false
+})
+
 /**
  * Computed properties for derived state
  */
 const isOwner = computed(() => {
-    return authStore.isLoggedIn && authStore.user?.userId === datasetData.value.owner?.userId
+    return authStore.isLoggedIn && authStore.user?.username === datasetData.value.owner?.username
 })
 
 const lastDownloadDate = computed(() => {
@@ -521,13 +541,12 @@ const filteredClones = computed(() => {
     return clonesData.value.filter(clone => {
         // Show approved clones to everyone
         if (clone.status === 'approved') return true;
-
-        // Show pending clones only to the clone owner or dataset owner
-        if (clone.status === 'pending' || clone.status === 'rejected') {
-            const isCloneOwner = authStore.isLoggedIn && authStore.user?.username === clone.owner?.username;
-            const isDatasetOwner = isOwner.value;
-            return isCloneOwner || isDatasetOwner;
-        }
+        // // Show pending clones only to the clone owner or dataset owner
+        // if (clone.status === 'pending' || clone.status === 'rejected') {
+        //     const isCloneOwner = authStore.isLoggedIn && authStore.user?.username === clone.owner?.username;
+        //     const isDatasetOwner = isOwner.value;
+        //     return isCloneOwner || isDatasetOwner;
+        // }
 
         return false;
     });
@@ -602,6 +621,9 @@ const loadDownloadStats = async () => {
     try {
         const response = await api.get(`/datasets/${route.params.id}/downloads`)
         downloadStats.value = response.data
+
+        // Prepare chart data after loading stats
+        prepareChartData()
     } catch (err) {
         console.error('Error loading download stats:', err)
         downloadStats.value = { statistics: { totalDownloads: 0, uniqueUsers: 0, recentDownloads: [] } }
@@ -941,6 +963,50 @@ const cloneDataset = async () => {
     }
 }
 
+/**
+ * Prepare multi-year chart data from download statistics
+ */
+const prepareChartData = () => {
+    if (!isOwner.value || !downloadStats.value.statistics.recentDownloads.length) {
+        return
+    }
+
+    const downloads = [...downloadStats.value.statistics.recentDownloads]
+
+    // Group downloads by year-month
+    const monthlyCounts = {}
+
+    downloads.forEach(download => {
+        const date = new Date(download.downloadedAt)
+        const yearMonth = date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short'
+        })
+        monthlyCounts[yearMonth] = (monthlyCounts[yearMonth] || 0) + 1
+    })
+
+    // Sort by date
+    const sortedEntries = Object.entries(monthlyCounts)
+        .sort(([a], [b]) => new Date(a) - new Date(b))
+
+    const labels = sortedEntries.map(([date]) => date)
+    const data = sortedEntries.map(([, count]) => count)
+
+    downloadChartData.value = {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Monthly Downloads',
+                data: data,
+                fill: true,
+                borderColor: '#42A5F5',
+                backgroundColor: 'rgba(66, 165, 245, 0.1)',
+                tension: 0.4
+            }
+        ]
+    }
+}
+
 // Retrieve datasets header photo
 const getDatasetHeaderUrl = (dataset) => {
     if (!dataset.header_photo_url) return null;
@@ -972,19 +1038,6 @@ const navigateToDataset = (datasetId) => {
     router.push(`/datasets/${datasetId}`)
 }
 
-// TODO: Implement download chart data
-const downloadChartData = ref({
-    labels: [],
-    datasets: [
-        {
-            label: 'Downloads',
-            data: [],
-            fill: false,
-            borderColor: '#42A5F5',
-            tension: 0.4
-        }
-    ]
-})
 </script>
 
 <style scoped>

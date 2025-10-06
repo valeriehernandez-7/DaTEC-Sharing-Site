@@ -40,6 +40,7 @@ import AccordionPanel from 'primevue/accordionpanel'
 import AccordionHeader from 'primevue/accordionheader'
 import AccordionContent from 'primevue/accordioncontent'
 import Chart from 'primevue/chart'
+import Select from 'primevue/select'
 
 import App from './App.vue'
 import router from './router'
@@ -93,14 +94,15 @@ app.component('DataView', DataView)
 app.component('Drawer', Drawer)
 app.component('Textarea', Textarea)
 app.component('Tooltip', Tooltip)
-app.component('Accordion', Accordion);
-app.component('AccordionPanel', AccordionPanel);
-app.component('AccordionHeader', AccordionHeader);
-app.component('AccordionContent', AccordionContent);
-app.component('DataTable', DataTable);
-app.component('Column', Column);
-app.component('Rating', Rating);
-app.component('Chart', Chart);
+app.component('Accordion', Accordion)
+app.component('AccordionPanel', AccordionPanel)
+app.component('AccordionHeader', AccordionHeader)
+app.component('AccordionContent', AccordionContent)
+app.component('DataTable', DataTable)
+app.component('Column', Column)
+app.component('Rating', Rating)
+app.component('Chart', Chart)
+app.component('Select', Select)
 
 /**
  * Services and state management
