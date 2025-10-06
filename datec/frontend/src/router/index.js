@@ -29,7 +29,7 @@ const router = createRouter({
     {
       path: '/datasets/:id',
       name: 'dataset-detail',
-      component: () => import('@/views/DatasetDetail.vue'),
+      component: () => import('@/views/DatasetDetailView.vue'),
       meta: { requiresAuth: false }
     },
     {
