@@ -185,13 +185,13 @@ async function getComments(req, res) {
             });
         }
 
-        // Build query based on user role
+        // Build query based on user roles
         const query = { target_dataset_id: datasetId };
 
-        // Non-admin users only see active comments
-        if (!req.user || !req.user.isAdmin) {
-            query.is_active = true;
-        }
+        // // Non-admin users only see active comments
+        // if (!req.user || !req.user.isAdmin) {
+        //     query.is_active = true;
+        // }
 
         // Get all comments for this dataset
         const comments = await db.collection('comments')

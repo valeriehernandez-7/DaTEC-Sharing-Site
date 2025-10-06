@@ -156,7 +156,7 @@ const submitComment = async () => {
         toast.add({
             severity: 'error',
             summary: 'Error',
-            detail: error.response?.data?.error || 'Failed to post comment',
+            detail: error.message || 'Failed to post comment',
             life: 5000
         })
     } finally {

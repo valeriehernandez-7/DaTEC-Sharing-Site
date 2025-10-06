@@ -187,7 +187,8 @@
 
                                 <!-- Comments Thread -->
                                 <CommentThread v-else :comments="commentsData"
-                                    :datasetOwnerId="datasetData.owner?.userId" @comment-updated="loadComments" />
+                                    :datasetOwnerUsername="datasetData.owner?.username"
+                                    @comment-updated="loadComments" />
                             </div>
                         </template>
                     </Card>
@@ -372,7 +373,7 @@
                                             <div class="text-center">
                                                 <i class="pi pi-download text-blue-500 text-2xl mb-2"></i>
                                                 <h3 class="text-xl font-bold">{{ downloadStats.statistics.totalDownloads
-                                                }}</h3>
+                                                    }}</h3>
                                                 <p class="text-gray-600">Total Downloads</p>
                                             </div>
                                         </template>

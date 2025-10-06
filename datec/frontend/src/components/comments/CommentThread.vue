@@ -1,7 +1,6 @@
 <template>
     <div class="comment-thread" :style="{ marginLeft: `${nestingLevel * 24}px` }">
         <div v-for="comment in comments" :key="comment.comment_id" :class="['comment-item', {
-            'disabled': !comment.is_active && !isAdmin,
             'nested': nestingLevel > 0
         }]">
             <!-- Comment Header -->
@@ -18,10 +17,10 @@
                 </div>
 
                 <div class="comment-badges">
-                    <Tag v-if="!comment.is_active" value="MODERATED" severity="danger" size="small" />
-                    <Tag v-else-if="comment.author.user_id === datasetOwnerId" value="OWNER" severity="info"
+                    <Tag v-if="!comment.is_active" icon="pi pi-ban" severity="danger" size="small" />
+                    <Tag v-else-if="comment.author.username === datasetOwnerUsername" icon="pi pi-flag-fill" severity="info"
                         size="small" />
-                    <Tag v-else-if="comment.is_own_comment" value="YOU" severity="secondary" size="small" />
+                    <Tag v-else-if="comment.is_own_comment" icon="pi pi-bullseye" severity="secondary" size="small" />
                 </div>
             </div>
 
@@ -31,8 +30,8 @@
                     <p class="comment-text">{{ comment.content }}</p>
                 </div>
                 <div v-else class="disabled-content">
-                    <i class="pi pi-flag text-gray-400 mr-2"></i>
-                    <span class="text-gray-500 text-sm">This comment has been moderated by an administrator</span>
+                    <i class="pi pi-ban text-gray-400 mr-2"></i>
+                    <span class="text-gray-500 text-sm"><i>This comment has been moderated by an administrator.</i></span>
                 </div>
             </div>
 
@@ -56,7 +55,7 @@
 
             <!-- Nested Replies (Recursive) -->
             <CommentThread v-if="comment.replies && comment.replies.length > 0" :comments="comment.replies"
-                :nestingLevel="nestingLevel + 1" :datasetOwnerId="datasetOwnerId"
+                :nestingLevel="nestingLevel + 1" :datasetOwnerUsername="datasetOwnerUsername"
                 @comment-updated="$emit('comment-updated')" class="nested-replies" />
         </div>
     </div>
@@ -81,7 +80,7 @@ const props = defineProps({
         type: Number,
         default: 0
     },
-    datasetOwnerId: {
+    datasetOwnerUsername: {
         type: String,
         default: ''
     }
@@ -164,6 +163,12 @@ const handleReplySubmit = async (content, parentId) => {
         closeReplyForm()
     } catch (error) {
         console.error('Error in reply submission:', error)
+        toast.add({
+            severity: 'error',
+            summary: 'Failed in reply submission',
+            detail: error.message,
+            life: 5000
+        })
     }
 }
 
@@ -183,8 +188,8 @@ const disableComment = async (commentId) => {
         console.error('Error disabling comment:', error)
         toast.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to disable comment',
+            summary: 'Failed to disable comment',
+            detail: error.message,
             life: 5000
         })
     }
@@ -206,8 +211,8 @@ const enableComment = async (commentId) => {
         console.error('Error enabling comment:', error)
         toast.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to enable comment',
+            summary: 'Failed to enable comment',
+            detail: error.message,
             life: 5000
         })
     }
@@ -231,10 +236,6 @@ const enableComment = async (commentId) => {
 .comment-item.nested {
     border-left: 2px solid #e5e7eb;
     padding-left: 1rem;
-}
-
-.comment-item.disabled {
-    opacity: 0.6;
 }
 
 .comment-header {
@@ -283,14 +284,6 @@ const enableComment = async (commentId) => {
     margin: 0;
     line-height: 1.5;
     color: #374151;
-}
-
-.disabled-content {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem;
-    background-color: #f9fafb;
-    border-radius: 0.375rem;
 }
 
 .comment-actions {
