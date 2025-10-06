@@ -9,10 +9,12 @@
  * - GET    /api/datasets/search                   - Search datasets (HU9)
  * - GET    /api/datasets/user/:username           - Get user's datasets (HU12)
  * - GET    /api/datasets/:datasetId               - Get dataset details (HU10)
+ * - PATCH /api/datasets/:datasetId                - Update dataset details
  * - PATCH  /api/datasets/:datasetId/review-request - Request approval (HU6)
  * - PATCH  /api/datasets/:datasetId/visibility    - Toggle visibility (HU7)
  * - DELETE /api/datasets/:datasetId               - Delete dataset (HU7)
  * - POST   /api/datasets/:datasetId/clone         - Clone dataset (HU18)
+ * - GET /api/datasets/:datasetId/clones           - Clone dataset (HU18)
  * - GET /api/datasets/:datasetId/download         - Download dataset (H13)
  * - GET /api/datasets/:datasetId/downloads        - Download dataset (H13)
  * - GET /api/datasets/:datasetId/files/:fileId    - Download dataset (H13)
@@ -130,6 +132,32 @@ router.patch(
 );
 
 /**
+ * PATCH /api/datasets/:datasetId
+ * Update dataset information and files
+ * Requires: Dataset owner
+ * 
+ * Body (multipart/form-data):
+ *   - dataset_name: string (optional, 3-100 chars)
+ *   - description: string (optional, 10-5000 chars)
+ *   - tags: array of strings (optional)
+ *   - tutorial_video_url: string (optional, YouTube/Vimeo URL or null to remove)
+ *   - files_to_delete: array of file IDs (optional)
+ *   - header_photo: null (to remove existing)
+ * 
+ * Files:
+ *   - data_files: array of files (optional, max 10 files)
+ *   - header_photo: single image file (optional)
+ * 
+ * Response: { success, message, dataset }
+ */
+router.patch(
+    '/:datasetId',
+    verifyToken,
+    uploadDataset,
+    controller.updateDataset
+);
+
+/**
  * DELETE /api/datasets/:datasetId
  * Permanently delete dataset
  * Requires: Dataset owner or admin
@@ -177,6 +205,16 @@ router.post(
     verifyToken,
     controller.cloneDataset
 );
+
+/**
+ * GET /api/datasets/:datasetId/clones
+ * Get all datasets cloned from this dataset
+ * 
+ * Response: { success, count, clones[] }
+ * 
+ * Note: Public endpoint - shows clone relationships
+ */
+router.get('/:datasetId/clones', controller.getDatasetClones);
 
 /**
  * GET /api/datasets/:datasetId/download

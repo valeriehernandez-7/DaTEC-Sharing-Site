@@ -580,6 +580,236 @@ async function toggleVisibility(req, res) {
 }
 
 /**
+ * Update dataset information and files
+ * PATCH /api/datasets/:datasetId
+ * 
+ * Allows dataset owner to update dataset metadata, files, and media
+ * Supports partial updates (only provided fields are modified)
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+async function updateDataset(req, res) {
+    try {
+        const db = getMongo();
+        const { datasetId } = req.params;
+
+        // Validate request body
+        const { error, value } = datasetUpdateSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({
+                success: false,
+                error: error.details[0].message
+            });
+        }
+
+        const { dataset_name, description, tags, tutorial_video_url, is_public } = value;
+        const filesToDelete = req.body.files_to_delete || [];
+
+        // Get existing dataset
+        const dataset = await db.collection('datasets').findOne({
+            dataset_id: datasetId
+        });
+
+        if (!dataset) {
+            return res.status(404).json({
+                success: false,
+                error: 'Dataset not found'
+            });
+        }
+
+        // Verify user is the owner
+        if (dataset.owner_user_id !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                error: 'Forbidden: Only dataset owner can update dataset'
+            });
+        }
+
+        const updates = {};
+        const normalizedName = dataset_name ? dataset_name.trim().replace(/\s+/g, '-').toLowerCase() : null;
+
+        // Validate new dataset name if changing
+        if (normalizedName && normalizedName !== dataset.dataset_name) {
+            const existingDataset = await db.collection('datasets').findOne({
+                owner_user_id: req.user.userId,
+                dataset_name: normalizedName
+            });
+
+            if (existingDataset) {
+                return res.status(409).json({
+                    success: false,
+                    error: 'You already have a dataset with this name'
+                });
+            }
+            updates.dataset_name = normalizedName;
+        }
+
+        // Update basic fields if provided
+        if (description) updates.description = description;
+        if (tags) updates.tags = tags;
+        if (is_public !== undefined) updates.is_public = is_public;
+
+        // Handle file deletions
+        if (filesToDelete.length > 0) {
+            const updatedFileReferences = dataset.file_references.filter(
+                file => !filesToDelete.includes(file.couchdb_document_id)
+            );
+
+            // Delete files from CouchDB
+            for (const fileId of filesToDelete) {
+                try {
+                    await deleteFile(fileId);
+                } catch (error) {
+                    console.warn(`Failed to delete file ${fileId}:`, error.message);
+                }
+            }
+
+            updates.file_references = updatedFileReferences;
+        }
+
+        // Handle new file uploads
+        if (req.files && req.files.data_files) {
+            const newFileReferences = [...(updates.file_references || dataset.file_references)];
+            let nextFileIndex = newFileReferences.length + 1;
+
+            for (let i = 0; i < req.files.data_files.length; i++) {
+                const file = req.files.data_files[i];
+                const docId = generateDatasetFileDocId(datasetId, nextFileIndex);
+
+                const fileRef = await uploadFile(docId, file, {
+                    type: 'dataset_file',
+                    owner_user_id: req.user.userId,
+                    dataset_id: datasetId,
+                    file_index: nextFileIndex,
+                    uploaded_at: new Date().toISOString()
+                });
+
+                newFileReferences.push({
+                    ...fileRef,
+                    uploaded_at: new Date()
+                });
+
+                nextFileIndex++;
+            }
+
+            updates.file_references = newFileReferences;
+        }
+
+        // Handle header photo update
+        if (req.files && req.files.header_photo) {
+            // Delete old header photo if exists
+            if (dataset.header_photo_ref) {
+                try {
+                    await deleteFile(dataset.header_photo_ref.couchdb_document_id);
+                } catch (error) {
+                    console.warn('Failed to delete old header photo:', error.message);
+                }
+            }
+
+            // Upload new header photo
+            const docId = generateHeaderPhotoDocId(datasetId);
+            updates.header_photo_ref = await uploadFile(
+                docId,
+                req.files.header_photo[0],
+                {
+                    type: 'header_photo',
+                    owner_user_id: req.user.userId,
+                    dataset_id: datasetId,
+                    uploaded_at: new Date().toISOString()
+                }
+            );
+        } else if (req.body.header_photo === null && dataset.header_photo_ref) {
+            // Delete header photo if explicitly set to null
+            try {
+                await deleteFile(dataset.header_photo_ref.couchdb_document_id);
+                updates.header_photo_ref = null;
+            } catch (error) {
+                console.warn('Failed to delete header photo:', error.message);
+            }
+        }
+
+        // Handle tutorial video update
+        if (tutorial_video_url !== undefined) {
+            if (tutorial_video_url === null || tutorial_video_url === '') {
+                updates.tutorial_video_ref = null;
+            } else {
+                const platform = tutorial_video_url.includes('youtube') || tutorial_video_url.includes('youtu.be') ? 'youtube' :
+                    tutorial_video_url.includes('vimeo') ? 'vimeo' : 'other';
+
+                updates.tutorial_video_ref = {
+                    url: tutorial_video_url,
+                    platform: platform
+                };
+            }
+        }
+
+        // Only proceed if there are actual updates
+        if (Object.keys(updates).length > 0) {
+            updates.updated_at = new Date();
+
+            await db.collection('datasets').updateOne(
+                { dataset_id: datasetId },
+                { $set: updates }
+            );
+        }
+
+        // Get updated dataset
+        const updatedDataset = await db.collection('datasets').findOne({
+            dataset_id: datasetId
+        });
+
+        // Enrich with owner information
+        const owner = await db.collection('users').findOne(
+            { user_id: updatedDataset.owner_user_id },
+            { projection: { username: 1, full_name: 1, avatar_ref: 1 } }
+        );
+
+        res.json({
+            success: true,
+            message: 'Dataset updated successfully',
+            dataset: {
+                dataset_id: updatedDataset.dataset_id,
+                dataset_name: updatedDataset.dataset_name,
+                description: updatedDataset.description,
+                tags: updatedDataset.tags,
+                status: updatedDataset.status,
+                is_public: updatedDataset.is_public,
+                owner: owner ? {
+                    username: owner.username,
+                    fullName: owner.full_name,
+                    avatarUrl: owner.avatar_ref
+                        ? getFileUrl(owner.avatar_ref.couchdb_document_id, owner.avatar_ref.file_name)
+                        : null
+                } : null,
+                files: updatedDataset.file_references.map(file => ({
+                    file_name: file.file_name,
+                    file_size_bytes: file.file_size_bytes,
+                    mime_type: file.mime_type,
+                    download_url: getFileUrl(file.couchdb_document_id, file.file_name)
+                })),
+                header_photo_url: updatedDataset.header_photo_ref
+                    ? getFileUrl(updatedDataset.header_photo_ref.couchdb_document_id, updatedDataset.header_photo_ref.file_name)
+                    : null,
+                tutorial_video: updatedDataset.tutorial_video_ref,
+                download_count: updatedDataset.download_count,
+                vote_count: updatedDataset.vote_count,
+                comment_count: updatedDataset.comment_count,
+                created_at: updatedDataset.created_at,
+                updated_at: updatedDataset.updated_at
+            }
+        });
+
+    } catch (error) {
+        console.error('Error updating dataset:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
+/**
  * HU7 - Delete dataset
  * DELETE /api/datasets/:datasetId
  * 
@@ -889,6 +1119,74 @@ async function cloneDataset(req, res) {
 }
 
 /**
+ * Get all clones of a dataset
+ * GET /api/datasets/:datasetId/clones
+ * 
+ * Returns list of datasets that were cloned from this dataset
+ * Public endpoint - any user can see clones
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+async function getDatasetClones(req, res) {
+    try {
+        const db = getMongo();
+        const { datasetId } = req.params;
+
+        // Verify dataset exists
+        const originalDataset = await db.collection('datasets').findOne({
+            dataset_id: datasetId
+        });
+
+        if (!originalDataset) {
+            return res.status(404).json({
+                success: false,
+                error: 'Dataset not found'
+            });
+        }
+
+        // Find all datasets that have this dataset as parent
+        const cloneDatasets = await db.collection('datasets').find({
+            parent_dataset_id: datasetId
+        }).sort({ created_at: -1 }).toArray();
+
+        // Enrich with owner information
+        const enrichedClones = await Promise.all(
+            cloneDatasets.map(async (clone) => {
+                const owner = await db.collection('users').findOne(
+                    { user_id: clone.owner_user_id },
+                    { projection: { username: 1, full_name: 1 } }
+                );
+
+                return {
+                    dataset_id: clone.dataset_id,
+                    dataset_name: clone.dataset_name,
+                    owner: owner ? {
+                        username: owner.username,
+                        fullName: owner.full_name
+                    } : null,
+                    status: clone.status,
+                    created_at: clone.created_at
+                };
+            })
+        );
+
+        res.json({
+            success: true,
+            count: enrichedClones.length,
+            clones: enrichedClones
+        });
+
+    } catch (error) {
+        console.error('Error getting dataset clones:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+}
+
+/**
  * HU13 - Download dataset file
  * GET /api/datasets/:datasetId/files/:fileId
  * 
@@ -1172,11 +1470,25 @@ async function getDownloadStats(req, res) {
                 LIMIT 100
             `, { datasetId: req.params.datasetId });
 
-            const downloadHistory = result.records.map(record => ({
-                userId: record.get('userId'),
-                username: record.get('username'),
-                downloadedAt: record.get('downloadedAt')
-            }));
+            const downloadHistory = await Promise.all(
+                result.records.map(async (record) => {
+                    const userId = record.get('userId');
+                    const username = record.get('username');
+
+                    // Get fullName from MongoDB
+                    const user = await db.collection('users').findOne(
+                        { user_id: userId },
+                        { projection: { full_name: 1 } }
+                    );
+
+                    return {
+                        userId: userId,
+                        username: username,
+                        fullName: user?.full_name || 'Unknown User', // ← NUEVO CAMPO
+                        downloadedAt: record.get('downloadedAt')
+                    };
+                })
+            );
 
             // Get total download count from Redis
             const totalDownloads = await getCounter(`download_count:dataset:${req.params.datasetId}`);
@@ -1213,8 +1525,10 @@ module.exports = {
     getUserDatasets,      // HU12
     requestApproval,      // HU6
     toggleVisibility,     // HU7
+    updateDataset,
     deleteDataset,        // HU7
     cloneDataset,         // HU18
+    getDatasetClones,     // HU18
     downloadFile,         // HU13
     downloadDataset,      // HU13
     getDownloadStats      // HU13
