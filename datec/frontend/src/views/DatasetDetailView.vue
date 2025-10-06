@@ -42,7 +42,7 @@
                     <p class="text-gray-600 text-lg mb-4">{{ datasetData.description }}</p>
 
                     <!-- Current User Vote Display -->
-                    <div v-if="hasUserVoted && authStore.isLoggedIn" class="mb-4 p-3 bg-blue-50 rounded-lg">
+                    <div v-if="hasUserVoted && authStore.isLoggedIn && !isOwner" class="mb-4 p-3 bg-blue-50 rounded-lg">
                         <div class="flex items-center gap-2">
                             <i class="pi pi-star text-yellow-500"></i>
                             <span class="font-medium">Your rating:</span>
@@ -65,8 +65,8 @@
 
                     <!-- Action Buttons -->
                     <div class="flex flex-wrap gap-2">
-                        <Button :label="hasUserVoted ? 'Update Vote' : 'Vote'" icon="pi pi-star" @click="openVoteDialog"
-                            :severity="hasUserVoted ? 'warning' : 'primary'" />
+                        <Button v-if="!isOwner" :label="hasUserVoted ? 'Update Vote' : 'Vote'" icon="pi pi-star"
+                            @click="openVoteDialog" :severity="hasUserVoted ? 'warning' : 'primary'" />
                         <Button label="Clone" icon="pi pi-copy" @click="cloneDataset" />
                         <Button label="Download" icon="pi pi-download" @click="downloadDataset" />
                     </div>
@@ -368,7 +368,7 @@
                                     class="mb-6">
                                     <Card>
                                         <template #content>
-                                            <h4 class="font-semibold mb-4">Monthly Download History</h4>
+                                            <h4 class="font-semibold mb-4">Download History</h4>
                                             <Chart type="line" :data="downloadChartData" :options="chartOptions"
                                                 class="h-80" />
                                         </template>
@@ -380,7 +380,7 @@
                                     class="mt-6">
                                     <Card>
                                         <template #content>
-                                            <h4 class="font-semibold mb-4">Recent Downloads</h4>
+                                            <h4 class="font-semibold mb-4">Downloads Details</h4>
                                             <DataTable v-if="downloadStats.statistics.recentDownloads.length !== 0"
                                                 :value="downloadStats.statistics.recentDownloads" :paginator="true"
                                                 :rows="10">
@@ -514,7 +514,34 @@ const downloadChartData = ref({
 
 const chartOptions = ref({
     responsive: true,
-    maintainAspectRatio: false
+    maintainAspectRatio: false,
+    plugins: {
+        tooltip: {
+            callbacks: {
+                label: function (context) {
+                    return `Downloads: ${context.parsed.y}`
+                }
+            }
+        }
+    },
+    scales: {
+        y: {
+            beginAtZero: true,
+            ticks: {
+                stepSize: 1
+            },
+            title: {
+                display: true,
+                text: 'Number of Downloads'
+            }
+        },
+        x: {
+            title: {
+                display: true,
+                text: 'Month'
+            }
+        }
+    }
 })
 
 /**
@@ -964,7 +991,7 @@ const cloneDataset = async () => {
 }
 
 /**
- * Prepare multi-year chart data from download statistics
+ * Prepare complete monthly chart data showing all downloads
  */
 const prepareChartData = () => {
     if (!isOwner.value || !downloadStats.value.statistics.recentDownloads.length) {
@@ -973,35 +1000,45 @@ const prepareChartData = () => {
 
     const downloads = [...downloadStats.value.statistics.recentDownloads]
 
-    // Group downloads by year-month
+    // Get all unique year-months from the data
+    const allYearMonths = new Set()
     const monthlyCounts = {}
 
+    // First pass: collect all unique year-months and count downloads
     downloads.forEach(download => {
         const date = new Date(download.downloadedAt)
-        const yearMonth = date.toLocaleDateString('en-US', {
+        const year = date.getFullYear()
+        const month = date.getMonth() // 0-11
+        const yearMonth = `${year}-${month}`
+        const label = date.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short'
         })
-        monthlyCounts[yearMonth] = (monthlyCounts[yearMonth] || 0) + 1
+
+        allYearMonths.add(yearMonth)
+        monthlyCounts[yearMonth] = {
+            label: label,
+            count: (monthlyCounts[yearMonth]?.count || 0) + 1
+        }
     })
 
-    // Sort by date
-    const sortedEntries = Object.entries(monthlyCounts)
-        .sort(([a], [b]) => new Date(a) - new Date(b))
+    // Convert to arrays and sort chronologically
+    const sortedYearMonths = Array.from(allYearMonths).sort()
 
-    const labels = sortedEntries.map(([date]) => date)
-    const data = sortedEntries.map(([, count]) => count)
+    const labels = sortedYearMonths.map(ym => monthlyCounts[ym].label)
+    const data = sortedYearMonths.map(ym => monthlyCounts[ym].count)
 
     downloadChartData.value = {
         labels: labels,
         datasets: [
             {
-                label: 'Monthly Downloads',
+                label: 'Downloads per Month',
                 data: data,
                 fill: true,
                 borderColor: '#42A5F5',
                 backgroundColor: 'rgba(66, 165, 245, 0.1)',
-                tension: 0.4
+                tension: 0.4,
+                borderWidth: 2
             }
         ]
     }

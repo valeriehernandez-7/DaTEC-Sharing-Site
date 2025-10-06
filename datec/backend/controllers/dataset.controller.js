@@ -1381,28 +1381,47 @@ async function downloadDataset(req, res) {
                 try {
                     // Check if user already downloaded this dataset
                     const { relationshipExists, createRelationship } = require('../utils/neo4j-relations');
-                    const alreadyDownloaded = await relationshipExists(
+
+                    
+                    // // Only track if first time downloading this dataset
+
+                    // const alreadyDownloaded = await relationshipExists(
+                    //     req.user.userId,
+                    //     datasetId,
+                    //     'DOWNLOADED'
+                    // );
+
+                    
+                    // if (!alreadyDownloaded) {
+                    //     // Create DOWNLOADED relationship in Neo4j
+                    //     await createRelationship(
+                    //         req.user.userId,
+                    //         datasetId,
+                    //         'DOWNLOADED',
+                    //         { downloaded_at: new Date().toISOString() },
+                    //         'User',
+                    //         'Dataset'
+                    //     );
+
+                    //     // Increment download counter in Redis
+                    //     const { incrementCounter } = require('../utils/redis-counters');
+                    //     await incrementCounter(`download_count:dataset:${datasetId}`);
+                    // }
+
+                    // Create DOWNLOADED relationship in Neo4j
+                    await createRelationship(
                         req.user.userId,
                         datasetId,
-                        'DOWNLOADED'
+                        'DOWNLOADED',
+                        { downloaded_at: new Date().toISOString() },
+                        'User',
+                        'Dataset'
                     );
 
-                    // Only track if first time downloading this dataset
-                    if (!alreadyDownloaded) {
-                        // Create DOWNLOADED relationship in Neo4j
-                        await createRelationship(
-                            req.user.userId,
-                            datasetId,
-                            'DOWNLOADED',
-                            { downloaded_at: new Date().toISOString() },
-                            'User',
-                            'Dataset'
-                        );
+                    // Increment download counter in Redis
+                    const { incrementCounter } = require('../utils/redis-counters');
+                    await incrementCounter(`download_count:dataset:${datasetId}`);
 
-                        // Increment download counter in Redis
-                        const { incrementCounter } = require('../utils/redis-counters');
-                        await incrementCounter(`download_count:dataset:${datasetId}`);
-                    }
 
                 } catch (trackingError) {
                     console.error('Error tracking download:', trackingError.message);
