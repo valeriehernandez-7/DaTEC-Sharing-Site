@@ -48,6 +48,10 @@ const props = defineProps({
     nestingLevel: {
         type: Number,
         default: 0
+    },
+    datasetId: {
+        type: String,
+        required: true
     }
 })
 
@@ -135,7 +139,7 @@ const submitComment = async () => {
             payload.parent_comment_id = props.parentId
         }
 
-        await api.post(`/datasets/${getCurrentDatasetId()}/comments`, payload)
+        await api.post(`/datasets/${props.datasetId}/comments`, payload)
 
         toast.add({
             severity: 'success',
@@ -156,7 +160,7 @@ const submitComment = async () => {
         toast.add({
             severity: 'error',
             summary: 'Error',
-            detail: error.message || 'Failed to post comment',
+            detail: error.response?.data?.error || 'Failed to post comment',
             life: 5000
         })
     } finally {
@@ -164,11 +168,6 @@ const submitComment = async () => {
     }
 }
 
-const getCurrentDatasetId = () => {
-    // This should be passed as prop or from route in actual implementation
-    const route = useRoute()
-    return route.params.id
-}
 </script>
 
 <style scoped>

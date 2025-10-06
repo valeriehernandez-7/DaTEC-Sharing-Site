@@ -6,10 +6,12 @@
             <!-- Comment Header -->
             <div class="comment-header">
                 <div class="user-info">
-                    <Avatar v-if="comment.author.avatar_url" :image="getAvatarUrl(comment.author)" shape="circle"
-                        size="small" class="comment-avatar" />
-                    <Avatar v-else :label="getInitials(comment.author.full_name)" shape="circle" size="small"
-                        :class="getUserAvatarClasses(comment.author.username)" class="comment-avatar" />
+                    <div class="flex" @click="goToProfile(comment.author.username)">
+                        <Avatar v-if="comment.author.avatar_url" :image="getAvatarUrl(comment.author)" shape="circle"
+                            size="small" class="comment-avatar" />
+                        <Avatar v-else :label="getInitials(comment.author.full_name)" shape="circle" size="small"
+                            :class="getUserAvatarClasses(comment.author.username)" class="comment-avatar" />
+                    </div>
                     <div class="user-details">
                         <span class="username">{{ comment.author.username }}</span>
                         <span class="timestamp">{{ formatDate(comment.created_at) }}</span>
@@ -18,8 +20,8 @@
 
                 <div class="comment-badges">
                     <Tag v-if="!comment.is_active" icon="pi pi-ban" severity="danger" size="small" />
-                    <Tag v-else-if="comment.author.username === datasetOwnerUsername" icon="pi pi-flag-fill" severity="info"
-                        size="small" />
+                    <Tag v-else-if="comment.author.username === datasetOwnerUsername" icon="pi pi-flag-fill"
+                        severity="info" size="small" />
                     <Tag v-else-if="comment.is_own_comment" icon="pi pi-bullseye" severity="secondary" size="small" />
                 </div>
             </div>
@@ -31,7 +33,8 @@
                 </div>
                 <div v-else class="disabled-content">
                     <i class="pi pi-ban text-gray-400 mr-2"></i>
-                    <span class="text-gray-500 text-sm"><i>This comment has been moderated by an administrator.</i></span>
+                    <span class="text-gray-500 text-sm"><i>This comment has been moderated by an
+                            administrator.</i></span>
                 </div>
             </div>
 
@@ -51,7 +54,9 @@
 
             <!-- Reply Form -->
             <CommentForm v-if="showReplyForm === comment.comment_id" :parentId="comment.comment_id"
-                :nestingLevel="nestingLevel" @submit="handleReplySubmit" @cancel="closeReplyForm" class="reply-form" />
+                :datasetId="route.params.id" :nestingLevel="nestingLevel" @submit="handleReplySubmit"
+                @cancel="closeReplyForm" class="reply-form" />
+
 
             <!-- Nested Replies (Recursive) -->
             <CommentThread v-if="comment.replies && comment.replies.length > 0" :comments="comment.replies"
@@ -65,6 +70,7 @@
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'primevue/usetoast'
+import { useRoute, useRouter } from 'vue-router'
 import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
@@ -90,6 +96,8 @@ const emit = defineEmits(['comment-updated'])
 
 const authStore = useAuthStore()
 const toast = useToast()
+const route = useRoute()
+const router = useRouter()
 const showReplyForm = ref(null)
 
 // Computed properties
@@ -217,6 +225,16 @@ const enableComment = async (commentId) => {
         })
     }
 }
+
+/**
+ * Navigates to user's profile page
+ */
+const goToProfile = (username) => {
+    if (username) {
+        router.push(`/profile/${username}`)
+    }
+}
+
 </script>
 
 <style scoped>

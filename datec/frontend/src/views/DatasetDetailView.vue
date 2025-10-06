@@ -162,7 +162,7 @@
                             <div class="discussion-container">
                                 <!-- Comment Form for Top-Level Comments -->
                                 <CommentForm v-if="authStore.isLoggedIn && isDatasetAccessible"
-                                    @submit="handleNewComment" class="mb-6" />
+                                    :datasetId="route.params.id" @submit="handleNewComment" class="mb-6" />
 
                                 <Divider type="dotted" />
 
