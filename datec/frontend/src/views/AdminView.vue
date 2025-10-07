@@ -118,11 +118,7 @@
                                     <div
                                         class="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                                         <span class="w-full sm:w-auto">
-                                            <IconField>
-                                                <InputText v-model="userSearch"
-                                                    placeholder="Search users by username or name"
-                                                    class="w-full sm:w-100" />
-                                            </IconField>
+                                            <InputText v-model="userSearch" placeholder="Search users by username or name" class="w-full sm:w-100" />
                                         </span>
                                         <div class="text-sm text-gray-500 py-5">
                                             {{ filteredUsers.length }} users found <i class="pi pi-search px-2"></i>

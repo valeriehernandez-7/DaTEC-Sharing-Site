@@ -48,21 +48,6 @@ async function setupRedis() {
         console.log('\nRedis Replica Replication Info:');
         console.log(replicaInfo.split('\n').filter(line => line.includes('role:') || line.includes('master_host:')).join('\n'));
 
-        // Initialize counters for datasets (matching setup-mongo.js)
-        console.log('\nInitializing Redis counters...');
-
-        // Sample datasets matching MongoDB seed data
-        const sampleDatasets = [
-            'erickhernandez_20250101_001',
-            'armandogarcia_20250201_001'
-        ];
-
-        for (const datasetId of sampleDatasets) {
-            await primaryClient.set(`download_count:dataset:${datasetId}`, 0);
-            await primaryClient.set(`vote_count:dataset:${datasetId}`, 0);
-            console.log(`  - Initialized counters for dataset: ${datasetId}`);
-        }
-
         // Create sample notifications matching Neo4j FOLLOWS relationships
         console.log('\nCreating sample notifications...');
 
@@ -71,7 +56,9 @@ async function setupRedis() {
             sudod4t3c: '00000000-0000-5000-8000-00005a317347',
             erickhernandez: '00000000-0000-5000-8000-00002a10550c',
             armandogarcia: '00000000-0000-5000-8000-000050c163e7',
-            valeriehernandez: '00000000-0000-5000-8000-000004637677'
+            valeriehernandez: '00000000-0000-5000-8000-000004637677',
+            dhodgkin: '00000000-0000-5000-8000-0000087b63e3',
+            einst3in: '00000000-0000-5000-8000-0000160ecd67'
         };
 
         // Notification 1: erickhernandez receives notification from armandogarcia (new_follower)

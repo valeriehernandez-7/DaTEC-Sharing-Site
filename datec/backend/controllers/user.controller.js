@@ -323,7 +323,7 @@ async function followUser(req, res) {
         await sendNotification(targetUser.user_id, {
             type: 'new_follower',
             message: `${req.user.username} started following you`,
-            from_user: req.user.username,
+            from_username: req.user.username,
             from_user_id: followerId,
             timestamp: new Date().toISOString()
         });

@@ -81,7 +81,9 @@ async function setupNeo4j() {
             { userId: '00000000-0000-5000-8000-00005a317347', username: 'sudod4t3c' },
             { userId: '00000000-0000-5000-8000-00002a10550c', username: 'erickhernandez' },
             { userId: '00000000-0000-5000-8000-000050c163e7', username: 'armandogarcia' },
-            { userId: '00000000-0000-5000-8000-000004637677', username: 'valeriehernandez' }
+            { userId: '00000000-0000-5000-8000-000004637677', username: 'valeriehernandez' },
+            { userId: '00000000-0000-5000-8000-0000087b63e3', username: 'dhodgkin' },
+            { userId: '00000000-0000-5000-8000-0000160ecd67', username: 'einst3in' }
         ];
 
         for (const user of sampleUsers) {
