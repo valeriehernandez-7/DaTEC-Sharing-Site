@@ -73,11 +73,6 @@ async function listAllUsers(req, res) {
     try {
         const db = getMongo();
 
-        // Verify requester is admin
-        if (!req.user.isAdmin) {
-            return res.status(403).json({ error: 'Forbidden: Admin privileges required' });
-        }
-
         const users = await db.collection('users').find({})
             .sort({ created_at: -1 })
             .toArray();
@@ -462,6 +457,7 @@ async function getFollowing(req, res) {
 
 module.exports = {
     searchUsers,      // HU14
+    listAllUsers,
     getUser,
     updateUser,       // HU4
     promoteUser,      // HU3

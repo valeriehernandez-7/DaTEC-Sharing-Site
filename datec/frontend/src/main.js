@@ -56,6 +56,8 @@ import StepPanel from 'primevue/steppanel'
 import FloatLabel from 'primevue/floatlabel'
 import Chip from 'primevue/chip'
 import AutoComplete  from 'primevue/autocomplete'
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 
 import CommentThread from '@/components/comments/CommentThread.vue'
 import CommentForm from '@/components/comments/CommentForm.vue'
@@ -137,6 +139,8 @@ app.component('StepPanel', StepPanel)
 app.component('FloatLabel', FloatLabel)
 app.component('Chip', Chip)
 app.component('AutoComplete ', AutoComplete)
+app.component('IconField ', IconField)
+app.component('InputIcon ', InputIcon)
 
 /**
  * Services and state management
