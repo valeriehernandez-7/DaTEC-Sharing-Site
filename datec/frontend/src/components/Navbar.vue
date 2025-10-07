@@ -11,43 +11,102 @@
             <template #end>
                 <div class="flex items-center gap-2">
                     <!-- Notifications Menu (only when logged in) -->
-                    <Button v-if="authStore.isLoggedIn" icon="pi pi-bell" text rounded severity="secondary"
+                    <Button
+                        v-if="authStore.isLoggedIn"
+                        icon="pi pi-bell"
+                        text
+                        rounded
+                        severity="secondary"
                         @click="toggleNotifications"
                         :badge="notificationCount > 0 ? notificationCount.toString() : null"
-                        badge-class="notification-badge" />
+                        badge-class="notification-badge"
+                    />
 
-                    <Button v-if="authStore.isLoggedIn && authStore.user?.isAdmin" icon="pi pi-shield" text rounded
-                        aria-label="DaTEC Management" severity="secondary" @click="router.push(`/admin`)"/>
+                    <Button
+                        v-if="authStore.isLoggedIn && authStore.user?.isAdmin"
+                        icon="pi pi-shield"
+                        text
+                        rounded
+                        aria-label="DaTEC Management"
+                        severity="secondary"
+                        @click="router.push(`/admin`)"
+                    />
 
-                    <Menu v-if="authStore.isLoggedIn" ref="notificationsMenu" :model="notificationItems" :popup="true"
-                        class="notifications-overlay" />
+                    <Menu
+                        v-if="authStore.isLoggedIn"
+                        ref="notificationsMenu"
+                        :model="notificationItems"
+                        :popup="true"
+                        class="notifications-overlay"
+                    />
 
                     <!-- User Section (only when logged in) -->
                     <div v-if="authStore.isLoggedIn" class="flex items-center gap-2">
+                        <Avatar
+                            v-if="authStore.user?.avatarUrl"
+                            :image="userAvatarUrl"
+                            size="medium"
+                            shape="circle"
+                            class="cursor-pointer"
+                            @click="goToProfile"
+                        />
+                        <Avatar
+                            v-else
+                            :label="userInitials"
+                            size="medium"
+                            shape="circle"
+                            :class="avatarClasses"
+                            class="cursor-pointer"
+                            @click="goToProfile"
+                        />
 
-                        <Avatar v-if="authStore.user?.avatarUrl" :image="userAvatarUrl" size="medium" shape="circle"
-                            class="cursor-pointer" @click="goToProfile" />
-                        <Avatar v-else :label="userInitials" size="medium" shape="circle" :class="avatarClasses"
-                            class="cursor-pointer" @click="goToProfile" />
+                        <Button
+                            icon="pi pi-ellipsis-v"
+                            text
+                            rounded
+                            severity="secondary"
+                            @click="toggleUserMenu"
+                        />
 
-                        <Button icon="pi pi-ellipsis-v" text rounded severity="secondary" @click="toggleUserMenu" />
-
-                        <Menu ref="userMenu" :model="userMenuItems" :popup="true" class="user-menu-overlay" />
+                        <Menu
+                            ref="userMenu"
+                            :model="userMenuItems"
+                            :popup="true"
+                            class="user-menu-overlay"
+                        />
                     </div>
 
                     <!-- Login Button (when not authenticated) -->
-                    <Button v-else label="Log In" icon="pi pi-sign-in" @click="goToLogin" rounded class="bg-sky-600" />
+                    <Button
+                        v-else
+                        label="Log In"
+                        icon="pi pi-sign-in"
+                        @click="goToLogin"
+                        rounded
+                        class="bg-sky-600"
+                    />
                 </div>
             </template>
         </Menubar>
 
         <!-- Contact Dialog -->
-        <Dialog v-model:visible="showContactDialog" header="Contact User" :style="{ width: '450px' }" :modal="true">
+        <Dialog
+            v-model:visible="showContactDialog"
+            header="Contact User"
+            :style="{ width: '450px' }"
+            :modal="true"
+        >
             <div class="p-fluid">
                 <div class="field">
                     <label for="username">Username</label>
-                    <InputText id="username" v-model="contactUsername" placeholder="Enter username to contact..."
-                        class="w-full mt-2" @keyup.enter="findUser" :class="{ 'p-invalid': usernameError }" />
+                    <InputText
+                        id="username"
+                        v-model="contactUsername"
+                        placeholder="Enter username to contact..."
+                        class="w-full mt-2"
+                        @keyup.enter="findUser"
+                        :class="{ 'p-invalid': usernameError }"
+                    />
                     <small v-if="usernameError" class="p-error">{{ usernameError }}</small>
                 </div>
                 <small class="text-gray-500 block mt-2">
@@ -56,18 +115,39 @@
             </div>
             <template #footer>
                 <Button label="Cancel" icon="pi pi-times" text @click="closeContactDialog" />
-                <Button label="Contact" icon="pi pi-user" @click="findUser" :loading="isCheckingUser"
-                    :disabled="!isValidUsername" />
+                <Button
+                    label="Contact"
+                    icon="pi pi-user"
+                    @click="findUser"
+                    :loading="isCheckingUser"
+                    :disabled="!isValidUsername"
+                />
             </template>
         </Dialog>
 
         <!-- Settings Dialog -->
-        <Dialog v-model:visible="showSettingsDialog" modal header="Edit Profile" :style="{ width: '500px' }"
-            :closable="false">
+        <Dialog
+            v-model:visible="showSettingsDialog"
+            modal
+            header="Edit Profile"
+            :style="{ width: '500px' }"
+            :closable="false"
+        >
             <template #header>
                 <div class="inline-flex items-center justify-center gap-3">
-                    <Avatar v-if="authStore.user?.avatarUrl" :image="userAvatarUrl" size="xlarge" shape="circle" />
-                    <Avatar v-else :label="userInitials" size="xlarge" shape="circle" :class="avatarClasses" />
+                    <Avatar
+                        v-if="authStore.user?.avatarUrl"
+                        :image="userAvatarUrl"
+                        size="xlarge"
+                        shape="circle"
+                    />
+                    <Avatar
+                        v-else
+                        :label="userInitials"
+                        size="xlarge"
+                        shape="circle"
+                        :class="avatarClasses"
+                    />
                     <span class="font-bold text-lg">{{ userData?.fullName || 'User' }}</span>
                 </div>
             </template>
@@ -75,9 +155,19 @@
             <div class="space-y-4">
                 <!-- Avatar Upload Section -->
                 <div class="text-center mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-3">Profile Picture</label>
-                    <FileUpload mode="basic" name="avatar" accept="image/*" :maxFileSize="5000000"
-                        chooseLabel="Choose New Avatar" :auto="true" @select="onAvatarSelect" class="w-full" />
+                    <label class="block text-sm font-medium text-gray-700 mb-3"
+                        >Profile Picture</label
+                    >
+                    <FileUpload
+                        mode="basic"
+                        name="avatar"
+                        accept="image/*"
+                        :maxFileSize="5000000"
+                        chooseLabel="Choose New Avatar"
+                        :auto="true"
+                        @select="onAvatarSelect"
+                        class="w-full"
+                    />
                     <small class="text-gray-500 block mt-2">
                         Max file size: 5MB. Supported formats: JPG, PNG, GIF
                     </small>
@@ -86,27 +176,49 @@
                 <!-- Form Fields -->
                 <div class="flex items-center gap-4">
                     <label for="username" class="font-semibold w-32">Username</label>
-                    <InputText id="username" v-model="userData.username" class="flex-auto" disabled
-                        placeholder="Username" />
+                    <InputText
+                        id="username"
+                        v-model="userData.username"
+                        class="flex-auto"
+                        disabled
+                        placeholder="Username"
+                    />
                 </div>
 
                 <div class="flex items-center gap-4">
                     <label for="fullName" class="font-semibold w-32">Full Name</label>
-                    <InputText id="fullName" v-model="userData.fullName" class="flex-auto"
-                        placeholder="Enter your full name" />
+                    <InputText
+                        id="fullName"
+                        v-model="userData.fullName"
+                        class="flex-auto"
+                        placeholder="Enter your full name"
+                    />
                 </div>
 
                 <div class="flex items-center gap-4">
                     <label for="email" class="font-semibold w-32">Email</label>
-                    <InputText id="email" v-model="userData.emailAddress" type="email" class="flex-auto"
-                        placeholder="Enter your email address" />
+                    <InputText
+                        id="email"
+                        v-model="userData.emailAddress"
+                        type="email"
+                        class="flex-auto"
+                        placeholder="Enter your email address"
+                    />
                 </div>
 
                 <div class="flex items-center gap-4">
                     <label for="birthDate" class="font-semibold w-32">Birth Date</label>
-                    <DatePicker id="birthDate" v-model="userData.birthDate" class="flex-auto" dateFormat="yy-mm-dd"
-                        :maxDate="maxDate" :minDate="minDate" showIcon iconDisplay="input"
-                        placeholder="Select your birth date" />
+                    <DatePicker
+                        id="birthDate"
+                        v-model="userData.birthDate"
+                        class="flex-auto"
+                        dateFormat="yy-mm-dd"
+                        :maxDate="maxDate"
+                        :minDate="minDate"
+                        showIcon
+                        iconDisplay="input"
+                        placeholder="Select your birth date"
+                    />
                 </div>
 
                 <!-- Read-only Information -->
@@ -120,8 +232,10 @@
                         <div class="flex justify-between">
                             <span class="text-gray-600">Role:</span>
                             <span class="font-medium">
-                                <Tag :value="userData?.isAdmin ? 'Administrator' : 'User'"
-                                    :severity="userData?.isAdmin ? 'danger' : 'info'" />
+                                <Tag
+                                    :value="userData?.isAdmin ? 'Administrator' : 'User'"
+                                    :severity="userData?.isAdmin ? 'danger' : 'info'"
+                                />
                             </span>
                         </div>
                     </div>
@@ -129,26 +243,49 @@
             </div>
 
             <template #footer>
-                <Button label="Cancel" icon="pi pi-times" text severity="secondary" @click="closeSettingsDialog"
-                    :disabled="isSaving" />
-                <Button label="Save Changes" icon="pi pi-check" @click="saveSettings" :loading="isSaving"
-                    :disabled="!hasChanges" />
+                <Button
+                    label="Cancel"
+                    icon="pi pi-times"
+                    text
+                    severity="secondary"
+                    @click="closeSettingsDialog"
+                    :disabled="isSaving"
+                />
+                <Button
+                    label="Save Changes"
+                    icon="pi pi-check"
+                    @click="saveSettings"
+                    :loading="isSaving"
+                    :disabled="!hasChanges"
+                />
             </template>
         </Dialog>
 
         <!-- Avatar Upload Dialog -->
-        <Dialog v-model:visible="showAvatarUploadDialog" header="Upload Avatar" :style="{ width: '400px' }"
-            :modal="true">
+        <Dialog
+            v-model:visible="showAvatarUploadDialog"
+            header="Upload Avatar"
+            :style="{ width: '400px' }"
+            :modal="true"
+        >
             <div class="text-center" v-if="selectedAvatarFile">
-                <img :src="avatarPreviewUrl" alt="Avatar Preview"
-                    class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-2 border-gray-300" />
+                <img
+                    :src="avatarPreviewUrl"
+                    alt="Avatar Preview"
+                    class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-2 border-gray-300"
+                />
                 <p class="text-sm text-gray-600 mb-4">
                     {{ selectedAvatarFile.name }} ({{ formatFileSize(selectedAvatarFile.size) }})
                 </p>
 
                 <div class="flex gap-2 justify-center">
                     <Button label="Cancel" icon="pi pi-times" text @click="cancelAvatarUpload" />
-                    <Button label="Upload" icon="pi pi-upload" @click="uploadAvatar" :loading="isUploadingAvatar" />
+                    <Button
+                        label="Upload"
+                        icon="pi pi-upload"
+                        @click="uploadAvatar"
+                        :loading="isUploadingAvatar"
+                    />
                 </div>
             </div>
         </Dialog>
@@ -193,7 +330,7 @@ const userAvatarUrl = computed(() => {
 
     try {
         const url = new URL(authStore.user.avatarUrl)
-        const pathParts = url.pathname.split('/').filter(part => part)
+        const pathParts = url.pathname.split('/').filter((part) => part)
 
         if (pathParts.length < 3) return null
 
@@ -214,7 +351,7 @@ const userInitials = computed(() => {
     if (!authStore.user?.fullName) return 'U'
     return authStore.user.fullName
         .split(' ')
-        .map(name => name.charAt(0))
+        .map((name) => name.charAt(0))
         .join('')
         .toUpperCase()
         .substring(0, 2)
@@ -225,7 +362,14 @@ const userInitials = computed(() => {
  * @returns {string} CSS classes for avatar background
  */
 const avatarClasses = computed(() => {
-    const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500']
+    const colors = [
+        'bg-emerald-500',
+        'bg-blue-500',
+        'bg-purple-500',
+        'bg-amber-500',
+        'bg-rose-500',
+        'bg-cyan-500',
+    ]
     const index = (authStore.user?.username?.charCodeAt(0) || 0) % colors.length
     return `${colors[index]} text-white`
 })
@@ -285,22 +429,22 @@ const notificationItems = computed(() => {
             {
                 label: 'No notifications',
                 icon: 'pi pi-inbox',
-                disabled: true
-            }
+                disabled: true,
+            },
         ]
     }
 
-    const items = notifications.value.map(notification => ({
+    const items = notifications.value.map((notification) => ({
         label: formatNotification(notification),
         icon: getNotificationIcon(notification.type),
-        command: () => handleNotificationClick(notification)
+        command: () => handleNotificationClick(notification),
     }))
 
     items.push({ separator: true })
     items.push({
         label: 'Clear All',
         icon: 'pi pi-trash',
-        command: clearAllNotifications
+        command: clearAllNotifications,
     })
 
     return items
@@ -329,28 +473,28 @@ const userMenuItems = computed(() => [
         icon: 'pi pi-search',
         command: () => {
             router.push('/')
-        }
+        },
     },
     {
         label: 'New Dataset',
         icon: 'pi pi-folder-plus',
         command: () => {
             router.push('/datasets/create')
-        }
+        },
     },
     {
         label: 'Contact User',
         icon: 'pi pi-envelope',
         command: () => {
             showContactDialog.value = true
-        }
+        },
     },
     {
         label: 'Settings',
         icon: 'pi pi-cog',
         command: () => {
             openSettingsDialog()
-        }
+        },
     },
     { separator: true },
     {
@@ -362,11 +506,11 @@ const userMenuItems = computed(() => [
                 severity: 'info',
                 summary: 'Logged Out',
                 detail: 'You have been successfully logged out',
-                life: 3000
+                life: 3000,
             })
             router.push('/login')
-        }
-    }
+        },
+    },
 ])
 
 // Lifecycle hooks
@@ -416,8 +560,8 @@ const loadNotificationCount = async () => {
     try {
         const response = await fetch('http://localhost:3000/api/notifications/count', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
         })
 
         if (response.ok) {
@@ -436,8 +580,8 @@ const loadNotifications = async () => {
     try {
         const response = await fetch('http://localhost:3000/api/notifications', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
         })
 
         if (response.ok) {
@@ -457,8 +601,8 @@ const clearAllNotifications = async () => {
         const response = await fetch('http://localhost:3000/api/notifications', {
             method: 'DELETE',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
         })
 
         if (response.ok) {
@@ -468,7 +612,7 @@ const clearAllNotifications = async () => {
                 severity: 'success',
                 summary: 'Cleared',
                 detail: 'All notifications cleared',
-                life: 3000
+                life: 3000,
             })
         }
     } catch (error) {
@@ -477,7 +621,7 @@ const clearAllNotifications = async () => {
             severity: 'error',
             summary: 'Failed to clear notifications',
             detail: error.message,
-            life: 5000
+            life: 5000,
         })
     }
 }
@@ -489,10 +633,10 @@ const clearAllNotifications = async () => {
  */
 const formatNotification = (notification) => {
     const messages = {
-        'new_follower': `${notification.from_username} started following you`,
-        'new_dataset': `${notification.from_username} published a new dataset`,
-        'dataset_approved': `Your dataset "${notification.dataset_name}" was approved`,
-        'dataset_rejected': `Your dataset "${notification.dataset_name}" was rejected`
+        new_follower: `${notification.from_username} started following you`,
+        new_dataset: `${notification.from_username} published a new dataset`,
+        dataset_approved: `Your dataset "${notification.dataset_name}" was approved`,
+        dataset_rejected: `Your dataset "${notification.dataset_name}" was rejected`,
     }
 
     return messages[notification.type] || notification.message || 'New notification'
@@ -505,10 +649,10 @@ const formatNotification = (notification) => {
  */
 const getNotificationIcon = (type) => {
     const icons = {
-        'new_follower': 'pi pi-user-plus',
-        'new_dataset': 'pi pi-database',
-        'dataset_approved': 'pi pi-check',
-        'dataset_rejected': 'pi pi-times'
+        new_follower: 'pi pi-user-plus',
+        new_dataset: 'pi pi-database',
+        dataset_approved: 'pi pi-check',
+        dataset_rejected: 'pi pi-times',
     }
 
     return icons[type] || 'pi pi-bell'
@@ -568,9 +712,9 @@ const uploadAvatar = async () => {
         const response = await fetch(`http://localhost:3000/api/users/${authStore.user.username}`, {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
-            body: formData
+            body: formData,
         })
 
         if (response.ok) {
@@ -579,7 +723,7 @@ const uploadAvatar = async () => {
                 severity: 'success',
                 summary: 'Success',
                 detail: 'Avatar updated successfully',
-                life: 3000
+                life: 3000,
             })
 
             // Update auth store and close dialogs
@@ -599,7 +743,7 @@ const uploadAvatar = async () => {
             severity: 'error',
             summary: 'Failed to upload avatar',
             detail: error.message,
-            life: 5000
+            life: 5000,
         })
     } finally {
         isUploadingAvatar.value = false
@@ -629,7 +773,7 @@ const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
     })
 }
 
@@ -640,15 +784,15 @@ const loadUserData = async () => {
     try {
         const response = await fetch(`http://localhost:3000/api/users/${authStore.user.username}`, {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
         })
 
         if (response.ok) {
             const data = await response.json()
             userData.value = {
                 ...data.user,
-                password: '' // Initialize password as empty
+                password: '', // Initialize password as empty
             }
             originalUserData.value = { ...userData.value }
 
@@ -680,7 +824,7 @@ const openSettingsDialog = async () => {
             severity: 'error',
             summary: 'Failed to load user data',
             detail: error.message,
-            life: 5000
+            life: 5000,
         })
         showSettingsDialog.value = false
     }
@@ -722,7 +866,7 @@ const saveSettings = async () => {
                 severity: 'warn',
                 summary: 'No Changes',
                 detail: 'No changes detected to save',
-                life: 3000
+                life: 3000,
             })
             return
         }
@@ -730,10 +874,10 @@ const saveSettings = async () => {
         const response = await fetch(`http://localhost:3000/api/users/${authStore.user.username}`, {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                'Content-Type': 'application/json'
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify(updateData)
+            body: JSON.stringify(updateData),
         })
 
         const responseData = await response.json()
@@ -743,7 +887,7 @@ const saveSettings = async () => {
                 severity: 'success',
                 summary: 'Profile updated successfully',
                 detail: responseData.message,
-                life: 3000
+                life: 3000,
             })
 
             // Update auth store with new data
@@ -754,7 +898,6 @@ const saveSettings = async () => {
 
             // Reload original data to reset change detection
             originalUserData.value = { ...userData.value }
-
         } else {
             // Handle server validation errors
             throw new Error(responseData.error || `Failed to update profile: ${response.status}`)
@@ -767,7 +910,7 @@ const saveSettings = async () => {
             severity: 'error',
             summary: 'Failed to save changes.',
             detail: error.message,
-            life: 5000
+            life: 5000,
         })
     } finally {
         isSaving.value = false
@@ -830,7 +973,7 @@ const findUser = async () => {
                     severity: 'success',
                     summary: 'User Found',
                     detail: `Navigating to ${targetUsername}'s profile`,
-                    life: 3000
+                    life: 3000,
                 })
             } else {
                 usernameError.value = 'User not found'

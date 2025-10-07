@@ -11,6 +11,7 @@
 
 const { getMongo } = require('../config/databases');
 const { incrementCounter, decrementCounter, getCounter } = require('../utils/redis-counters');
+const { getFileUrl } = require('../utils/couchdb-manager');
 
 /**
  * HU17 - Add or update vote for a dataset
@@ -209,7 +210,7 @@ async function getVotes(req, res) {
             votes.map(async (vote) => {
                 const voter = await db.collection('users').findOne(
                     { user_id: vote.voter_user_id },
-                    { projection: { username: 1, full_name: 1 } }
+                    { projection: { username: 1, full_name: 1 , avatar_ref: 1 } }
                 );
 
                 return {
@@ -217,7 +218,10 @@ async function getVotes(req, res) {
                     rating: vote.rating,
                     voter: voter ? {
                         username: voter.username,
-                        fullName: voter.full_name
+                        fullName: voter.full_name,
+                        avatarUrl: voter.avatar_ref
+                                ? getFileUrl(voter.avatar_ref.couchdb_document_id, voter.avatar_ref.file_name)
+                                : null,
                     } : null,
                     created_at: vote.created_at
                 };

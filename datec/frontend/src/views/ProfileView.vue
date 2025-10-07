@@ -21,28 +21,52 @@
                     <div class="flex items-center gap-6">
                         <!-- Avatar with proper CouchDB file handling -->
                         <div class="relative">
-                            <Avatar v-if="userData.avatarUrl" :image="getAvatarUrl(userData)" size="xlarge"
-                                shape="circle" :alt="userData.username" />
-                            <Avatar v-else :label="userInitials" size="xlarge" shape="circle" :class="avatarClasses" />
+                            <Avatar
+                                v-if="userData.avatarUrl"
+                                :image="getAvatarUrl(userData)"
+                                size="xlarge"
+                                shape="circle"
+                                :alt="userData.username"
+                            />
+                            <Avatar
+                                v-else
+                                :label="userInitials"
+                                size="xlarge"
+                                shape="circle"
+                                :class="avatarClasses"
+                            />
                         </div>
 
                         <!-- User Information -->
                         <div class="flex-1">
                             <div class="flex items-center gap-3 mb-2">
-                                <h1 class="text-2xl font-bold text-gray-900">{{ userData.fullName }}</h1>
-                                <i v-if="userData.isAdmin" class="pi pi-verified text-blue-500 text-xl"
-                                    title="Administrator"></i>
+                                <h1 class="text-2xl font-bold text-gray-900">
+                                    {{ userData.fullName }}
+                                </h1>
+                                <i
+                                    v-if="userData.isAdmin"
+                                    class="pi pi-verified text-blue-500 text-xl"
+                                    title="Administrator"
+                                ></i>
                             </div>
                             <p class="text-gray-600 text-lg">@{{ userData.username }}</p>
                         </div>
 
                         <!-- Action Buttons -->
                         <div class="flex gap-2" v-if="!isOwnProfile && authStore.isLoggedIn">
-                            <Button :label="isFollowing ? 'Unfollow' : 'Follow'"
-                                :icon="isFollowing ? 'pi pi-user-minus' : 'pi pi-user-plus'" @click="toggleFollow"
-                                :loading="isFollowingLoading" :severity="isFollowing ? 'secondary' : 'primary'" />
-                            <Button label="Message" icon="pi pi-envelope" severity="secondary"
-                                @click="openChatDrawer" />
+                            <Button
+                                :label="isFollowing ? 'Unfollow' : 'Follow'"
+                                :icon="isFollowing ? 'pi pi-user-minus' : 'pi pi-user-plus'"
+                                @click="toggleFollow"
+                                :loading="isFollowingLoading"
+                                :severity="isFollowing ? 'secondary' : 'primary'"
+                            />
+                            <Button
+                                label="Message"
+                                icon="pi pi-envelope"
+                                severity="secondary"
+                                @click="openChatDrawer"
+                            />
                         </div>
                     </div>
                 </template>
@@ -76,52 +100,89 @@
 
                 <!-- Datasets Tab -->
                 <TabPanel value="datasets">
-                    <DataView :value="datasets" :paginator="true" :rows="9" :loading="loadingDatasets"
+                    <DataView
+                        :value="datasets"
+                        :paginator="true"
+                        :rows="9"
+                        :loading="loadingDatasets"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} datasets">
+                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} datasets"
+                    >
                         <template v-if="isOwnProfile" #header>
-                            <div style="display: flex; justify-content: flex-end;">
-                                <Button icon="pi pi-folder-plus" raised rounded label="New Dataset"
-                                    @click="router.push('/datasets/create')" />
+                            <div style="display: flex; justify-content: flex-end">
+                                <Button
+                                    icon="pi pi-folder-plus"
+                                    raised
+                                    rounded
+                                    label="New Dataset"
+                                    @click="router.push('/datasets/create')"
+                                />
                             </div>
                         </template>
 
                         <template #list="slotProps">
                             <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                                <Card v-for="dataset in slotProps.items" :key="dataset.dataset_id"
+                                <Card
+                                    v-for="dataset in slotProps.items"
+                                    :key="dataset.dataset_id"
                                     class="cursor-pointer hover:shadow-lg transition-all duration-300 h-full"
-                                    @click="navigateToDataset(dataset.dataset_id)">
+                                    @click="navigateToDataset(dataset.dataset_id)"
+                                >
                                     <template #header>
                                         <div class="relative h-32 rounded-t-lg overflow-hidden">
                                             <!-- Header Photo or Fallback -->
-                                            <img v-if="getDatasetHeaderUrl(dataset)" :src="getDatasetHeaderUrl(dataset)"
-                                                :alt="dataset.dataset_name" class="object-cover" />
-                                            <div v-else
-                                                class="w-full h-full bg-gradient-to-br from-blue-600 to-gray-300 flex items-center justify-center text-white">
+                                            <img
+                                                v-if="getDatasetHeaderUrl(dataset)"
+                                                :src="getDatasetHeaderUrl(dataset)"
+                                                :alt="dataset.dataset_name"
+                                                class="object-cover"
+                                            />
+                                            <div
+                                                v-else
+                                                class="w-full h-full bg-gradient-to-br from-blue-600 to-gray-300 flex items-center justify-center text-white"
+                                            >
                                                 <i class="pi pi-box text-3xl"></i>
                                             </div>
-                                            <Tag v-if="isOwnProfile || authStore.user?.isAdmin"
+                                            <Tag
+                                                v-if="isOwnProfile || authStore.user?.isAdmin"
                                                 :icon="getStatusIcon(dataset.status)"
                                                 :value="dataset.status.toUpperCase()"
                                                 :severity="getStatusSeverity(dataset.status)"
-                                                class="absolute top-2 right-2" />
+                                                class="absolute top-2 right-2"
+                                            />
                                         </div>
                                     </template>
                                     <template #title>
-                                        <h3 class="text-lg font-semibold text-gray-900 line-clamp-1">{{
-                                            dataset.dataset_name }}</h3>
+                                        <h3
+                                            class="text-lg font-semibold text-gray-900 line-clamp-1"
+                                        >
+                                            {{ dataset.dataset_name }}
+                                        </h3>
                                     </template>
                                     <template #content>
-                                        <p class="text-gray-600 text-sm line-clamp-2 mb-3">{{ dataset.description }}</p>
-                                        <div class="flex items-center justify-between text-xs text-gray-500">
-                                            <div v-if="isOwnProfile || authStore.user?.isAdmin"
-                                                class="flex items-center gap-1">
+                                        <p class="text-gray-600 text-sm line-clamp-2 mb-3">
+                                            {{ dataset.description }}
+                                        </p>
+                                        <div
+                                            class="flex items-center justify-between text-xs text-gray-500"
+                                        >
+                                            <div
+                                                v-if="isOwnProfile || authStore.user?.isAdmin"
+                                                class="flex items-center gap-1"
+                                            >
                                                 <i
-                                                    :class="dataset.is_public ? 'pi pi-lock-open text-green-500' : 'pi pi-lock text-red-500'"></i>
-                                                <span>{{ dataset.is_public ? 'Public' : 'Private' }}</span>
+                                                    :class="
+                                                        dataset.is_public
+                                                            ? 'pi pi-lock-open text-green-500'
+                                                            : 'pi pi-lock text-red-500'
+                                                    "
+                                                ></i>
+                                                <span>{{
+                                                    dataset.is_public ? 'Public' : 'Private'
+                                                }}</span>
                                             </div>
                                             <div class="flex items-center gap-1">
-                                                <i class="pi pi-calendar  text-orange-500"></i>
+                                                <i class="pi pi-calendar text-orange-500"></i>
                                                 <span>{{ formatDate(dataset.updated_at) }}</span>
                                             </div>
                                             <div class="flex items-center gap-1">
@@ -149,30 +210,52 @@
 
                 <!-- Followers Tab -->
                 <TabPanel value="followers">
-                    <DataView :value="followers" :paginator="true" :rows="12" :loading="loadingFollowers"
+                    <DataView
+                        :value="followers"
+                        :paginator="true"
+                        :rows="12"
+                        :loading="loadingFollowers"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} followers">
+                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} followers"
+                    >
                         <template #list="slotProps">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <Card v-for="follower in slotProps.items" :key="follower.userId"
+                                <Card
+                                    v-for="follower in slotProps.items"
+                                    :key="follower.userId"
                                     class="cursor-pointer hover:shadow-md transition-all"
-                                    @click="navigateToProfile(follower.username)">
+                                    @click="navigateToProfile(follower.username)"
+                                >
                                     <template #content>
                                         <div class="flex items-center gap-3">
                                             <div class="relative">
-                                                <Avatar v-if="follower.avatarUrl" :image="getAvatarUrl(follower)"
-                                                    shape="circle" :alt="follower.username" />
-                                                <Avatar v-else :label="getInitials(follower.fullName)" shape="circle"
-                                                    :class="getUserAvatarClasses(follower.username)" />
+                                                <Avatar
+                                                    v-if="follower.avatarUrl"
+                                                    :image="getAvatarUrl(follower)"
+                                                    shape="circle"
+                                                    :alt="follower.username"
+                                                />
+                                                <Avatar
+                                                    v-else
+                                                    :label="getInitials(follower.fullName)"
+                                                    shape="circle"
+                                                    :class="getUserAvatarClasses(follower.username)"
+                                                />
                                             </div>
                                             <div class="flex-1">
                                                 <div class="flex items-center gap-2">
-                                                    <span class="font-medium text-gray-900">{{ follower.fullName
+                                                    <span class="font-medium text-gray-900">{{
+                                                        follower.fullName
                                                     }}</span>
-                                                    <i v-if="follower.isAdmin" class="pi pi-verified text-blue-500"
-                                                        title="Administrator"></i>
+                                                    <i
+                                                        v-if="follower.isAdmin"
+                                                        class="pi pi-verified text-blue-500"
+                                                        title="Administrator"
+                                                    ></i>
                                                 </div>
-                                                <p class="text-gray-500 text-sm">@{{ follower.username }}</p>
+                                                <p class="text-gray-500 text-sm">
+                                                    @{{ follower.username }}
+                                                </p>
                                             </div>
                                         </div>
                                     </template>
@@ -191,30 +274,52 @@
 
                 <!-- Following Tab -->
                 <TabPanel value="following">
-                    <DataView :value="following" :paginator="true" :rows="12" :loading="loadingFollowing"
+                    <DataView
+                        :value="following"
+                        :paginator="true"
+                        :rows="12"
+                        :loading="loadingFollowing"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} followed">
+                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} followed"
+                    >
                         <template #list="slotProps">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <Card v-for="followed in slotProps.items" :key="followed.userId"
+                                <Card
+                                    v-for="followed in slotProps.items"
+                                    :key="followed.userId"
                                     class="cursor-pointer hover:shadow-md transition-all"
-                                    @click="navigateToProfile(followed.username)">
+                                    @click="navigateToProfile(followed.username)"
+                                >
                                     <template #content>
                                         <div class="flex items-center gap-3">
                                             <div class="relative">
-                                                <Avatar v-if="followed.avatarUrl" :image="getAvatarUrl(followed)"
-                                                    shape="circle" :alt="followed.username" />
-                                                <Avatar v-else :label="getInitials(followed.fullName)" shape="circle"
-                                                    :class="getUserAvatarClasses(followed.username)" />
+                                                <Avatar
+                                                    v-if="followed.avatarUrl"
+                                                    :image="getAvatarUrl(followed)"
+                                                    shape="circle"
+                                                    :alt="followed.username"
+                                                />
+                                                <Avatar
+                                                    v-else
+                                                    :label="getInitials(followed.fullName)"
+                                                    shape="circle"
+                                                    :class="getUserAvatarClasses(followed.username)"
+                                                />
                                             </div>
                                             <div class="flex-1">
                                                 <div class="flex items-center gap-2">
-                                                    <span class="font-medium text-gray-900">{{ followed.fullName
-                                                        }}</span>
-                                                    <i v-if="followed.isAdmin" class="pi pi-verified text-blue-500"
-                                                        title="Administrator"></i>
+                                                    <span class="font-medium text-gray-900">{{
+                                                        followed.fullName
+                                                    }}</span>
+                                                    <i
+                                                        v-if="followed.isAdmin"
+                                                        class="pi pi-verified text-blue-500"
+                                                        title="Administrator"
+                                                    ></i>
                                                 </div>
-                                                <p class="text-gray-500 text-sm">@{{ followed.username }}</p>
+                                                <p class="text-gray-500 text-sm">
+                                                    @{{ followed.username }}
+                                                </p>
                                             </div>
                                         </div>
                                     </template>
@@ -233,13 +338,29 @@
             </Tabs>
 
             <!-- Chat Drawer -->
-            <Drawer v-model:visible="showChatDrawer" position="right" :style="{ width: '450px' }" :dismissable="true">
+            <Drawer
+                v-model:visible="showChatDrawer"
+                position="right"
+                :style="{ width: '450px' }"
+                :dismissable="true"
+            >
                 <template #header>
                     <div class="flex items-center gap-3">
                         <div class="relative">
-                            <Avatar v-if="userData.avatarUrl" :image="getAvatarUrl(userData)" shape="circle"
-                                :alt="userData.username" />
-                            <Avatar v-else :label="userInitials" shape="circle" size="xlarge" :class="avatarClasses" />
+                            <Avatar
+                                v-if="userData.avatarUrl"
+                                :image="getAvatarUrl(userData)"
+                                shape="circle"
+                                :alt="userData.username"
+                                size="xlarge"
+                            />
+                            <Avatar
+                                v-else
+                                :label="userInitials"
+                                shape="circle"
+                                size="xlarge"
+                                :class="avatarClasses"
+                            />
                         </div>
                         <div>
                             <div class="font-semibold text-gray-900">{{ userData.fullName }}</div>
@@ -250,24 +371,45 @@
 
                 <div class="h-full flex flex-col">
                     <!-- Messages Container -->
-                    <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4 messages-container">
+                    <div
+                        ref="messagesContainer"
+                        class="flex-1 overflow-y-auto p-4 space-y-4 messages-container"
+                    >
                         <div v-if="loadingMessages" class="flex justify-center py-4">
                             <ProgressSpinner size="small" />
                         </div>
-                        <div v-else-if="messages.length === 0" class="text-center text-gray-500 py-8">
+                        <div
+                            v-else-if="messages.length === 0"
+                            class="text-center text-gray-500 py-8"
+                        >
                             <i class="pi pi-comments text-4xl mb-3"></i>
                             <p>Start a conversation with {{ userData.fullName }}</p>
                         </div>
                         <div v-else>
-                            <div v-for="message in messages" :key="message.message_id" class="flex"
-                                :class="message.is_own_message ? 'justify-end' : 'justify-start'">
+                            <div
+                                v-for="message in messages"
+                                :key="message.message_id"
+                                class="flex"
+                                :class="message.is_own_message ? 'justify-end' : 'justify-start'"
+                            >
                                 <div class="max-w-[80%]">
-                                    <div class="flex flex-col"
-                                        :class="message.is_own_message ? 'items-end' : 'items-start'">
-                                        <div class="px-4 py-2 rounded-2xl" :class="message.is_own_message
-                                            ? 'bg-blue-500 text-white rounded-br-none'
-                                            : 'bg-gray-200 text-gray-900 rounded-bl-none'">
-                                            <p class="text-sm whitespace-pre-wrap break-words">{{ message.content }}</p>
+                                    <div
+                                        class="flex flex-col"
+                                        :class="
+                                            message.is_own_message ? 'items-end' : 'items-start'
+                                        "
+                                    >
+                                        <div
+                                            class="px-4 py-2 rounded-2xl"
+                                            :class="
+                                                message.is_own_message
+                                                    ? 'bg-blue-500 text-white rounded-br-none'
+                                                    : 'bg-gray-200 text-gray-900 rounded-bl-none'
+                                            "
+                                        >
+                                            <p class="text-sm whitespace-pre-wrap break-words">
+                                                {{ message.content }}
+                                            </p>
                                         </div>
                                         <span class="text-xs text-gray-500 mt-1 px-1 mb-2">
                                             {{ formatMessageTime(message.created_at) }}
@@ -281,14 +423,25 @@
                     <!-- Message Input -->
                     <div class="p-4 border-t border-gray-200">
                         <div class="flex flex-col gap-2">
-                            <Textarea v-model="messageText" placeholder="Message" rows="3" class="w-full"
-                                @keydown="handleTextareaKeydown" :disabled="sendingMessage" />
+                            <Textarea
+                                v-model="messageText"
+                                placeholder="Message"
+                                rows="3"
+                                class="w-full"
+                                @keydown="handleTextareaKeydown"
+                                :disabled="sendingMessage"
+                            />
                             <div class="flex justify-between items-center">
                                 <span class="text-xs text-gray-500">
                                     {{ messageText.length }}/2000
                                 </span>
-                                <Button label="Send" icon="pi pi-send" @click="sendMessage"
-                                    :disabled="!messageText.trim() || sendingMessage" :loading="sendingMessage" />
+                                <Button
+                                    label="Send"
+                                    icon="pi pi-send"
+                                    @click="sendMessage"
+                                    :disabled="!messageText.trim() || sendingMessage"
+                                    :loading="sendingMessage"
+                                />
                             </div>
                         </div>
                     </div>
@@ -343,7 +496,7 @@ const userInitials = computed(() => {
     if (!userData.value.fullName) return 'U'
     return userData.value.fullName
         .split(' ')
-        .map(name => name.charAt(0))
+        .map((name) => name.charAt(0))
         .join('')
         .toUpperCase()
         .substring(0, 2)
@@ -351,11 +504,18 @@ const userInitials = computed(() => {
 
 const isFollowing = computed(() => {
     if (!authStore.isLoggedIn) return false
-    return followers.value.some(follower => follower.userId === authStore.user.userId)
+    return followers.value.some((follower) => follower.userId === authStore.user.userId)
 })
 
 const avatarClasses = computed(() => {
-    const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500']
+    const colors = [
+        'bg-emerald-500',
+        'bg-blue-500',
+        'bg-purple-500',
+        'bg-amber-500',
+        'bg-rose-500',
+        'bg-cyan-500',
+    ]
     const index = (userData.value.username?.charCodeAt(0) || 0) % colors.length
     return `${colors[index]} text-white border-2 border-white shadow-lg`
 })
@@ -367,9 +527,12 @@ onMounted(() => {
     loadProfileData()
 })
 
-watch(() => route.params.username, () => {
-    loadProfileData()
-})
+watch(
+    () => route.params.username,
+    () => {
+        loadProfileData()
+    },
+)
 
 watch(showChatDrawer, (newVal) => {
     if (newVal) {
@@ -387,12 +550,7 @@ const loadProfileData = async () => {
     error.value = ''
 
     try {
-        await Promise.all([
-            loadUserData(),
-            loadUserDatasets(),
-            loadFollowers(),
-            loadFollowing()
-        ])
+        await Promise.all([loadUserData(), loadUserDatasets(), loadFollowers(), loadFollowing()])
     } catch (err) {
         error.value = 'Failed to load profile data'
         console.error('Error loading profile data:', err)
@@ -477,7 +635,9 @@ const loadMessages = async () => {
 
     loadingMessages.value = true
     try {
-        const response = await api.get(`/messages/${authStore.user.username}/${route.params.username}`)
+        const response = await api.get(
+            `/messages/${authStore.user.username}/${route.params.username}`,
+        )
         messages.value = response.data.messages || []
 
         // Scroll to bottom after messages load
@@ -516,7 +676,14 @@ const handleTextareaKeydown = (event) => {
  * Gets avatar background color
  */
 const getUserAvatarClasses = (username) => {
-    const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500']
+    const colors = [
+        'bg-emerald-500',
+        'bg-blue-500',
+        'bg-purple-500',
+        'bg-amber-500',
+        'bg-rose-500',
+        'bg-cyan-500',
+    ]
     const index = (username?.charCodeAt(0) || 0) % colors.length
     return `${colors[index]} text-white`
 }
@@ -528,7 +695,7 @@ const getInitials = (fullName) => {
     if (!fullName) return 'U'
     return fullName
         .split(' ')
-        .map(name => name.charAt(0))
+        .map((name) => name.charAt(0))
         .join('')
         .toUpperCase()
         .substring(0, 2)
@@ -539,9 +706,9 @@ const getInitials = (fullName) => {
  */
 const getStatusIcon = (status) => {
     const iconMap = {
-        'approved': 'pi pi-check-circle',
-        'pending': 'pi pi-file-edit',
-        'rejected': 'pi pi-ban'
+        approved: 'pi pi-check-circle',
+        pending: 'pi pi-file-edit',
+        rejected: 'pi pi-ban',
     }
     return iconMap[status] || 'info'
 }
@@ -551,9 +718,9 @@ const getStatusIcon = (status) => {
  */
 const getStatusSeverity = (status) => {
     const severityMap = {
-        'approved': 'success',
-        'pending': 'info',
-        'rejected': 'danger'
+        approved: 'success',
+        pending: 'info',
+        rejected: 'danger',
     }
     return severityMap[status] || 'info'
 }
@@ -580,7 +747,7 @@ const toggleFollow = async () => {
             severity: 'success',
             summary: 'Success',
             detail: isFollowing.value ? 'Started following user' : 'Unfollowed user',
-            life: 3000
+            life: 3000,
         })
     } catch (err) {
         console.error('Error toggling follow:', err)
@@ -588,7 +755,7 @@ const toggleFollow = async () => {
             severity: 'error',
             summary: 'Error',
             detail: 'Failed to update follow status',
-            life: 5000
+            life: 5000,
         })
     } finally {
         isFollowingLoading.value = false
@@ -617,7 +784,7 @@ const sendMessage = async () => {
 
     try {
         await api.post(`/messages/${authStore.user.username}/${route.params.username}`, {
-            content: messageText.value.trim()
+            content: messageText.value.trim(),
         })
 
         // Reload messages to show the new one
@@ -629,7 +796,7 @@ const sendMessage = async () => {
             severity: 'success',
             summary: 'Message Sent',
             detail: 'Your message has been sent',
-            life: 3000
+            life: 3000,
         })
     } catch (err) {
         console.error('Error sending message:', err)
@@ -637,7 +804,7 @@ const sendMessage = async () => {
             severity: 'error',
             summary: 'Error',
             detail: err.response?.data?.error || 'Failed to send message',
-            life: 5000
+            life: 5000,
         })
     } finally {
         sendingMessage.value = false
@@ -678,7 +845,7 @@ const formatDate = (dateString) => {
     return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
     })
 }
 
@@ -701,7 +868,7 @@ const formatMessageTime = (dateString) => {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
     })
 }
 
@@ -710,49 +877,51 @@ const avatarUrl = computed(() => {
     if (avatarLoadError.value || !userData.value.avatarUrl) return null
 
     // Extraer documentId y filename de la URL original
-    const originalUrl = userData.value.avatarUrl;
-    const url = new URL(originalUrl);
-    const pathParts = url.pathname.split('/').filter(part => part);
+    const originalUrl = userData.value.avatarUrl
+    const url = new URL(originalUrl)
+    const pathParts = url.pathname.split('/').filter((part) => part)
 
-    if (pathParts.length < 3) return null;
+    if (pathParts.length < 3) return null
 
-    const documentId = pathParts[1];
-    const filename = pathParts[2];
+    const documentId = pathParts[1]
+    const filename = pathParts[2]
 
-    return `http://localhost:3000/api/files/${documentId}/${filename}`;
-});
+    return `http://localhost:3000/api/files/${documentId}/${filename}`
+})
 
 // Retrieve datasets header photo
 const getDatasetHeaderUrl = (dataset) => {
-    if (!dataset.header_photo_url) return null;
+    if (!dataset.header_photo_url) return null
 
-    const url = new URL(dataset.header_photo_url);
-    const pathParts = url.pathname.split('/').filter(part => part);
+    const url = new URL(dataset.header_photo_url)
+    const pathParts = url.pathname.split('/').filter((part) => part)
 
-    if (pathParts.length < 3) return null;
+    if (pathParts.length < 3) return null
 
-    const documentId = pathParts[1];
-    const filename = pathParts[2];
+    const documentId = pathParts[1]
+    const filename = pathParts[2]
 
-    return `http://localhost:3000/api/files/${documentId}/${filename}`;
-};
+    return `http://localhost:3000/api/files/${documentId}/${filename}`
+}
 
 // Retrieve followers/following avatars
 const getAvatarUrl = (user) => {
-    if (!user.avatarUrl) return null;
+    if (!user?.avatarUrl) return null
 
-    const url = new URL(user.avatarUrl);
-    const pathParts = url.pathname.split('/').filter(part => part);
+    try {
+        const url = new URL(user.avatarUrl)
+        const pathParts = url.pathname.split('/').filter((part) => part)
 
-    if (pathParts.length < 3) return null;
+        if (pathParts.length < 3) return null
 
-    const documentId = pathParts[1];
-    const filename = pathParts[2];
+        const documentId = pathParts[1]
+        const filename = pathParts[2]
 
-    return `http://localhost:3000/api/files/${documentId}/${filename}`;
-};
-
-
+        return `http://localhost:3000/api/files/${documentId}/${filename}`
+    } catch {
+        return null
+    }
+}
 </script>
 
 <style scoped>

@@ -44,7 +44,6 @@ app.get('/api/files/:documentId/:filename', async (req, res) => {
 
         const fileBuffer = await getFile(documentId, filename);
 
-        // Determinar content-type basado en extensión del archivo
         const getContentType = (filename) => {
             const ext = filename.toLowerCase().split('.').pop();
             const types = {

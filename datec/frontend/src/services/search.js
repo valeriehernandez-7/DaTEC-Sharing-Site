@@ -80,5 +80,5 @@ export const searchService = {
             console.error(`Failed to get dataset count for ${username}:`, error)
             return 0
         }
-    }
+    },
 }

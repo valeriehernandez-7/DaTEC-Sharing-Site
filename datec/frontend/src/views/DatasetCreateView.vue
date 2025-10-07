@@ -8,7 +8,11 @@
                         <i class="pi pi-lock text-6xl text-gray-400"></i>
                         <h2 class="text-2xl font-bold text-gray-900">Authentication Required</h2>
                         <p class="text-gray-600">Please log in to create a dataset</p>
-                        <Button label="Go to Login" icon="pi pi-sign-in" @click="router.push('/login')" />
+                        <Button
+                            label="Go to Login"
+                            icon="pi pi-sign-in"
+                            @click="router.push('/login')"
+                        />
                     </div>
                 </template>
             </Card>
@@ -49,59 +53,105 @@
                                 <!-- Step 1: Basic Information -->
                                 <StepPanel v-slot="{ activateCallback }" value="0">
                                     <div class="step-content">
-                                        <h3 class="text-xl font-semibold mb-6">Basic Information</h3>
+                                        <h3 class="text-xl font-semibold mb-6">
+                                            Basic Information
+                                        </h3>
                                         <div class="grid grid-cols-1 gap-6 mt-8">
                                             <!-- Dataset Name -->
                                             <div class="field mb-6">
                                                 <FloatLabel variant="in">
-                                                    <InputText id="dataset_name" v-model="formData.dataset_name"
-                                                        :class="{ 'p-invalid': validationErrors.dataset_name }"
-                                                        class="w-full" @blur="validateField('dataset_name')" />
+                                                    <InputText
+                                                        id="dataset_name"
+                                                        v-model="formData.dataset_name"
+                                                        :class="{
+                                                            'p-invalid':
+                                                                validationErrors.dataset_name,
+                                                        }"
+                                                        class="w-full"
+                                                        @blur="validateField('dataset_name')"
+                                                    />
                                                     <label for="dataset_name">Dataset Name *</label>
                                                 </FloatLabel>
-                                                <small class="p-error">{{ validationErrors.dataset_name }}</small>
-                                                <small class="text-gray-500">3-100 Characters, will be normalized to
-                                                    lowercase with hyphens</small>
+                                                <small class="p-error">{{
+                                                    validationErrors.dataset_name
+                                                }}</small>
+                                                <small class="text-gray-500"
+                                                    >3-100 Characters, will be normalized to
+                                                    lowercase with hyphens</small
+                                                >
                                             </div>
 
                                             <!-- Description -->
                                             <div class="field mb-6">
                                                 <FloatLabel variant="in">
-                                                    <Textarea id="description" v-model="formData.description" rows="5"
-                                                        :class="{ 'p-invalid': validationErrors.description }"
-                                                        class="w-full" @blur="validateField('description')" />
+                                                    <Textarea
+                                                        id="description"
+                                                        v-model="formData.description"
+                                                        rows="5"
+                                                        :class="{
+                                                            'p-invalid':
+                                                                validationErrors.description,
+                                                        }"
+                                                        class="w-full"
+                                                        @blur="validateField('description')"
+                                                    />
                                                     <label for="description">Description *</label>
                                                 </FloatLabel>
-                                                <small class="p-error">{{ validationErrors.description }}</small>
-                                                <small class="text-gray-500">10-5000 Characters describing your
-                                                    dataset</small>
+                                                <small class="p-error">{{
+                                                    validationErrors.description
+                                                }}</small>
+                                                <small class="text-gray-500"
+                                                    >10-5000 Characters describing your
+                                                    dataset</small
+                                                >
                                             </div>
 
                                             <!-- Tags Input - Corregido -->
                                             <div class="field mb-6">
-                                                <label class="block font-medium text-gray-700 mb-3">Tags</label>
+                                                <label class="block font-medium text-gray-700 mb-3"
+                                                    >Tags</label
+                                                >
                                                 <div class="tags-input-container">
                                                     <div class="flex flex-wrap gap-2 mb-3">
-                                                        <Chip v-for="(tag, index) in formData.tags" :key="index"
-                                                            :label="tag" class="bg-emerald-500/70 font-semibold"
-                                                            removable @remove="removeTag(index)" />
+                                                        <Chip
+                                                            v-for="(tag, index) in formData.tags"
+                                                            :key="index"
+                                                            :label="tag"
+                                                            class="bg-emerald-500/70 font-semibold"
+                                                            removable
+                                                            @remove="removeTag(index)"
+                                                        />
                                                     </div>
                                                     <div class="flex gap-2">
-                                                        <InputText v-model="newTag"
-                                                            placeholder="Add a tag and press Enter" class="flex-1"
-                                                            @keydown.enter.prevent="addTag" />
-                                                        <Button label="Add" icon="pi pi-plus" @click="addTag"
-                                                            :disabled="!newTag.trim()" />
+                                                        <InputText
+                                                            v-model="newTag"
+                                                            placeholder="Add a tag and press Enter"
+                                                            class="flex-1"
+                                                            @keydown.enter.prevent="addTag"
+                                                        />
+                                                        <Button
+                                                            label="Add"
+                                                            icon="pi pi-plus"
+                                                            @click="addTag"
+                                                            :disabled="!newTag.trim()"
+                                                        />
                                                     </div>
                                                 </div>
-                                                <small class="text-gray-500">0-10 Tags to categorize your dataset
-                                                    (Optional)</small>
+                                                <small class="text-gray-500"
+                                                    >0-10 Tags to categorize your dataset
+                                                    (Optional)</small
+                                                >
                                             </div>
                                         </div>
                                     </div>
                                     <div class="flex pt-6 justify-end">
-                                        <Button label="Next" icon="pi pi-arrow-right" iconPos="right"
-                                            @click="activateCallback('1')" :disabled="!canProceedToStep(1)" />
+                                        <Button
+                                            label="Next"
+                                            icon="pi pi-arrow-right"
+                                            iconPos="right"
+                                            @click="activateCallback('1')"
+                                            :disabled="!canProceedToStep(1)"
+                                        />
                                     </div>
                                 </StepPanel>
 
@@ -110,44 +160,84 @@
                                     <div class="step-content">
                                         <h3 class="text-xl font-semibold mb-6">Data Files</h3>
                                         <div class="field mb-6">
-                                            <label class="block font-medium mb-3">Upload Data Files *</label>
-                                            <FileUpload name="data_files[]" :multiple="true" :maxFileSize="1073741824"
+                                            <label class="block font-medium mb-3"
+                                                >Upload Data Files *</label
+                                            >
+                                            <FileUpload
+                                                name="data_files[]"
+                                                :multiple="true"
+                                                :maxFileSize="1073741824"
                                                 :fileLimit="10"
                                                 accept=".csv,.xlsx,.xls,.json,.txt,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/json,text/plain"
-                                                chooseLabel="Browse" uploadLabel="Upload" cancelLabel="Cancel"
-                                                :customUpload="true" @select="onFileSelect" @remove="onFileRemove"
-                                                @clear="onFileClear">
+                                                chooseLabel="Browse"
+                                                uploadLabel="Upload"
+                                                cancelLabel="Cancel"
+                                                :customUpload="true"
+                                                @select="onFileSelect"
+                                                @remove="onFileRemove"
+                                                @clear="onFileClear"
+                                            >
                                                 <template #empty>
                                                     <div
-                                                        class="flex flex-col items-center justify-center py-8 border-2 border-dashed border-gray-300 rounded-lg mb-6">
-                                                        <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-3"></i>
-                                                        <p class="font-medium">Drag and drop files here or click to
-                                                            browse</p>
+                                                        class="flex flex-col items-center justify-center py-8 border-2 border-dashed border-gray-300 rounded-lg mb-6"
+                                                    >
+                                                        <i
+                                                            class="pi pi-cloud-upload text-4xl text-gray-400 mb-3"
+                                                        ></i>
+                                                        <p class="font-medium">
+                                                            Drag and drop files here or click to
+                                                            browse
+                                                        </p>
                                                         <p class="text-sm text-gray-500 mt-2">
-                                                            Supported: CSV, Excel, JSON, TXT • Max: 10 files, 1GB each
+                                                            Supported: CSV, Excel, JSON, TXT • Max:
+                                                            10 files, 1GB each
                                                         </p>
                                                     </div>
                                                 </template>
                                             </FileUpload>
-                                            <small class="p-error">{{ validationErrors.data_files }}</small>
+                                            <small class="p-error">{{
+                                                validationErrors.data_files
+                                            }}</small>
 
                                             <!-- Uploaded Files List -->
                                             <div v-if="formData.data_files.length > 0" class="mt-6">
-                                                <h4 class="font-medium mb-4">Uploaded Files ({{
-                                                    formData.data_files.length }}/10):</h4>
-                                                <DataTable :value="getFileList()" class="p-datatable-sm"
-                                                    responsiveLayout="scroll">
-                                                    <Column field="name" header="File Name" sortable></Column>
+                                                <h4 class="font-medium mb-4">
+                                                    Uploaded Files ({{
+                                                        formData.data_files.length
+                                                    }}/10):
+                                                </h4>
+                                                <DataTable
+                                                    :value="getFileList()"
+                                                    class="p-datatable-sm"
+                                                    responsiveLayout="scroll"
+                                                >
+                                                    <Column
+                                                        field="name"
+                                                        header="File Name"
+                                                        sortable
+                                                    ></Column>
                                                     <Column field="size" header="Size" sortable>
                                                         <template #body="slotProps">
-                                                            {{ formatFileSize(slotProps.data.size) }}
+                                                            {{
+                                                                formatFileSize(slotProps.data.size)
+                                                            }}
                                                         </template>
                                                     </Column>
-                                                    <Column field="type" header="Type" sortable></Column>
+                                                    <Column
+                                                        field="type"
+                                                        header="Type"
+                                                        sortable
+                                                    ></Column>
                                                     <Column header="Actions" style="width: 100px">
                                                         <template #body="slotProps">
-                                                            <Button icon="pi pi-times" severity="danger" text rounded
-                                                                size="small" @click="removeFile(slotProps.data)" />
+                                                            <Button
+                                                                icon="pi pi-times"
+                                                                severity="danger"
+                                                                text
+                                                                rounded
+                                                                size="small"
+                                                                @click="removeFile(slotProps.data)"
+                                                            />
                                                         </template>
                                                     </Column>
                                                 </DataTable>
@@ -155,10 +245,19 @@
                                         </div>
                                     </div>
                                     <div class="flex pt-6 justify-between">
-                                        <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                            @click="activateCallback('0')" />
-                                        <Button label="Next" icon="pi pi-arrow-right" iconPos="right"
-                                            @click="activateCallback('2')" :disabled="!canProceedToStep(2)" />
+                                        <Button
+                                            label="Back"
+                                            severity="secondary"
+                                            icon="pi pi-arrow-left"
+                                            @click="activateCallback('0')"
+                                        />
+                                        <Button
+                                            label="Next"
+                                            icon="pi pi-arrow-right"
+                                            iconPos="right"
+                                            @click="activateCallback('2')"
+                                            :disabled="!canProceedToStep(2)"
+                                        />
                                     </div>
                                 </StepPanel>
 
@@ -169,29 +268,51 @@
                                         <div class="grid grid-cols-1 gap-6">
                                             <!-- Header Photo -->
                                             <div class="field mb-6">
-                                                <label class="block font-medium mb-3">Header Photo</label>
-                                                <FileUpload name="header_photo" :multiple="false" :maxFileSize="5242880"
-                                                    accept="image/*" chooseLabel="Browse" uploadLabel="Upload"
-                                                    cancelLabel="Cancel" :customUpload="true"
-                                                    @select="onHeaderPhotoSelect" @remove="onHeaderPhotoRemove"
-                                                    class="mb-4">
+                                                <label class="block font-medium mb-3"
+                                                    >Header Photo</label
+                                                >
+                                                <FileUpload
+                                                    name="header_photo"
+                                                    :multiple="false"
+                                                    :maxFileSize="5242880"
+                                                    accept="image/*"
+                                                    chooseLabel="Browse"
+                                                    uploadLabel="Upload"
+                                                    cancelLabel="Cancel"
+                                                    :customUpload="true"
+                                                    @select="onHeaderPhotoSelect"
+                                                    @remove="onHeaderPhotoRemove"
+                                                    class="mb-4"
+                                                >
                                                     <template #empty>
                                                         <div
-                                                            class="flex flex-col items-center justify-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
-                                                            <i class="pi pi-image text-3xl text-gray-400 mb-2"></i>
-                                                            <p class="font-medium">Choose header photo</p>
-                                                            <p class="text-sm text-gray-500">Max: 5MB, JPEG/PNG/WebP</p>
+                                                            class="flex flex-col items-center justify-center py-6 border-2 border-dashed border-gray-300 rounded-lg"
+                                                        >
+                                                            <i
+                                                                class="pi pi-image text-3xl text-gray-400 mb-2"
+                                                            ></i>
+                                                            <p class="font-medium">
+                                                                Choose header photo
+                                                            </p>
+                                                            <p class="text-sm text-gray-500">
+                                                                Max: 5MB, JPEG/PNG/WebP
+                                                            </p>
                                                         </div>
                                                     </template>
                                                 </FileUpload>
 
                                                 <!-- Header Photo Preview -->
-                                                <div v-if="formData.header_photo"
-                                                    class="mt-4 p-4 border border-gray-200 rounded-lg">
+                                                <div
+                                                    v-if="formData.header_photo"
+                                                    class="mt-4 p-4 border border-gray-200 rounded-lg"
+                                                >
                                                     <p class="text-sm font-medium mb-3">Preview:</p>
                                                     <div class="flex justify-center">
-                                                        <img :src="getHeaderPhotoPreview()" alt="Header photo preview"
-                                                            class="max-w-full max-h-48 object-contain rounded-lg border" />
+                                                        <img
+                                                            :src="getHeaderPhotoPreview()"
+                                                            alt="Header photo preview"
+                                                            class="max-w-full max-h-48 object-contain rounded-lg border"
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
@@ -199,55 +320,111 @@
                                             <!-- Tutorial Video -->
                                             <div class="field mb-6">
                                                 <FloatLabel variant="in">
-                                                    <InputText id="tutorial_video_url"
-                                                        v-model="formData.tutorial_video_url" class="w-full"
+                                                    <InputText
+                                                        id="tutorial_video_url"
+                                                        v-model="formData.tutorial_video_url"
+                                                        class="w-full"
                                                         placeholder="https://youtube.com/... or https://vimeo.com/..."
-                                                        @blur="validateVideoUrl" />
-                                                    <label for="tutorial_video_url">Tutorial Video URL</label>
+                                                        @blur="validateVideoUrl"
+                                                    />
+                                                    <label for="tutorial_video_url"
+                                                        >Tutorial Video URL</label
+                                                    >
                                                 </FloatLabel>
-                                                <small class="text-gray-500">YouTube or Vimeo URL for tutorial
-                                                    (Optional)
-                                                    videos</small>
+                                                <small class="text-gray-500"
+                                                    >YouTube or Vimeo URL for tutorial (Optional)
+                                                    videos</small
+                                                >
 
                                                 <!-- Video Preview -->
-                                                <div v-if="formData.tutorial_video_url && isValidVideoUrl"
-                                                    class="mt-4 p-4 border border-gray-200 rounded-lg">
+                                                <div
+                                                    v-if="
+                                                        formData.tutorial_video_url &&
+                                                        isValidVideoUrl
+                                                    "
+                                                    class="mt-4 p-4 border border-gray-200 rounded-lg"
+                                                >
                                                     <p class="text-sm font-medium mb-3">Preview:</p>
                                                     <div class="video-preview">
-                                                        <iframe v-if="videoPlatform === 'YouTube'"
-                                                            :src="getYouTubeEmbedUrl(formData.tutorial_video_url)"
-                                                            width="100%" height="300" frameborder="0"
+                                                        <iframe
+                                                            v-if="videoPlatform === 'YouTube'"
+                                                            :src="
+                                                                getYouTubeEmbedUrl(
+                                                                    formData.tutorial_video_url,
+                                                                )
+                                                            "
+                                                            width="100%"
+                                                            height="300"
+                                                            frameborder="0"
                                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                            allowfullscreen class="rounded-lg"></iframe>
-                                                        <iframe v-else-if="videoPlatform === 'Vimeo'"
-                                                            :src="getVimeoEmbedUrl(formData.tutorial_video_url)"
-                                                            width="100%" height="300" frameborder="0"
+                                                            allowfullscreen
+                                                            class="rounded-lg"
+                                                        ></iframe>
+                                                        <iframe
+                                                            v-else-if="videoPlatform === 'Vimeo'"
+                                                            :src="
+                                                                getVimeoEmbedUrl(
+                                                                    formData.tutorial_video_url,
+                                                                )
+                                                            "
+                                                            width="100%"
+                                                            height="300"
+                                                            frameborder="0"
                                                             allow="autoplay; fullscreen; picture-in-picture"
-                                                            allowfullscreen class="rounded-lg"></iframe>
-                                                        <div v-else
-                                                            class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
-                                                            <i class="pi pi-exclamation-triangle text-2xl mb-2"></i>
-                                                            <p>Video platform not supported for embedding</p>
-                                                            <Button :label="`Watch on ${videoPlatform}`"
+                                                            allowfullscreen
+                                                            class="rounded-lg"
+                                                        ></iframe>
+                                                        <div
+                                                            v-else
+                                                            class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg"
+                                                        >
+                                                            <i
+                                                                class="pi pi-exclamation-triangle text-2xl mb-2"
+                                                            ></i>
+                                                            <p>
+                                                                Video platform not supported for
+                                                                embedding
+                                                            </p>
+                                                            <Button
+                                                                :label="`Watch on ${videoPlatform}`"
                                                                 icon="pi pi-external-link"
-                                                                @click="openExternalVideo(formData.tutorial_video_url)"
-                                                                class="mt-2" />
+                                                                @click="
+                                                                    openExternalVideo(
+                                                                        formData.tutorial_video_url,
+                                                                    )
+                                                                "
+                                                                class="mt-2"
+                                                            />
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <small v-if="formData.tutorial_video_url && !isValidVideoUrl"
-                                                    class="p-error">
+                                                <small
+                                                    v-if="
+                                                        formData.tutorial_video_url &&
+                                                        !isValidVideoUrl
+                                                    "
+                                                    class="p-error"
+                                                >
                                                     Please enter a valid YouTube or Vimeo URL
                                                 </small>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="flex pt-6 justify-between">
-                                        <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                            @click="activateCallback('1')" />
-                                        <Button label="Next" icon="pi pi-arrow-right" iconPos="right"
-                                            @click="activateCallback('3')" :disabled="!canProceedToStep(3)" />
+                                        <Button
+                                            label="Back"
+                                            severity="secondary"
+                                            icon="pi pi-arrow-left"
+                                            @click="activateCallback('1')"
+                                        />
+                                        <Button
+                                            label="Next"
+                                            icon="pi pi-arrow-right"
+                                            iconPos="right"
+                                            @click="activateCallback('3')"
+                                            :disabled="!canProceedToStep(3)"
+                                        />
                                     </div>
                                 </StepPanel>
 
@@ -261,32 +438,60 @@
                                                 <template #title>
                                                     <div class="flex justify-between items-center">
                                                         <span>Basic Information</span>
-                                                        <Button label="Edit" icon="pi pi-pencil" severity="secondary"
-                                                            size="small" @click="activateCallback('0')" />
+                                                        <Button
+                                                            label="Edit"
+                                                            icon="pi pi-pencil"
+                                                            severity="secondary"
+                                                            size="small"
+                                                            @click="activateCallback('0')"
+                                                        />
                                                     </div>
                                                 </template>
                                                 <template #content>
                                                     <dl class="grid grid-cols-1 gap-4">
                                                         <div>
-                                                            <dt class="font-medium text-gray-500">Dataset Name</dt>
-                                                            <dd class="text-gray-900">{{ formData.dataset_name ||
-                                                                'Notprovided' }}</dd>
+                                                            <dt class="font-medium text-gray-500">
+                                                                Dataset Name
+                                                            </dt>
+                                                            <dd class="text-gray-900">
+                                                                {{
+                                                                    formData.dataset_name ||
+                                                                    'Notprovided'
+                                                                }}
+                                                            </dd>
                                                         </div>
                                                         <div>
-                                                            <dt class="font-medium text-gray-500">Description</dt>
-                                                            <dd class="text-gray-900 whitespace-pre-wrap">{{
-                                                                formData.description || 'Not provided' }}</dd>
+                                                            <dt class="font-medium text-gray-500">
+                                                                Description
+                                                            </dt>
+                                                            <dd
+                                                                class="text-gray-900 whitespace-pre-wrap"
+                                                            >
+                                                                {{
+                                                                    formData.description ||
+                                                                    'Not provided'
+                                                                }}
+                                                            </dd>
                                                         </div>
                                                         <div>
-                                                            <dt class="font-medium text-gray-500">Tags</dt>
+                                                            <dt class="font-medium text-gray-500">
+                                                                Tags
+                                                            </dt>
                                                             <dd>
-                                                                <div v-if="formData.tags.length > 0"
-                                                                    class="flex flex-wrap gap-2">
-                                                                    <Chip v-for="tag in formData.tags" :key="tag"
+                                                                <div
+                                                                    v-if="formData.tags.length > 0"
+                                                                    class="flex flex-wrap gap-2"
+                                                                >
+                                                                    <Chip
+                                                                        v-for="tag in formData.tags"
+                                                                        :key="tag"
                                                                         :label="tag"
-                                                                        class="bg-primary-100 text-primary-800 border-primary-200" />
+                                                                        class="bg-primary-100 text-primary-800 border-primary-200"
+                                                                    />
                                                                 </div>
-                                                                <span v-else class="text-gray-400">No tags</span>
+                                                                <span v-else class="text-gray-400"
+                                                                    >No tags</span
+                                                                >
                                                             </dd>
                                                         </div>
                                                     </dl>
@@ -297,26 +502,47 @@
                                             <Card class="mb-6">
                                                 <template #title>
                                                     <div class="flex justify-between items-center">
-                                                        <span>Data Files ({{ formData.data_files.length }})</span>
-                                                        <Button label="Edit" icon="pi pi-pencil" severity="secondary"
-                                                            size="small" @click="activateCallback('1')" />
+                                                        <span
+                                                            >Data Files ({{
+                                                                formData.data_files.length
+                                                            }})</span
+                                                        >
+                                                        <Button
+                                                            label="Edit"
+                                                            icon="pi pi-pencil"
+                                                            severity="secondary"
+                                                            size="small"
+                                                            @click="activateCallback('1')"
+                                                        />
                                                     </div>
                                                 </template>
                                                 <template #content>
                                                     <ul class="space-y-3">
-                                                        <li v-for="file in formData.data_files" :key="file.name"
-                                                            class="flex justify-between items-center py-2 border-b border-gray-100">
+                                                        <li
+                                                            v-for="file in formData.data_files"
+                                                            :key="file.name"
+                                                            class="flex justify-between items-center py-2 border-b border-gray-100"
+                                                        >
                                                             <div class="flex items-center">
-                                                                <i class="pi pi-file text-gray-400 mr-3"></i>
-                                                                <span class="text-gray-900">{{ file.name }}</span>
+                                                                <i
+                                                                    class="pi pi-file text-gray-400 mr-3"
+                                                                ></i>
+                                                                <span class="text-gray-900">{{
+                                                                    file.name
+                                                                }}</span>
                                                             </div>
                                                             <span class="text-sm text-gray-500">{{
-                                                                formatFileSize(file.size) }}</span>
+                                                                formatFileSize(file.size)
+                                                            }}</span>
                                                         </li>
                                                     </ul>
-                                                    <div v-if="formData.data_files.length === 0"
-                                                        class="text-center py-6 text-gray-500 bg-gray-50 rounded-lg">
-                                                        <i class="pi pi-exclamation-circle text-2xl mb-2"></i>
+                                                    <div
+                                                        v-if="formData.data_files.length === 0"
+                                                        class="text-center py-6 text-gray-500 bg-gray-50 rounded-lg"
+                                                    >
+                                                        <i
+                                                            class="pi pi-exclamation-circle text-2xl mb-2"
+                                                        ></i>
                                                         <p>No files uploaded</p>
                                                     </div>
                                                 </template>
@@ -327,36 +553,70 @@
                                                 <template #title>
                                                     <div class="flex justify-between items-center">
                                                         <span>Media</span>
-                                                        <Button label="Edit" icon="pi pi-pencil" severity="secondary"
-                                                            size="small" @click="activateCallback('2')" />
+                                                        <Button
+                                                            label="Edit"
+                                                            icon="pi pi-pencil"
+                                                            severity="secondary"
+                                                            size="small"
+                                                            @click="activateCallback('2')"
+                                                        />
                                                     </div>
                                                 </template>
                                                 <template #content>
                                                     <div class="grid grid-cols-1 gap-4">
                                                         <div>
-                                                            <dt class="font-medium text-gray-500 mb-2">Header Photo</dt>
+                                                            <dt
+                                                                class="font-medium text-gray-500 mb-2"
+                                                            >
+                                                                Header Photo
+                                                            </dt>
                                                             <dd>
-                                                                <div v-if="formData.header_photo"
-                                                                    class="flex items-center gap-3">
-                                                                    <img :src="getHeaderPhotoPreview()"
+                                                                <div
+                                                                    v-if="formData.header_photo"
+                                                                    class="flex items-center gap-3"
+                                                                >
+                                                                    <img
+                                                                        :src="
+                                                                            getHeaderPhotoPreview()
+                                                                        "
                                                                         alt="Header photo preview"
-                                                                        class="w-20 h-20 object-cover rounded-lg border" />
-                                                                    <span class="text-green-600 font-medium">
-                                                                        <i class="pi pi-check-circle mr-1"></i>Uploaded
+                                                                        class="w-20 h-20 object-cover rounded-lg border"
+                                                                    />
+                                                                    <span
+                                                                        class="text-green-600 font-medium"
+                                                                    >
+                                                                        <i
+                                                                            class="pi pi-check-circle mr-1"
+                                                                        ></i
+                                                                        >Uploaded
                                                                     </span>
                                                                 </div>
-                                                                <span v-else class="text-gray-400">Not provided</span>
+                                                                <span v-else class="text-gray-400"
+                                                                    >Not provided</span
+                                                                >
                                                             </dd>
                                                         </div>
                                                         <div>
-                                                            <dt class="font-medium text-gray-500 mb-2">Tutorial Video
+                                                            <dt
+                                                                class="font-medium text-gray-500 mb-2"
+                                                            >
+                                                                Tutorial Video
                                                             </dt>
                                                             <dd>
-                                                                <span v-if="formData.tutorial_video_url"
-                                                                    class="text-green-600 font-medium">
-                                                                    <i class="pi pi-check-circle mr-1"></i>Configured
+                                                                <span
+                                                                    v-if="
+                                                                        formData.tutorial_video_url
+                                                                    "
+                                                                    class="text-green-600 font-medium"
+                                                                >
+                                                                    <i
+                                                                        class="pi pi-check-circle mr-1"
+                                                                    ></i
+                                                                    >Configured
                                                                 </span>
-                                                                <span v-else class="text-gray-400">Not provided</span>
+                                                                <span v-else class="text-gray-400"
+                                                                    >Not provided</span
+                                                                >
                                                             </dd>
                                                         </div>
                                                     </div>
@@ -365,10 +625,19 @@
                                         </div>
                                     </div>
                                     <div class="flex pt-6 justify-between">
-                                        <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                            @click="activateCallback('2')" />
-                                        <Button label="Create Dataset" icon="pi pi-check" @click="submitDataset"
-                                            :loading="submitting" :disabled="!canSubmit" />
+                                        <Button
+                                            label="Back"
+                                            severity="secondary"
+                                            icon="pi pi-arrow-left"
+                                            @click="activateCallback('2')"
+                                        />
+                                        <Button
+                                            label="Create Dataset"
+                                            icon="pi pi-check"
+                                            @click="submitDataset"
+                                            :loading="submitting"
+                                            :disabled="!canSubmit"
+                                        />
                                     </div>
                                 </StepPanel>
                             </StepPanels>
@@ -451,7 +720,7 @@ const formData = reactive({
     tags: [],
     data_files: [],
     header_photo: null,
-    tutorial_video_url: ''
+    tutorial_video_url: '',
 })
 
 /**
@@ -465,7 +734,7 @@ const formData = reactive({
 const validationErrors = reactive({
     dataset_name: '',
     description: '',
-    data_files: ''
+    data_files: '',
 })
 
 /**
@@ -473,11 +742,13 @@ const validationErrors = reactive({
  * @type {import('vue').ComputedRef<boolean>}
  */
 const canSubmit = computed(() => {
-    return formData.dataset_name.trim().length >= 3 &&
+    return (
+        formData.dataset_name.trim().length >= 3 &&
         formData.dataset_name.trim().length <= 100 &&
         formData.description.trim().length >= 10 &&
         formData.description.trim().length <= 5000 &&
         formData.data_files.length > 0
+    )
 })
 
 /**
@@ -488,7 +759,10 @@ const isValidVideoUrl = computed(() => {
     if (!formData.tutorial_video_url) return false
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/
     const vimeoRegex = /^(https?:\/\/)?(www\.)?vimeo\.com\/.+$/
-    return youtubeRegex.test(formData.tutorial_video_url) || vimeoRegex.test(formData.tutorial_video_url)
+    return (
+        youtubeRegex.test(formData.tutorial_video_url) ||
+        vimeoRegex.test(formData.tutorial_video_url)
+    )
 })
 
 /**
@@ -497,7 +771,10 @@ const isValidVideoUrl = computed(() => {
  */
 const videoPlatform = computed(() => {
     if (!formData.tutorial_video_url) return ''
-    if (formData.tutorial_video_url.includes('youtube') || formData.tutorial_video_url.includes('youtu.be')) {
+    if (
+        formData.tutorial_video_url.includes('youtube') ||
+        formData.tutorial_video_url.includes('youtu.be')
+    ) {
         return 'YouTube'
     } else if (formData.tutorial_video_url.includes('vimeo')) {
         return 'Vimeo'
@@ -513,10 +790,12 @@ const videoPlatform = computed(() => {
 const canProceedToStep = (step) => {
     switch (step) {
         case 1: // Basic Info → Data Files
-            return formData.dataset_name.trim().length >= 3 &&
+            return (
+                formData.dataset_name.trim().length >= 3 &&
                 formData.dataset_name.trim().length <= 100 &&
                 formData.description.trim().length >= 10 &&
                 formData.description.trim().length <= 5000
+            )
         case 2: // Data Files → Media
             return formData.data_files.length > 0 && formData.data_files.length <= 10
         case 3: // Media → Review
@@ -563,7 +842,7 @@ const validateVideoUrl = () => {
             severity: 'warn',
             summary: 'Invalid Video URL',
             detail: 'Please enter a valid YouTube or Vimeo URL',
-            life: 5000
+            life: 5000,
         })
     }
 }
@@ -581,7 +860,7 @@ const addTag = () => {
                 severity: 'warn',
                 summary: 'Duplicate Tag',
                 detail: 'This tag already exists',
-                life: 3000
+                life: 3000,
             })
         }
     } else if (formData.tags.length >= 10) {
@@ -589,7 +868,7 @@ const addTag = () => {
             severity: 'warn',
             summary: 'Tag Limit Reached',
             detail: 'Maximum 10 tags allowed',
-            life: 3000
+            life: 3000,
         })
     }
 }
@@ -615,7 +894,7 @@ const onFileSelect = (event) => {
             severity: 'error',
             summary: 'File Limit Exceeded',
             detail: 'Maximum 10 files allowed per dataset',
-            life: 5000
+            life: 5000,
         })
         return
     }
@@ -630,7 +909,7 @@ const onFileSelect = (event) => {
                 severity: 'error',
                 summary: 'Invalid File Type',
                 detail: `${file.name}: Only CSV, Excel, JSON, and TXT files are allowed`,
-                life: 5000
+                life: 5000,
             })
             continue
         }
@@ -640,7 +919,7 @@ const onFileSelect = (event) => {
                 severity: 'error',
                 summary: 'File Too Large',
                 detail: `${file.name}: Maximum file size is 1GB`,
-                life: 5000
+                life: 5000,
             })
             continue
         }
@@ -661,7 +940,7 @@ const onFileSelect = (event) => {
  */
 const onFileRemove = (event) => {
     const fileName = event.file.name
-    formData.data_files = formData.data_files.filter(file => file.name !== fileName)
+    formData.data_files = formData.data_files.filter((file) => file.name !== fileName)
 }
 
 /**
@@ -677,7 +956,7 @@ const onFileClear = () => {
  * @param {File} file - File to remove
  */
 const removeFile = (file) => {
-    formData.data_files = formData.data_files.filter(f => f.name !== file.name)
+    formData.data_files = formData.data_files.filter((f) => f.name !== file.name)
 }
 
 /**
@@ -696,7 +975,7 @@ const onHeaderPhotoSelect = (event) => {
             severity: 'error',
             summary: 'Invalid Image Type',
             detail: 'Only JPEG, PNG, and WebP images are allowed',
-            life: 5000
+            life: 5000,
         })
         return
     }
@@ -706,7 +985,7 @@ const onHeaderPhotoSelect = (event) => {
             severity: 'error',
             summary: 'Image Too Large',
             detail: 'Maximum header photo size is 5MB',
-            life: 5000
+            life: 5000,
         })
         return
     }
@@ -732,7 +1011,7 @@ const validateDatasetFileType = (file) => {
         'application/vnd.ms-excel',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'application/json',
-        'text/plain'
+        'text/plain',
     ]
     const allowedExtensions = ['.csv', '.xlsx', '.xls', '.json', '.txt']
 
@@ -756,10 +1035,10 @@ const validateImageType = (file) => {
  * @returns {Array} Array of file objects for display
  */
 const getFileList = () => {
-    return formData.data_files.map(file => ({
+    return formData.data_files.map((file) => ({
         name: file.name,
         size: file.size,
-        type: file.type || 'Unknown'
+        type: file.type || 'Unknown',
     }))
 }
 
@@ -780,7 +1059,9 @@ const getHeaderPhotoPreview = () => {
  * @returns {string} Embed URL
  */
 const getYouTubeEmbedUrl = (url) => {
-    const videoId = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)?.[1]
+    const videoId = url.match(
+        /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/,
+    )?.[1]
     return videoId ? `https://www.youtube.com/embed/${videoId}` : url
 }
 
@@ -834,7 +1115,7 @@ const submitDataset = async () => {
 
         // Append tags as array, not JSON string
         if (formData.tags.length > 0) {
-            formData.tags.forEach(tag => {
+            formData.tags.forEach((tag) => {
                 formDataToSend.append('tags', tag) // Append each tag individually
             })
         }
@@ -856,8 +1137,8 @@ const submitDataset = async () => {
         // Submit to API
         const response = await api.post('/datasets', formDataToSend, {
             headers: {
-                'Content-Type': 'multipart/form-data'
-            }
+                'Content-Type': 'multipart/form-data',
+            },
         })
 
         if (response.data.success) {
@@ -865,13 +1146,12 @@ const submitDataset = async () => {
                 severity: 'success',
                 summary: 'Dataset Created',
                 detail: 'Your dataset has been created successfully and is pending approval',
-                life: 5000
+                life: 5000,
             })
 
             // Redirect to the new dataset
             router.push(`/datasets/${response.data.dataset.dataset_id}`)
         }
-
     } catch (error) {
         console.error('Error creating dataset:', error)
 
@@ -889,7 +1169,7 @@ const submitDataset = async () => {
             severity: 'error',
             summary: 'Creation Failed',
             detail: errorMessage,
-            life: 5000
+            life: 5000,
         })
     } finally {
         submitting.value = false
@@ -903,7 +1183,7 @@ onMounted(() => {
             severity: 'warn',
             summary: 'Authentication Required',
             detail: 'Please log in to create datasets',
-            life: 3000
+            life: 3000,
         })
     }
 })

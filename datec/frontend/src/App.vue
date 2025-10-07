@@ -1,9 +1,9 @@
 <template>
-  <div id="app" class="min-h-screen bg-gray-50">
-    <Navbar v-if="showNavbar" />
-    <Toast />
-    <RouterView />
-  </div>
+    <div id="app" class="min-h-screen bg-gray-50">
+        <Navbar v-if="showNavbar" />
+        <Toast />
+        <RouterView />
+    </div>
 </template>
 
 <script setup>
@@ -19,6 +19,6 @@ const route = useRoute()
  * Hide navbar on login/register pages for cleaner look
  */
 const showNavbar = computed(() => {
-  return !['login', 'register'].includes(route.name)
+    return !['login', 'register'].includes(route.name)
 })
 </script>

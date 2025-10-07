@@ -55,9 +55,9 @@ import Step from 'primevue/step'
 import StepPanel from 'primevue/steppanel'
 import FloatLabel from 'primevue/floatlabel'
 import Chip from 'primevue/chip'
-import AutoComplete  from 'primevue/autocomplete'
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
+import AutoComplete from 'primevue/autocomplete'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 
 import CommentThread from '@/components/comments/CommentThread.vue'
 import CommentForm from '@/components/comments/CommentForm.vue'
@@ -79,11 +79,11 @@ app.use(PrimeVue, {
             darkModeSelector: 'light', // system | light | dark
             cssLayer: {
                 name: 'primevue',
-                order: 'theme, base, primevue'
-            }
+                order: 'theme, base, primevue',
+            },
         },
     },
-    ripple: true // Enable ripple effects if desired
+    ripple: true, // Enable ripple effects if desired
 })
 
 /**

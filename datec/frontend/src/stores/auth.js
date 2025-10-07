@@ -8,7 +8,7 @@ import { authService } from '@/services/auth'
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         user: null,
-        token: localStorage.getItem('token')
+        token: localStorage.getItem('token'),
     }),
 
     getters: {
@@ -22,7 +22,7 @@ export const useAuthStore = defineStore('auth', {
          * Checks if current user has administrative privileges
          * @returns {boolean} Admin status
          */
-        isAdmin: (state) => state.user?.isAdmin || false
+        isAdmin: (state) => state.user?.isAdmin || false,
     },
 
     actions: {
@@ -68,8 +68,8 @@ export const useAuthStore = defineStore('auth', {
             this.user = null
             this.token = null
             localStorage.removeItem('token')
-        }
+        },
     },
 
-    persist: true
+    persist: true,
 })

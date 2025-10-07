@@ -880,7 +880,7 @@ async function deleteDataset(req, res) {
 
         const datasetId = req.params.datasetId;
 
-        // 1. Delete files from CouchDB
+        // Delete files from CouchDB
         for (const fileRef of dataset.file_references) {
             try {
                 await deleteFile(fileRef.couchdb_document_id);
@@ -898,17 +898,17 @@ async function deleteDataset(req, res) {
             }
         }
 
-        // 2. Delete from MongoDB
+        // Delete from MongoDB
         await db.collection('datasets').deleteOne({ dataset_id: datasetId });
 
         // Also delete related votes and comments
         await db.collection('votes').deleteMany({ dataset_id: datasetId });
         await db.collection('comments').deleteMany({ dataset_id: datasetId });
 
-        // 3. Delete Neo4j node (DETACH DELETE removes relationships too)
+        // Delete Neo4j node (DETACH DELETE removes relationships too)
         await deleteNode(datasetId, 'Dataset');
 
-        // 4. Delete Redis counters
+        // Delete Redis counters
         const { getRedis } = require('../config/databases');
         const { primary } = getRedis();
         await primary.del(`download_count:dataset:${datasetId}`);
@@ -1192,7 +1192,7 @@ async function getDatasetClones(req, res) {
             cloneDatasets.map(async (clone) => {
                 const owner = await db.collection('users').findOne(
                     { user_id: clone.owner_user_id },
-                    { projection: { username: 1, full_name: 1 } }
+                    { projection: { username: 1, full_name: 1 , avatar_ref: 1 } }
                 );
 
                 return {
@@ -1200,7 +1200,10 @@ async function getDatasetClones(req, res) {
                     dataset_name: clone.dataset_name,
                     owner: owner ? {
                         username: owner.username,
-                        fullName: owner.full_name
+                        fullName: owner.full_name,
+                        avatarUrl: owner.avatar_ref
+                                ? getFileUrl(owner.avatar_ref.couchdb_document_id, owner.avatar_ref.file_name)
+                                : null
                     } : null,
                     status: clone.status,
                     created_at: clone.created_at
@@ -1534,13 +1537,16 @@ async function getDownloadStats(req, res) {
                     // Get fullName from MongoDB
                     const user = await db.collection('users').findOne(
                         { user_id: userId },
-                        { projection: { full_name: 1 } }
+                        { projection: { full_name: 1 , avatar_ref: 1 } }
                     );
 
                     return {
                         userId: userId,
                         username: username,
-                        fullName: user?.full_name || 'Unknown User', // ← NUEVO CAMPO
+                        fullName: user?.full_name || 'Unknown User',
+                        avatarUrl: user.avatar_ref
+                                ? getFileUrl(user.avatar_ref.couchdb_document_id, user.avatar_ref.file_name)
+                                : null,
                         downloadedAt: record.get('downloadedAt')
                     };
                 })

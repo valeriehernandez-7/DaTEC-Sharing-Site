@@ -1,17 +1,34 @@
 <template>
     <div class="comment-form" :class="{ 'nested-form': nestingLevel > 0 }">
         <div class="form-header">
-            <Avatar v-if="authStore.user?.avatarUrl" :image="getUserAvatarUrl()" shape="circle" size="small" />
-            <Avatar v-else :label="getUserInitials()" shape="circle" size="small" :class="getUserAvatarClasses()" />
+            <Avatar
+                v-if="authStore.user?.avatarUrl"
+                :image="getUserAvatarUrl()"
+                shape="circle"
+                size="small"
+            />
+            <Avatar
+                v-else
+                :label="getUserInitials()"
+                shape="circle"
+                size="small"
+                :class="getUserAvatarClasses()"
+            />
             <span class="reply-label">
                 {{ parentId ? `Replying to comment` : 'Write your comment' }}
             </span>
         </div>
 
         <div class="form-content">
-            <Textarea v-model="content" :placeholder="parentId ? 'Write your reply...' : 'Write your comment...'"
-                :rows="4" class="w-full" :class="{ 'p-invalid': contentError }" @input="clearError"
-                @keydown="handleKeydown" />
+            <Textarea
+                v-model="content"
+                :placeholder="parentId ? 'Write your reply...' : 'Write your comment...'"
+                :rows="4"
+                class="w-full"
+                :class="{ 'p-invalid': contentError }"
+                @input="clearError"
+                @keydown="handleKeydown"
+            />
 
             <div class="form-footer">
                 <div class="char-counter" :class="{ 'text-red-500': content.length > 2000 }">
@@ -19,10 +36,22 @@
                 </div>
 
                 <div class="form-actions">
-                    <Button label="Cancel" text size="small" severity="secondary" @click="$emit('cancel')"
-                        v-if="parentId" />
-                    <Button :label="parentId ? 'Reply' : 'Comment'" icon="pi pi-send" size="small"
-                        :disabled="!canSubmit" :loading="loading" @click="submitComment" />
+                    <Button
+                        label="Cancel"
+                        text
+                        size="small"
+                        severity="secondary"
+                        @click="$emit('cancel')"
+                        v-if="parentId"
+                    />
+                    <Button
+                        :label="parentId ? 'Reply' : 'Comment'"
+                        icon="pi pi-send"
+                        size="small"
+                        :disabled="!canSubmit"
+                        :loading="loading"
+                        @click="submitComment"
+                    />
                 </div>
             </div>
 
@@ -43,16 +72,16 @@ import api from '@/services/api'
 const props = defineProps({
     parentId: {
         type: String,
-        default: null
+        default: null,
     },
     nestingLevel: {
         type: Number,
-        default: 0
+        default: 0,
     },
     datasetId: {
         type: String,
-        required: true
-    }
+        required: true,
+    },
 })
 
 const emit = defineEmits(['submit', 'cancel'])
@@ -66,9 +95,7 @@ const contentError = ref('')
 
 // Computed properties
 const canSubmit = computed(() => {
-    return content.value.trim().length > 0 &&
-        content.value.length <= 2000 &&
-        !loading.value
+    return content.value.trim().length > 0 && content.value.length <= 2000 && !loading.value
 })
 
 // Methods
@@ -76,7 +103,7 @@ const getUserAvatarUrl = () => {
     if (!authStore.user?.avatarUrl) return null
     try {
         const url = new URL(authStore.user.avatarUrl)
-        const pathParts = url.pathname.split('/').filter(part => part)
+        const pathParts = url.pathname.split('/').filter((part) => part)
         if (pathParts.length < 3) return null
 
         const documentId = pathParts[1]
@@ -91,14 +118,21 @@ const getUserInitials = () => {
     if (!authStore.user?.fullName) return 'U'
     return authStore.user.fullName
         .split(' ')
-        .map(name => name.charAt(0))
+        .map((name) => name.charAt(0))
         .join('')
         .toUpperCase()
         .substring(0, 2)
 }
 
 const getUserAvatarClasses = () => {
-    const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500']
+    const colors = [
+        'bg-emerald-500',
+        'bg-blue-500',
+        'bg-purple-500',
+        'bg-amber-500',
+        'bg-rose-500',
+        'bg-cyan-500',
+    ]
     const index = (authStore.user?.username?.charCodeAt(0) || 0) % colors.length
     return `${colors[index]} text-white`
 }
@@ -132,7 +166,7 @@ const submitComment = async () => {
 
     try {
         const payload = {
-            content: content.value.trim()
+            content: content.value.trim(),
         }
 
         if (props.parentId) {
@@ -145,14 +179,13 @@ const submitComment = async () => {
             severity: 'success',
             summary: 'Success',
             detail: props.parentId ? 'Reply posted successfully' : 'Comment posted successfully',
-            life: 3000
+            life: 3000,
         })
 
         // Emit success and reset
         emit('submit', content.value, props.parentId)
         content.value = ''
         contentError.value = ''
-
     } catch (error) {
         console.error('Error posting comment:', error)
         contentError.value = error.response?.data?.error || 'Failed to post comment'
@@ -161,13 +194,12 @@ const submitComment = async () => {
             severity: 'error',
             summary: 'Error',
             detail: error.response?.data?.error || 'Failed to post comment',
-            life: 5000
+            life: 5000,
         })
     } finally {
         loading.value = false
     }
 }
-
 </script>
 
 <style scoped>

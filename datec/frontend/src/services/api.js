@@ -8,8 +8,8 @@ const api = axios.create({
     baseURL: 'http://localhost:3000/api',
     timeout: 10000,
     headers: {
-        'Content-Type': 'application/json'
-    }
+        'Content-Type': 'application/json',
+    },
 })
 
 /**
@@ -26,7 +26,7 @@ api.interceptors.request.use(
     },
     (error) => {
         return Promise.reject(error)
-    }
+    },
 )
 
 /**
@@ -39,7 +39,7 @@ api.interceptors.response.use(
         console.error('API Request Failed:', {
             status: error.response?.status,
             data: error.response?.data,
-            url: error.config?.url
+            url: error.config?.url,
         })
 
         if (error.response?.status === 401) {
@@ -48,7 +48,7 @@ api.interceptors.response.use(
         }
 
         return Promise.reject(error)
-    }
+    },
 )
 
 export default api

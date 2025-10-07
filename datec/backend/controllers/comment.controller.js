@@ -282,7 +282,7 @@ async function getCommentDepth(db, commentId, currentDepth = 0) {
  * @returns {Array} Array of root-level comments with nested replies
  */
 function buildCommentTree(comments) {
-    // Step 1: Create map and initialize replies array
+    // Create map and initialize replies array
     const commentMap = {};
     comments.forEach(comment => {
         commentMap[comment.comment_id] = {
@@ -291,7 +291,7 @@ function buildCommentTree(comments) {
         };
     });
 
-    // Step 2: Build tree by linking children to parents
+    // Build tree by linking children to parents
     const rootComments = [];
     comments.forEach(comment => {
         const commentNode = commentMap[comment.comment_id];
@@ -305,7 +305,7 @@ function buildCommentTree(comments) {
         }
     });
 
-    // Step 3: Sort replies chronologically (oldest first) at each level
+    // Sort replies chronologically (oldest first) at each level
     function sortReplies(comment) {
         comment.replies.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         comment.replies.forEach(reply => sortReplies(reply));

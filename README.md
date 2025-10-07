@@ -1,9 +1,5 @@
 # DaTEC - Dataset Sharing Platform
 
-<https://github.com/valeriehernandez-7/DaTEC-Sharing-Site>
-
-## Technical Documentations
-
 **Costa Rica Institute of Technology**  
 **San José Local Technological Campus**  
 **School of Computer Engineering**  
@@ -12,9 +8,9 @@
 **2nd Semester 2025**
 
 **Project Information:**  
-DaTEC - Dataset Sharing Platform  
-1st Project
-October 7th, 2025
+[DaTEC - Dataset Sharing Platform](https://github.com/valeriehernandez-7/DaTEC-Sharing-Site)  
+1st Project  
+October 7th, 2025  
 
 **Student Information:**  
 Valerie Michell Hernández Fernández  

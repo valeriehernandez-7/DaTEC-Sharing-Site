@@ -1,16 +1,34 @@
 <template>
     <div class="comment-thread" :style="{ marginLeft: `${nestingLevel * 24}px` }">
-        <div v-for="comment in comments" :key="comment.comment_id" :class="['comment-item', {
-            'nested': nestingLevel > 0
-        }]">
+        <div
+            v-for="comment in comments"
+            :key="comment.comment_id"
+            :class="[
+                'comment-item',
+                {
+                    nested: nestingLevel > 0,
+                },
+            ]"
+        >
             <!-- Comment Header -->
             <div class="comment-header">
                 <div class="user-info">
                     <div class="flex" @click="goToProfile(comment.author.username)">
-                        <Avatar v-if="comment.author.avatar_url" :image="getAvatarUrl(comment.author)" shape="circle"
-                            size="small" class="comment-avatar" />
-                        <Avatar v-else :label="getInitials(comment.author.full_name)" shape="circle" size="small"
-                            :class="getUserAvatarClasses(comment.author.username)" class="comment-avatar" />
+                        <Avatar
+                            v-if="comment.author.avatar_url"
+                            :image="getAvatarUrl(comment.author)"
+                            shape="circle"
+                            size="small"
+                            class="comment-avatar"
+                        />
+                        <Avatar
+                            v-else
+                            :label="getInitials(comment.author.full_name)"
+                            shape="circle"
+                            size="small"
+                            :class="getUserAvatarClasses(comment.author.username)"
+                            class="comment-avatar"
+                        />
                     </div>
                     <div class="user-details">
                         <span class="username">{{ comment.author.username }}</span>
@@ -19,10 +37,24 @@
                 </div>
 
                 <div class="comment-badges">
-                    <Tag v-if="!comment.is_active" icon="pi pi-ban" severity="danger" size="small" />
-                    <Tag v-else-if="comment.author.username === datasetOwnerUsername" icon="pi pi-flag-fill"
-                        severity="info" size="small" />
-                    <Tag v-else-if="comment.is_own_comment" icon="pi pi-bullseye" severity="secondary" size="small" />
+                    <Tag
+                        v-if="!comment.is_active"
+                        icon="pi pi-ban"
+                        severity="danger"
+                        size="small"
+                    />
+                    <Tag
+                        v-else-if="comment.author.username === datasetOwnerUsername"
+                        icon="pi pi-flag-fill"
+                        severity="info"
+                        size="small"
+                    />
+                    <Tag
+                        v-else-if="comment.is_own_comment"
+                        icon="pi pi-bullseye"
+                        severity="secondary"
+                        size="small"
+                    />
                 </div>
             </div>
 
@@ -33,35 +65,66 @@
                 </div>
                 <div v-else class="disabled-content">
                     <i class="pi pi-ban text-gray-400 mr-2"></i>
-                    <span class="text-gray-500 text-sm"><i>This comment has been moderated by an
-                            administrator.</i></span>
+                    <span class="text-gray-500 text-sm"
+                        ><i>This comment has been moderated by an administrator.</i></span
+                    >
                 </div>
             </div>
 
             <!-- Comment Actions -->
             <div class="comment-actions" v-if="comment.is_active || isAdmin">
                 <!-- Reply Button -->
-                <Button v-if="comment.is_active && nestingLevel < 5 && authStore.isLoggedIn" label="Reply"
-                    icon="pi pi-reply" text size="small" severity="secondary"
-                    @click="openReplyForm(comment.comment_id)" />
+                <Button
+                    v-if="comment.is_active && nestingLevel < 5 && authStore.isLoggedIn"
+                    label="Reply"
+                    icon="pi pi-reply"
+                    text
+                    size="small"
+                    severity="secondary"
+                    @click="openReplyForm(comment.comment_id)"
+                />
 
                 <!-- Admin Actions -->
-                <Button v-if="isAdmin && comment.is_active" label="Disable" icon="pi pi-ban" text severity="danger"
-                    size="small" @click="disableComment(comment.comment_id)" />
-                <Button v-else-if="isAdmin && !comment.is_active" label="Enable" icon="pi pi-check" text
-                    severity="success" size="small" @click="enableComment(comment.comment_id)" />
+                <Button
+                    v-if="isAdmin && comment.is_active"
+                    label="Disable"
+                    icon="pi pi-ban"
+                    text
+                    severity="danger"
+                    size="small"
+                    @click="disableComment(comment.comment_id)"
+                />
+                <Button
+                    v-else-if="isAdmin && !comment.is_active"
+                    label="Enable"
+                    icon="pi pi-check"
+                    text
+                    severity="success"
+                    size="small"
+                    @click="enableComment(comment.comment_id)"
+                />
             </div>
 
             <!-- Reply Form -->
-            <CommentForm v-if="showReplyForm === comment.comment_id" :parentId="comment.comment_id"
-                :datasetId="route.params.id" :nestingLevel="nestingLevel" @submit="handleReplySubmit"
-                @cancel="closeReplyForm" class="reply-form" />
-
+            <CommentForm
+                v-if="showReplyForm === comment.comment_id"
+                :parentId="comment.comment_id"
+                :datasetId="route.params.id"
+                :nestingLevel="nestingLevel"
+                @submit="handleReplySubmit"
+                @cancel="closeReplyForm"
+                class="reply-form"
+            />
 
             <!-- Nested Replies (Recursive) -->
-            <CommentThread v-if="comment.replies && comment.replies.length > 0" :comments="comment.replies"
-                :nestingLevel="nestingLevel + 1" :datasetOwnerUsername="datasetOwnerUsername"
-                @comment-updated="$emit('comment-updated')" class="nested-replies" />
+            <CommentThread
+                v-if="comment.replies && comment.replies.length > 0"
+                :comments="comment.replies"
+                :nestingLevel="nestingLevel + 1"
+                :datasetOwnerUsername="datasetOwnerUsername"
+                @comment-updated="$emit('comment-updated')"
+                class="nested-replies"
+            />
         </div>
     </div>
 </template>
@@ -80,16 +143,16 @@ import api from '@/services/api'
 const props = defineProps({
     comments: {
         type: Array,
-        default: () => []
+        default: () => [],
     },
     nestingLevel: {
         type: Number,
-        default: 0
+        default: 0,
     },
     datasetOwnerUsername: {
         type: String,
-        default: ''
-    }
+        default: '',
+    },
 })
 
 const emit = defineEmits(['comment-updated'])
@@ -108,7 +171,7 @@ const getAvatarUrl = (user) => {
     if (!user?.avatar_url) return null
     try {
         const url = new URL(user.avatar_url)
-        const pathParts = url.pathname.split('/').filter(part => part)
+        const pathParts = url.pathname.split('/').filter((part) => part)
         if (pathParts.length < 3) return null
 
         const documentId = pathParts[1]
@@ -123,14 +186,21 @@ const getInitials = (fullName) => {
     if (!fullName) return 'U'
     return fullName
         .split(' ')
-        .map(name => name.charAt(0))
+        .map((name) => name.charAt(0))
         .join('')
         .toUpperCase()
         .substring(0, 2)
 }
 
 const getUserAvatarClasses = (username) => {
-    const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500']
+    const colors = [
+        'bg-emerald-500',
+        'bg-blue-500',
+        'bg-purple-500',
+        'bg-amber-500',
+        'bg-rose-500',
+        'bg-cyan-500',
+    ]
     const index = (username?.charCodeAt(0) || 0) % colors.length
     return `${colors[index]} text-white`
 }
@@ -152,7 +222,7 @@ const formatDate = (dateString) => {
 
     return date.toLocaleDateString('en-US', {
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
     })
 }
 
@@ -175,7 +245,7 @@ const handleReplySubmit = async (content, parentId) => {
             severity: 'error',
             summary: 'Failed in reply submission',
             detail: error.message,
-            life: 5000
+            life: 5000,
         })
     }
 }
@@ -189,7 +259,7 @@ const disableComment = async (commentId) => {
             severity: 'success',
             summary: 'Comment Disabled',
             detail: 'Comment has been disabled successfully',
-            life: 3000
+            life: 3000,
         })
         emit('comment-updated')
     } catch (error) {
@@ -198,7 +268,7 @@ const disableComment = async (commentId) => {
             severity: 'error',
             summary: 'Failed to disable comment',
             detail: error.message,
-            life: 5000
+            life: 5000,
         })
     }
 }
@@ -212,7 +282,7 @@ const enableComment = async (commentId) => {
             severity: 'success',
             summary: 'Comment Enabled',
             detail: 'Comment has been enabled successfully',
-            life: 3000
+            life: 3000,
         })
         emit('comment-updated')
     } catch (error) {
@@ -221,7 +291,7 @@ const enableComment = async (commentId) => {
             severity: 'error',
             summary: 'Failed to enable comment',
             detail: error.message,
-            life: 5000
+            life: 5000,
         })
     }
 }
@@ -234,7 +304,6 @@ const goToProfile = (username) => {
         router.push(`/profile/${username}`)
     }
 }
-
 </script>
 
 <style scoped>
