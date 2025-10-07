@@ -12,7 +12,7 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: () => import('@/views/HomeView.vue'),
-      meta: { requiresAuth: false }
+      meta: { requiresAuth: true }
     },
     {
       path: '/login',
@@ -30,13 +30,13 @@ const router = createRouter({
       path: '/datasets/:id',
       name: 'dataset-detail',
       component: () => import('@/views/DatasetDetailView.vue'),
-      meta: { requiresAuth: false }
+      meta: { requiresAuth: true }
     },
     {
       path: '/profile/:username',
       name: 'profile',
       component: () => import('@/views/ProfileView.vue'),
-      meta: { requiresAuth: false }
+      meta: { requiresAuth: true }
     },
     {
       path: '/datasets/create',
