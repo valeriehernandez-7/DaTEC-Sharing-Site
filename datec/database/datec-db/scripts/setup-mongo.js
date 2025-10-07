@@ -19,7 +19,7 @@ try {
     try {
         const status = rs.status();
         if (status.ok === 1 && status.set) {
-            print('✓ Replica set already initialized: ' + status.set);
+            print('Replica set already initialized: ' + status.set);
         }
     } catch (e) {
         if (e.code === 94 || e.codeName === 'NotYetInitialized') {
@@ -40,7 +40,7 @@ try {
 
             const newStatus = rs.status();
             if (newStatus.ok === 1) {
-                print('✓ Replica set initialization complete: ' + newStatus.set);
+                print('Replica set initialization complete: ' + newStatus.set);
             } else {
                 throw new Error('Replica set failed to initialize properly');
             }
@@ -103,7 +103,7 @@ try {
                 }
             }
         });
-        print('✓ Created users collection with validation');
+        print('Created users collection with validation');
     }
 
     // 2. Datasets Collection
@@ -216,7 +216,7 @@ try {
                 }
             }
         });
-        print('✓ Created datasets collection with validation');
+        print('Created datasets collection with validation');
     }
 
     // 3. Comments Collection
@@ -249,7 +249,7 @@ try {
                 }
             }
         });
-        print('✓ Created comments collection with validation');
+        print('Created comments collection with validation');
     }
 
     // 4. Votes Collection
@@ -275,7 +275,7 @@ try {
                 }
             }
         });
-        print('✓ Created votes collection with validation');
+        print('Created votes collection with validation');
     }
 
     // 5. Private Messages Collection
@@ -300,7 +300,7 @@ try {
                 }
             }
         });
-        print('✓ Created private_messages collection with validation');
+        print('Created private_messages collection with validation');
     }
 
     // Create indexes
@@ -311,7 +311,7 @@ try {
     db.users.createIndex({ "username": 1 }, { unique: true, name: "username_unique" });
     db.users.createIndex({ "email_address": 1 }, { unique: true, name: "email_unique" });
     db.users.createIndex({ "username": "text", "full_name": "text" }, { name: "user_search_text" });
-    print('✓ Created users indexes');
+    print('Created users indexes');
 
     // Datasets indexes
     db.datasets.createIndex({ "dataset_id": 1 }, { unique: true, name: "dataset_id_unique" });
@@ -326,7 +326,7 @@ try {
             weights: { "dataset_name": 10, "tags": 5, "description": 1 }
         }
     );
-    print('✓ Created datasets indexes');
+    print('Created datasets indexes');
 
     // Comments indexes
     db.comments.createIndex({ "comment_id": 1 }, { unique: true, name: "comment_id_unique" });
@@ -334,7 +334,7 @@ try {
     db.comments.createIndex({ "parent_comment_id": 1 }, { name: "parent_comment_index" });
     db.comments.createIndex({ "author_user_id": 1 }, { name: "author_comments_index" });
     db.comments.createIndex({ "is_active": 1 }, { name: "active_comments_index" });
-    print('✓ Created comments indexes');
+    print('Created comments indexes');
 
     // Votes indexes
     db.votes.createIndex({ "vote_id": 1 }, { unique: true, name: "vote_id_unique" });
@@ -344,7 +344,7 @@ try {
     );
     db.votes.createIndex({ "target_dataset_id": 1 }, { name: "dataset_votes_index" });
     db.votes.createIndex({ "voter_user_id": 1 }, { name: "user_votes_index" });
-    print('✓ Created votes indexes');
+    print('Created votes indexes');
 
     // Private Messages indexes
     db.private_messages.createIndex({ "message_id": 1 }, { unique: true, name: "message_id_unique" });
@@ -354,7 +354,7 @@ try {
     );
     db.private_messages.createIndex({ "to_user_id": 1, "created_at": -1 }, { name: "user_inbox_index" });
     db.private_messages.createIndex({ "from_user_id": 1, "created_at": -1 }, { name: "user_sent_index" });
-    print('✓ Created private_messages indexes');
+    print('Created private_messages indexes');
 
     // Insert sample users
     print('\nCreating sample users...');
@@ -436,10 +436,10 @@ try {
     for (const user of sampleUsers) {
         try {
             db.users.insertOne(user);
-            print(`✓ Sample user created: ${user.username}`);
+            print(`Sample user created: ${user.username}`);
         } catch (e) {
             if (e.code === 11000) {
-                print(`✓ User already exists: ${user.username}`);
+                print(`User already exists: ${user.username}`);
             } else {
                 throw e;
             }

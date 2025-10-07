@@ -40,8 +40,6 @@ app.get('/api/files/:documentId/:filename', async (req, res) => {
         const { getFile } = require('./utils/couchdb-manager');
         const { documentId, filename } = req.params;
 
-        console.log('File request:', { documentId, filename });
-
         const fileBuffer = await getFile(documentId, filename);
 
         const getContentType = (filename) => {

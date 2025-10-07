@@ -20,9 +20,9 @@ async function setupCouchDB() {
         // Verify connection
         try {
             const serverInfo = await couchdb.db.list();
-            console.log(`✓ Connected to CouchDB successfully`);
+            console.log(`Connected to CouchDB successfully`);
         } catch (e) {
-            console.error('✗ Failed to connect. Is CouchDB running on localhost:5984?');
+            console.error('Failed to connect. Is CouchDB running on localhost:5984?');
             throw e;
         }
 
@@ -30,10 +30,10 @@ async function setupCouchDB() {
         console.log('\nCreating datec database...');
         try {
             await couchdb.db.create('datec');
-            console.log('✓ Database "datec" created');
+            console.log('Database "datec" created');
         } catch (e) {
             if (e.statusCode === 412) {
-                console.log('✓ Database "datec" already exists');
+                console.log('Database "datec" already exists');
             } else {
                 throw e;
             }
@@ -57,10 +57,10 @@ async function setupCouchDB() {
                     }
                 }
             });
-            console.log('✓ Created design document for user avatars');
+            console.log('Created design document for user avatars');
         } catch (e) {
             if (e.statusCode === 409) {
-                console.log('✓ Design document "users" already exists');
+                console.log('Design document "users" already exists');
             } else {
                 throw e;
             }
@@ -87,10 +87,10 @@ async function setupCouchDB() {
                     }
                 }
             });
-            console.log('✓ Created design document for dataset files');
+            console.log('Created design document for dataset files');
         } catch (e) {
             if (e.statusCode === 409) {
-                console.log('✓ Design document "datasets" already exists');
+                console.log('Design document "datasets" already exists');
             } else {
                 throw e;
             }
