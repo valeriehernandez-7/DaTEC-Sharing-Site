@@ -16,15 +16,15 @@
         <!-- Dataset Content -->
         <div v-else>
             <!-- Dataset Header -->
-            <Card class="dataset-header mb-6">
+            <Card class="mb-6">
                 <template #header>
-                    <div class="relative h-48 rounded-t-lg overflow-hidden">
+                    <div class="w-full h-48 rounded-t-lg overflow-hidden flex items-center justify-center">
                         <!-- Header Photo or Fallback -->
                         <img
                             v-if="datasetData.header_photo_url"
                             :src="getDatasetHeaderUrl(datasetData)"
                             :alt="datasetData.dataset_name"
-                            class="object-cover"
+                            style="width: 100%;"
                         />
                         <div
                             v-else
@@ -812,7 +812,7 @@
                                             <img
                                                 :src="getDatasetHeaderUrl(datasetData)"
                                                 :alt="datasetData.dataset_name"
-                                                class="w-2x1 h-50 object-cover rounded-lg"
+                                                class="w-2x1 h-50 rounded-lg"
                                             />
                                             <div class="flex-1">
                                                 <Button

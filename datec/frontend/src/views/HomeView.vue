@@ -152,13 +152,13 @@
                                 @click="navigateToDataset(dataset.id)"
                             >
                                 <template #header>
-                                    <div class="relative h-32 rounded-t-lg overflow-hidden">
+                                    <div class="w-full h-32 rounded-t-lg overflow-hidden flex items-center justify-center">
                                         <!-- Header Photo or Fallback -->
                                         <img
                                             v-if="dataset.header_photo_url"
                                             :src="getDatasetHeaderUrl(dataset)"
                                             :alt="dataset.name"
-                                            class="object-cover"
+                                            style="width: 100%;"
                                         />
                                         <div
                                             v-else
