@@ -436,7 +436,7 @@ async function getUserDatasets(req, res) {
  * HU6 - Request dataset approval
  * PATCH /api/datasets/:datasetId/review-request
  * 
- * Changes dataset status to request admin review
+ * Changes dataset status to 'pending' for admin review
  * Only owner can request approval
  */
 async function requestApproval(req, res) {
@@ -461,17 +461,35 @@ async function requestApproval(req, res) {
             });
         }
 
-        // Dataset must be in pending status
-        if (dataset.status !== 'pending') {
+        // Dataset must NOT be already pending or approved
+        if (dataset.status === 'pending') {
             return res.status(400).json({
                 success: false,
-                error: `Dataset is already ${dataset.status}`
+                error: 'Dataset is already pending approval'
             });
         }
 
+        if (dataset.status === 'approved') {
+            return res.status(400).json({
+                success: false,
+                error: 'Dataset is already approved'
+            });
+        }
+
+        // Update dataset status to pending
+        await db.collection('datasets').updateOne(
+            { dataset_id: req.params.datasetId },
+            {
+                $set: {
+                    status: 'pending',
+                    updated_at: new Date()
+                }
+            }
+        );
+
         res.json({
             success: true,
-            message: 'Dataset is pending approval. An administrator will review it soon.',
+            message: 'Dataset submitted for admin review. An administrator will review it soon.',
             status: 'pending'
         });
 

@@ -375,7 +375,7 @@
                                             <div class="text-center">
                                                 <i class="pi pi-download text-blue-500 text-2xl mb-2"></i>
                                                 <h3 class="text-xl font-bold">{{ downloadStats.statistics.totalDownloads
-                                                }}</h3>
+                                                    }}</h3>
                                                 <p class="text-gray-600">Total Downloads</p>
                                             </div>
                                         </template>
@@ -492,11 +492,11 @@
                                         <p class="text-sm mt-1" :class="statusStyle.textColor">
                                             {{ statusStyle.message }}
                                         </p>
-                                        <p v-if="datasetData.reviewed_at" class="text-sm mt-1"
-                                            :class="statusStyle.textColor">
+                                        <p v-if="datasetData.status !== 'pending' && datasetData.reviewed_at"
+                                            class="text-sm mt-1" :class="statusStyle.textColor">
                                             {{ statusStyle.dateLabel }}: {{ formatDate(datasetData.reviewed_at) }}
                                         </p>
-                                        <p v-if="datasetData.admin_review"
+                                        <p v-if="datasetData.status !== 'pending' && datasetData.admin_review"
                                             class="text-sm mt-1 text-gray-600 font-medium">
                                             Admin feedback: <i>{{ datasetData.admin_review }}</i>
                                         </p>
@@ -878,6 +878,51 @@ watch(() => datasetData.value, (newDataset) => {
         }
     }
 }, { immediate: true })
+
+/**
+ * Requests admin approval for the dataset
+ * HU6 - Request dataset approval
+ * PATCH /api/datasets/:datasetId/review-request
+ */
+const requestApproval = async () => {
+    try {
+        // Show loading state
+        const button = event?.target
+        if (button) {
+            button.disabled = true
+        }
+
+        const response = await api.patch(`/datasets/${route.params.id}/review-request`)
+
+        toast.add({
+            severity: 'success',
+            summary: 'Approval Requested',
+            detail: response.data.message || 'Dataset submitted for admin review',
+            life: 5000
+        })
+
+        // Update dataset status locally
+        datasetData.value.status = 'pending'
+
+        // Reload dataset data to get the latest status
+        await loadDatasetDetails()
+
+    } catch (err) {
+        console.error('Error requesting approval:', err)
+        toast.add({
+            severity: 'error',
+            summary: 'Request Failed',
+            detail: err.response?.data?.error || 'Failed to request approval',
+            life: 5000
+        })
+    } finally {
+        // Re-enable button
+        const button = event?.target
+        if (button) {
+            button.disabled = false
+        }
+    }
+}
 
 /**
  * Delete the entire dataset
