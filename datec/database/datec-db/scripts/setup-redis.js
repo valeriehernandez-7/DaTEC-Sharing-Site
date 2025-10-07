@@ -145,7 +145,6 @@ async function setupRedis() {
         console.log('  - Counters initialized: download_count, vote_count');
         console.log('  - Notification queues: ready');
         console.log('  - Replication: verified');
-        console.log(`  - Sample datasets: ${sampleDatasets.length}`);
         console.log(`  - Total notifications: ${Object.values(notificationCounts).reduce((a, b) => a + b, 0)}`);
 
         await primaryClient.quit();
