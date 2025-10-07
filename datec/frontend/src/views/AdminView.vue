@@ -136,7 +136,7 @@
                                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
                                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} users"
                                     class="p-datatable-sm">
-                                    <Column header="User">
+                                    <Column header="User" sortable field="username">
                                         <template #body="{ data }">
                                             <div class="user-cell flex items-center gap-3"
                                                 @click="goToProfile(data.username)">
@@ -152,14 +152,14 @@
                                         </template>
                                     </Column>
 
-                                    <Column header="Role">
+                                    <Column header="Role" sortable field="isAdmin">
                                         <template #body="{ data }">
                                             <Tag :value="data.isAdmin ? 'Admin' : 'User'"
                                                 :severity="data.isAdmin ? 'success' : 'secondary'" />
                                         </template>
                                     </Column>
 
-                                    <Column header="Member Since">
+                                    <Column header="Member Since" sortable field="createdAt">
                                         <template #body="{ data }">
                                             {{ formatDate(data.createdAt) }}
                                         </template>
@@ -200,7 +200,7 @@
                                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
                                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} datasets"
                                     class="p-datatable-sm">
-                                    <Column field="dataset_name" header="Dataset Name" sortable>
+                                    <Column header="Dataset Name" sortable field="dataset_name">
                                         <template #body="{ data }">
                                             <div class="font-medium text-gray-900">{{ data.dataset_name }}</div>
                                             <div class="text-sm text-gray-500 mt-1 line-clamp-2">{{ data.description }}
@@ -208,7 +208,7 @@
                                         </template>
                                     </Column>
 
-                                    <Column header="Author" sortable>
+                                    <Column header="Author" sortable field="owner.username">
                                         <template #body="{ data }">
                                             <div class="user-cell flex items-center gap-3"
                                                 @click="goToProfile(data.owner?.username)">
@@ -225,13 +225,13 @@
                                         </template>
                                     </Column>
 
-                                    <Column header="Files" sortable>
+                                    <Column header="Files">
                                         <template #body="{ data }">
                                             <Tag :value="`${data.file_count} files`" severity="info" />
                                         </template>
                                     </Column>
 
-                                    <Column header="Created" sortable>
+                                    <Column header="Created" sortable field="created_at">
                                         <template #body="{ data }">
                                             {{ formatDate(data.created_at) }}
                                         </template>
@@ -287,14 +287,14 @@
                                         </template>
                                     </Column>
 
-                                    <Column header="Dataset">
+                                    <Column header="Dataset" sortable field="dataset.dataset_name">
                                         <template #body="{ data }">
                                             <Button :label="data.dataset?.dataset_name" link
                                                 @click="goToDataset(data.dataset?.dataset_id)" />
                                         </template>
                                     </Column>
 
-                                    <Column header="Author">
+                                    <Column header="Author" sortable field="author.username">
                                         <template #body="{ data }">
                                             <div class="flex items-center gap-1">
                                                 <Button :label="data.author?.username" link
@@ -304,7 +304,7 @@
 
                                     </Column>
 
-                                    <Column header="Moderator">
+                                    <Column header="Moderator" sortable field="disabled_by">
                                         <template #body="{ data }">
                                             <div class="flex items-center gap-1">
                                                 <Button :label="data.disabled_by" link
@@ -313,7 +313,7 @@
                                         </template>
                                     </Column>
 
-                                    <Column header="Date">
+                                    <Column header="Date" sortable field="disabled_at">
                                         <template #body="{ data }">
                                             {{ formatDate(data.disabled_at) }}
                                         </template>
