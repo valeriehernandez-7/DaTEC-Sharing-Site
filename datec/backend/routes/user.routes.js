@@ -38,6 +38,13 @@ const { uploadAvatar } = require('../middleware/upload');
 router.get('/search', controller.searchUsers);
 
 /**
+ * GET /api/users
+ * List all users (admin only)
+ * Requires: Admin privileges
+ */
+router.get('/', controller.listAllUsers);
+
+/**
  * GET /api/users/:username
  * Get public profile information for a user
  * 

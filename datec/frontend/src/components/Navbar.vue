@@ -16,6 +16,9 @@
                         :badge="notificationCount > 0 ? notificationCount.toString() : null"
                         badge-class="notification-badge" />
 
+                    <Button v-if="authStore.isLoggedIn && authStore.user?.isAdmin" icon="pi pi-shield" text rounded
+                        aria-label="DaTEC Management" severity="secondary" @click="router.push(`/admin`)"/>
+
                     <Menu v-if="authStore.isLoggedIn" ref="notificationsMenu" :model="notificationItems" :popup="true"
                         class="notifications-overlay" />
 

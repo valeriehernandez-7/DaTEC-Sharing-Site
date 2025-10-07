@@ -66,6 +66,43 @@ async function searchUsers(req, res) {
 }
 
 /**
+ * List all users (admin only)
+ * GET /api/users
+ */
+async function listAllUsers(req, res) {
+    try {
+        const db = getMongo();
+
+        // Verify requester is admin
+        if (!req.user.isAdmin) {
+            return res.status(403).json({ error: 'Forbidden: Admin privileges required' });
+        }
+
+        const users = await db.collection('users').find({})
+            .sort({ created_at: -1 })
+            .toArray();
+
+        res.json({
+            success: true,
+            count: users.length,
+            users: users.map(u => ({
+                userId: u.user_id,
+                username: u.username,
+                fullName: u.full_name,
+                avatarUrl: u.avatar_ref
+                    ? getFileUrl(u.avatar_ref.couchdb_document_id, u.avatar_ref.file_name)
+                    : null,
+                isAdmin: u.is_admin,
+                createdAt: u.created_at
+            }))
+        });
+    } catch (error) {
+        console.error('Error listing users:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+/**
  * Get user profile by username
  * GET /api/users/:username
  */
