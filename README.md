@@ -2,7 +2,10 @@
 
 ### DEMO
 
-![DEMO](https://github.com/valeriehernandez-7/DaTEC-Sharing-Site/tree/main/docs/datec_demo.mp4)
+<video controls autoplay muted src="https://github.com/user-attachments/assets/9728144d-56a3-4287-9073-8dd04705d7d3">
+    Your browser does not support the video tag.
+    <a href="https://github.com/valeriehernandez-7/DaTEC-Sharing-Site/blob/main/docs/datec_demo.mp4">Download the demo 📼</a> instead.
+</video>
 
 ##
 
